@@ -20,9 +20,9 @@
     Heutzutage gibt es viele Plattformen die dabei helfen wollen neue Musik zu
     entdecken. Eine dieser Plattformen ist beispielsweise
     \url{https://www.last.fm}. Nutzer bekommen dabei
-    basierend auf ihren Hörverhalten Vorschläge was sie als nächstes anhören
+    basierend auf ihrem Hörverhalten Vorschläge was sie als nächstes anhören
     könnten - leider ist die Software in ihrem Kern keine \emph{FOSS} und zudem
-    abhängig von den zentralen Servern des Betreibers. Daher wäre ein freies
+    abhängig von den zentralen Servern des Betreibers. Daher wäre ein freies,
     clientseitiges System wünschenswert.
     \\
     \\
@@ -32,16 +32,16 @@
 
 \section{Themenstellung}
     Erstellen einer Softwarebibliothek zur automatisierten Empfehlung von Musik
-    basierend auf der Musiksammlung eines Nutzers und dessen Hörgewohnheiten.
+    basierend auf der Musik-Sammlung eines Nutzers und dessen Hör-Gewohnheiten.
     \\
     \\
-    Im speziellen soll das System dabei die Musikdatenbank des Nutzers importieren
-    können und dessen Hörgewohnheiten beobachten können. Daraus sollen dann
+    Im Speziellen soll das System dabei die Musik-Datenbank des Nutzers importieren
+    und dessen Hör-Gewohnheiten beobachten können. Daraus sollen dann
     Empfehlungen (\textit{N} ähnliche Songs zu Stück \textit{X}) und Dynamische Playlisten 
-    (Playlist die zu den zuletzte Gehörten passt) abgeleitet werden können.
+    (Playlist die zu den zuletzt Gehörtem passt) abgeleitet werden können.
     \\
     \\
-    Beteiligte Diszplinen der Informatik:
+    Beteiligte Disziplinen der Informatik:
 
     \begin{itemize}
         \item Graphentheorie (Aufbau/Wartung der internen Graphenstruktur)
@@ -62,18 +62,19 @@
         Siehe auch: \url{http://de.wikipedia.org/wiki/Hugin_und_Munin}
 
 \section{Geplantes Vorgehen}
-    Es soll eine Prototyp für unixoide Betriebssysteme in \emph{Python} implementiert werden. Sollte noch
-    ausreichend Zeit bleiben (eher unwahrscheinlich) soll dieser Prototyp in eine
+    Es soll eine Prototyp für unixoide Betriebssysteme in \emph{Python}
+    implementiert werden. Wenn noch
+    ausreichend Zeit bleibt (leider eher unwahrscheinlich) soll dieser Prototyp in eine
     \emph{C-Bibliothek} umgesetzt werden. Zuerst soll die Grundfunktionalität der
     Bibliothek stehen, danach können dann \emph{spezielle Provider}, welche
     beispielsweise eine \emph{Moodbar-Anaylse} oder \emph{Liedtexte vergleichen}, implementiert
-    werden. Sollte die Library rechtzeitig in einem annehmbaren Zustand sein so soll
+    werden. Wenn die Library rechtzeitig in einem annehmbaren Zustand sein, so soll
     die Library in einem \emph{MPD-Client zum Einsatz} kommen. 
     \\
     \\
-    Später soll dann die \emph{Theorie} mit zuhilfenahme von \emph{Visualierungen} detailliert in 
+    Später soll dann die \emph{Theorie} mit Zuhilfenahme von \emph{Visualisierungen} detailliert in 
     der Bachelor-Arbeit beschrieben werden und, nach Möglichkeit, wird das System an 
-    \emph{echten Menschen} und verschiedenen Musiksammlungen getestet um zu
+    \emph{echten Menschen} und verschiedenen Musik-Sammlungen getestet um zu
     sehen ob es auch praxistauglich ist.
 
 \section{Aufteilung/Zeitplanung}
@@ -82,7 +83,7 @@
     \paragraph{Projektarbeit:}
         \begin{enumerate} 
             \item Implementierung von \emph{libmunin}. (ca. 55\%)
-            \item {[}\emph{Optional}{]} Beispielanwendung in einem MPD-Client (vorraussichtlich
+            \item {[}\emph{Optional}{]} Beispielanwendung in einem MPD-Client (voraussichtlich
                 ,,\emph{Moosecat}''). (ca. 15\%)
         \end{enumerate}
 
@@ -90,7 +91,7 @@
         \begin{enumerate} 
             \item Beschreibung der Theorie/Algorithmik mit Visualisierungen.  (ca. 25\%)
             \item {[}\emph{Optional}{]} Test mit echten Nutzern und verschiedenen
-                Musiksammlungen. (ca. 5\%)
+                Musik-Sammlungen. (ca. 5\%)
         \end{enumerate}
 
 \section{Literatur}
