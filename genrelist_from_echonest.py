@@ -38,6 +38,8 @@ With above's example:
     'Melodic death-metal' = metal -> death -> melodic (Path: 0, 1, 1, 0)
     'Pagan Metal'         = metal -> pagan (Path: 0, 1, 0)
     'Japan Pop Music'     = pop -> japan (Path: 0, 0, 0)
+
+TODO: Implement a backtracking variant to get all variations?
 '''
 
 
@@ -77,6 +79,7 @@ class Tree:
 
     def build_index_recursively(self):
         '''Build a index of self.children (the stemmed genre being the key)'''
+        self.children.sort(key=lambda elem: elem.genre)
         for idx, child in enumerate(self.children):
             self._index[stem(child.genre)] = idx
             child.build_index_recursively()
@@ -93,6 +96,14 @@ class Tree:
         '''
         self.children.remove(child)
 
+    def resolve_path(self, path):
+        if not path:
+            return ()
+
+        fst, *other = path
+        child = self.children[fst]
+        return (child.genre, ) + child.resolve_path(other)
+
     def find_linear(self, genre):
         '''Linear scan of the childrens list.
 
@@ -106,25 +117,24 @@ class Tree:
             if child.genre == genre:
                 return child
 
-    def find(self, genre):
-        '''Find a child node by it's stemmed genre
+    def find_idx(self, genre):
+        '''Find a child node's index by it's stemmed genre
 
         As a prerequesite build_index_recursively must have been called before,
         and no other add or remove operation must have happened.
 
         :param genre: The stemmed genre.
+        :returns: The idx of the desired child in self.children
         '''
         # _index is a mapping <stem(genre), index_in_self.children)
-        pos = self._index.get(genre)
-        if pos is not None:
-            return self.children[pos]
+        return self._index.get(genre)
 
-    def print_tree(self, _tabs=1):
+    def print_tree(self, _tabs=1, _idx=0):
         '''Recursively print the Tree with indentation and the stemmed variation.
         '''
-        print('    ' * _tabs, self.genre, stem(self.genre).join(('[', ']')))
-        for child in self.children:
-            child.print_tree(_tabs=_tabs + 1)
+        print('    ' * _tabs, '#' + str(_idx), self.genre, stem(self.genre).join(('[', ']')))
+        for idx, child in enumerate(self.children):
+            child.print_tree(_tabs=_tabs + 1, _idx=idx)
 
 
 def unflatten_list(root):
@@ -222,7 +232,7 @@ def build_genre_tree():
     for to_add in ['vocal', 'speech']:
         root.add(Tree(to_add))
 
-    # Make sure find() works - this should be the last operation.
+    # Make sure find_idx() works - this should be the last operation.
     root.build_index_recursively()
     return root
 
@@ -232,7 +242,6 @@ def prepare_single_genre(genre):
 
     :returns: A list of single words in the genre description.
     '''
-    # TODO: Decide if we should split by 'core' or not. (can't harm?)
     return list(filter(
         lambda elem: elem != '-',
         [stem(genre.lower()) for genre in re.split('(core|[\s-])', genre) if genre.strip()]
@@ -259,25 +268,24 @@ def prepare_genre_list(genre):
 def build_genre_path_single(root, words):
     '''Try to map a list of genre words to a path in the tree.
 
-    # TODO: Make this integers.
     '''
     current_node = root
-    path = [root]
+    path = []
     words = list(reversed(words))
 
     # Make the iteration iterative, rather than recursive.
     # -m cProfile gave us a little plus of 0.1 seconds.
     while True:
         for word in words:
-            child = current_node.find(word)
-            if child is not None:
+            pos = current_node.find_idx(word)
+            if pos is not None:
+                current_node = current_node.children[pos]
                 words.remove(word)
-                path.append(child)
-                current_node = child
+                path.append(pos)
                 break
         else:
             break
-    return path
+    return tuple(path)
 
 
 def build_genre_path_best(root, words):
@@ -286,8 +294,10 @@ def build_genre_path_best(root, words):
     This sometimes gives better results. It will return the longest path found.
     '''
     fst_try = build_genre_path_single(root, words)
+    print(root.resolve_path(fst_try))
     words.reverse()
     snd_try = build_genre_path_single(root, words)
+    print(root.resolve_path(snd_try))
     return fst_try if len(fst_try) > len(snd_try) else snd_try
 
 
@@ -306,12 +316,19 @@ if __name__ == '__main__':
     except OSError:
         root = build_genre_tree()
 
+    # Uncomment to get the whole list:
+    # root.print_tree()
+
     # Split the genre description and normalize each before finding the path:
     for sub_genre in prepare_genre_list(sys.argv[1]):
         words = prepare_single_genre(sub_genre)
+
+        path = build_genre_path_best(root, words)
+        print('Input Genre   :', sub_genre)
         print('Prepared Words:', words)
-        for idx, child in enumerate(build_genre_path_best(root, words)):
-            print(' ' * idx, child.genre)
+        print('Result Path   :', path)
+        print('Resolved      :', root.resolve_path(path))
+        print('---------------')
 
     with open('genre_tree.dump', 'wb') as f:
         pickle.dump(root, f)
@@ -326,16 +343,16 @@ if __name__ == '__main__':
             g = _graph or nx.DiGraph()
 
             for child in root.children:
-                if root.genre == 'edge' or child.genre == 'edge':
-                    continue
                 g.add_edge(root.genre, child.genre)
                 recursive(child, _graph=g)
             return g
 
         graph = recursive(root)
         nx.draw_networkx(
-             graph, pos=nx.spring_layout(graph, dim=2, k=0.05, scale=100, iterations=10),
-             width=0.2, node_size=150, alpha=0.2, node_color='#A0CBE2', font_size=2, arrows=False, node_shape=' '
+             graph,
+             pos=nx.spring_layout(graph, dim=2, k=0.05, scale=100, iterations=10),
+             width=0.2, node_size=150, alpha=0.2, node_color='#A0CBE2',
+             font_size=2, arrows=False, node_shape=' '
         )
 
         plt.savefig("graph.pdf")
