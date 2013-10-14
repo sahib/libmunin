@@ -7,7 +7,11 @@ import json
 import re
 
 # Pure Python Stemmer - slow as fuck.
+# TODO: Perhaps use a faster stemmer library?
 from stemming.porter2 import stem
+
+# Internal imports:
+from munin.provider import DirectProvider
 
 '''
 Get a list of genre via echonest and try to make a Tree out of them:
@@ -38,8 +42,6 @@ With above's example:
     'Melodic death-metal' = metal -> death -> melodic (Path: 0, 1, 1, 0)
     'Pagan Metal'         = metal -> pagan (Path: 0, 1, 0)
     'Japan Pop Music'     = pop -> japan (Path: 0, 0, 0)
-
-TODO: Implement a backtracking variant to get all variations?
 '''
 
 
@@ -236,6 +238,10 @@ def build_genre_tree():
     root.build_index_recursively()
     return root
 
+###########################################################################
+#                            Input preparation                            #
+###########################################################################
+
 
 def prepare_single_genre(genre):
     '''Prepare a single genre from a genre list by cleaning and stemming it
@@ -264,6 +270,10 @@ def prepare_genre_list(genre):
     dirty_subs = [sub_genre.strip() for sub_genre in re.split(regex, genre)]
     return list(filter(lambda elem: elem not in regex, dirty_subs))
 
+
+###########################################################################
+#         Matching Function (delivering a path throught the Tree)         #
+###########################################################################
 
 def build_genre_path_single(root, words):
     '''Try to map a list of genre words to a path in the tree.
@@ -335,6 +345,46 @@ def build_genre_path_all(root, words):
     return path_list
 
 
+def load_genre_tree(pickle_path):
+    '''Load the genre by either (in this order):
+
+        1) Load it from a locally pickled file as given by pickle_path
+        2) Load a list of genres from 'genre_list.dump' and build up the tree.
+        3) Load a list of genres from echonest.com and build up the tree.
+
+    :returns: The head of the tree.
+    '''
+    # Load the tree from the disk or rebuild it:
+    try:
+        with open(pickle_path, 'rb') as fh:
+            return pickle.load(fh)
+    except OSError:
+        root = build_genre_tree()
+
+        # Write it to disk for the next time:
+        if root is not None:
+            with open(pickle_path, 'wb') as f:
+                pickle.dump(root, f)
+        return root
+
+###########################################################################
+#                         Provider Implementation                         #
+###########################################################################
+
+
+class GenreTreeProvider(DirectProvider):
+    def __init__(self):
+        # TODO: Finish thiz?
+        DirectProvider.__init__(self, 'GenreTree')
+
+    def process(self, input_value)
+        for sub_genre in prepare_genre_list(input_value):
+            words = prepare_single_genre(sub_genre)
+
+###########################################################################
+#                                Test Main                                #
+###########################################################################
+
 if __name__ == '__main__':
     import sys
     if len(sys.argv) < 2:
@@ -343,15 +393,10 @@ if __name__ == '__main__':
         ))
         sys.exit(1)
 
-    # Load the tree from the disk or rebuild it:
-    try:
-        with open('genre_tree.dump', 'rb') as f:
-            root = pickle.load(f)
-    except OSError:
-        root = build_genre_tree()
+    root = load_genre_tree('genre_tree.dump')
 
     # Uncomment to get the whole list:
-    root.print_tree()
+    # root.print_tree()
 
     # Split the genre description and normalize each before finding the path:
     for sub_genre in prepare_genre_list(sys.argv[1]):
@@ -370,9 +415,6 @@ if __name__ == '__main__':
         print('Resolved      :', root.resolve_path(path))
         print('---------------')
 
-    with open('genre_tree.dump', 'wb') as f:
-        pickle.dump(root, f)
-
     # Silly graph drawing playground ahead:
     def draw_genre_path(root):
         import networkx as nx
@@ -381,7 +423,6 @@ if __name__ == '__main__':
         # Build up the Tree recursively:
         def recursive(root, _graph=None):
             g = _graph or nx.DiGraph()
-
             for child in root.children:
                 g.add_edge(root.genre, child.genre)
                 recursive(child, _graph=g)
