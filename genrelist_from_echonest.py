@@ -288,17 +288,51 @@ def build_genre_path_single(root, words):
     return tuple(path)
 
 
-def build_genre_path_best(root, words):
+def build_genre_path_best_of_two(root, words):
     '''Like build_genre_path_single() but try also the reverse order of the wordlist.
 
     This sometimes gives better results. It will return the longest path found.
     '''
     fst_try = build_genre_path_single(root, words)
-    print(root.resolve_path(fst_try))
     words.reverse()
     snd_try = build_genre_path_single(root, words)
-    print(root.resolve_path(snd_try))
     return fst_try if len(fst_try) > len(snd_try) else snd_try
+
+
+def build_genre_path_all(root, words):
+    '''Get a list of all possible matching genre buildable with the wordlist.
+
+    This is by far more expensive than build_genre_path_single, but will get you
+    the best results.
+    '''
+    path_list = []
+
+    def _iterate_recursive(current_root, _mask, _result):
+        children = []
+        for idx, word in enumerate(words):
+            if not _mask[idx]:
+                continue
+
+            child_idx = current_root.find_idx(word)
+            if child_idx is not None:
+                children.append(
+                        (idx, child_idx, current_root.children[child_idx])
+                )
+
+        if not children:
+            path_list.append(_result)
+
+        for word_idx, child_idx, child in children:
+            child_mask = list(_mask)
+            child_mask[word_idx] = True
+            _iterate_recursive(
+                    child, _mask=child_mask,
+                    _result=_result + (child_idx, )
+            )
+
+    _iterate_recursive(root, (True, ) * len(words), ())
+    path_list.sort(key=lambda elem: len(elem), reverse=True)
+    return path_list
 
 
 if __name__ == '__main__':
@@ -317,13 +351,19 @@ if __name__ == '__main__':
         root = build_genre_tree()
 
     # Uncomment to get the whole list:
-    # root.print_tree()
+    root.print_tree()
 
     # Split the genre description and normalize each before finding the path:
     for sub_genre in prepare_genre_list(sys.argv[1]):
         words = prepare_single_genre(sub_genre)
 
-        path = build_genre_path_best(root, words)
+        print()
+        print('///////////////')
+        print('All Possible  :')
+        for path in build_genre_path_all(root, words):
+            print('   ', path, root.resolve_path(path))
+
+        path = build_genre_path_best_of_two(root, words)
         print('Input Genre   :', sub_genre)
         print('Prepared Words:', words)
         print('Result Path   :', path)
