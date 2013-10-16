@@ -295,7 +295,8 @@ def build_genre_path_single(root, words):
                 break
         else:
             break
-    return tuple(path)
+
+    return [tuple(path)] if path else []
 
 
 def build_genre_path_best_of_two(root, words):
@@ -306,7 +307,7 @@ def build_genre_path_best_of_two(root, words):
     fst_try = build_genre_path_single(root, words)
     words.reverse()
     snd_try = build_genre_path_single(root, words)
-    return fst_try if len(fst_try) > len(snd_try) else snd_try
+    return sorted(fst_try + snd_try)
 
 
 def build_genre_path_all(root, words):
@@ -329,7 +330,7 @@ def build_genre_path_all(root, words):
                         (idx, child_idx, current_root.children[child_idx])
                 )
 
-        if not children:
+        if not children and len(_result) > 0:
             path_list.append(_result)
 
         for word_idx, child_idx, child in children:
@@ -341,7 +342,7 @@ def build_genre_path_all(root, words):
             )
 
     _iterate_recursive(root, (True, ) * len(words), ())
-    path_list.sort(key=lambda elem: len(elem), reverse=True)
+    path_list.sort()
     return path_list
 
 
@@ -373,13 +374,48 @@ def load_genre_tree(pickle_path):
 
 
 class GenreTreeProvider(DirectProvider):
-    def __init__(self):
-        # TODO: Finish thiz?
-        DirectProvider.__init__(self, 'GenreTree')
+    def __init__(self, quality='all'):
+        '''Creates a GenreTreeProvider with a certain quality.
 
-    def process(self, input_value)
+        A GenreTreeProvider will try to normalize a genre by using a Tree of
+        705 single genres that will be matched with the input genre in a fast way.
+
+        The result will be a list of Paths. A Path is a tuple of indices, representing
+        a possible way through the Tree. For debugging purpose you can use
+        GenreTreeProvider.resolve_path() on the path to get the full genre back.
+
+        The Quality levels are:
+
+            - 'all': Try to find all possible paths through the Tree, sorted
+               by the first index (which is useful for comparing.)
+            - 'single': Simply take the first possible path found. Fastest.
+            - 'best_two': Like list, but also uses the reverse word list in a
+              second try. Might give better results than 'single' at the cost
+              of some speed.
+
+        Default is 'all'.
+
+        :param quality: One of 'all', 'best_two'  'single' [default: 'all']
+        '''
+        DirectProvider.__init__(self, 'GenreTree')
+        self._root = load_genre_tree('/tmp/genre_tree.dump')
+        self._build_func = {
+            'all': build_genre_path_all,
+            'best_two': build_genre_path_best_of_two,
+            'single': build_genre_path_single
+        }.get(quality, build_genre_path_all)
+
+    def process(self, input_value):
+        result = []
         for sub_genre in prepare_genre_list(input_value):
             words = prepare_single_genre(sub_genre)
+            result += self._build_func(self._root, words)
+        return result
+
+    def resolve_path(self, path):
+        'Resolve a path like (197, 1, 0) t0 ["metal", "death", "brutal"]'
+        return self._root.resolve_path(path)
+
 
 ###########################################################################
 #                                Test Main                                #
@@ -408,11 +444,12 @@ if __name__ == '__main__':
         for path in build_genre_path_all(root, words):
             print('   ', path, root.resolve_path(path))
 
-        path = build_genre_path_best_of_two(root, words)
+        paths = build_genre_path_best_of_two(root, words)
         print('Input Genre   :', sub_genre)
         print('Prepared Words:', words)
-        print('Result Path   :', path)
-        print('Resolved      :', root.resolve_path(path))
+        print('Result Path   :', paths)
+        if paths:
+            print('Resolved      :', root.resolve_path(paths[0]))
         print('---------------')
 
     # Silly graph drawing playground ahead:
