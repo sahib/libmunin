@@ -1,4 +1,3 @@
-# This needs pyxdg
 #!/usr/bin/env python
 # encoding: utf-8
 

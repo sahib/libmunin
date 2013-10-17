@@ -7,11 +7,12 @@ import json
 import re
 
 # Pure Python Stemmer - slow as fuck.
-# TODO: Perhaps use a faster stemmer library?
-from stemming.porter2 import stem
+from Stemmer import Stemmer
+STEMMER = Stemmer('english')
 
 # Internal imports:
 from munin.provider import DirectProvider
+from munin.caching import get_cache_path
 
 '''
 Get a list of genre via echonest and try to make a Tree out of them:
@@ -83,7 +84,7 @@ class Tree:
         '''Build a index of self.children (the stemmed genre being the key)'''
         self.children.sort(key=lambda elem: elem.genre)
         for idx, child in enumerate(self.children):
-            self._index[stem(child.genre)] = idx
+            self._index[STEMMER.stemWord(child.genre)] = idx
             child.build_index_recursively()
 
     def add(self, child):
@@ -134,7 +135,7 @@ class Tree:
     def print_tree(self, _tabs=1, _idx=0):
         '''Recursively print the Tree with indentation and the stemmed variation.
         '''
-        print('    ' * _tabs, '#' + str(_idx), self.genre, stem(self.genre).join(('[', ']')))
+        print('    ' * _tabs, '#' + str(_idx), self.genre, STEMMER.stemWord(self.genre).join(('[', ']')))
         for idx, child in enumerate(self.children):
             child.print_tree(_tabs=_tabs + 1, _idx=idx)
 
@@ -250,7 +251,7 @@ def prepare_single_genre(genre):
     '''
     return list(filter(
         lambda elem: elem != '-',
-        [stem(genre.lower()) for genre in re.split('(core|[\s-])', genre) if genre.strip()]
+        [STEMMER.stemWord(genre.lower()) for genre in re.split('(core|[\s-])', genre) if genre.strip()]
     ))
 
 
@@ -398,7 +399,7 @@ class GenreTreeProvider(DirectProvider):
         :param quality: One of 'all', 'best_two'  'single' [default: 'all']
         '''
         DirectProvider.__init__(self, 'GenreTree')
-        self._root = load_genre_tree('/tmp/genre_tree.dump')
+        self._root = load_genre_tree(get_cache_path('genre_tree.dump'))
         self._build_func = {
             'all': build_genre_path_all,
             'best_two': build_genre_path_best_of_two,
@@ -429,10 +430,10 @@ if __name__ == '__main__':
         ))
         sys.exit(1)
 
-    root = load_genre_tree('genre_tree.dump')
+    root = load_genre_tree(get_cache_path('genre_tree.dump'))
 
     # Uncomment to get the whole list:
-    # root.print_tree()
+    root.print_tree()
 
     # Split the genre description and normalize each before finding the path:
     for sub_genre in prepare_genre_list(sys.argv[1]):
