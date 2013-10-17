@@ -88,8 +88,8 @@ def create_logger(name=None, log_file=None, verbosity=logging.DEBUG):
 
 if __name__ == '__main__':
     logger = create_logger('Herbert', log_file='/tmp/munin.log')
-    logger.debug('Test Message #1')
-    logger.info('Test Message #2')
-    logger.warning('Test Message #3')
-    logger.error('Test Message #4')
-    logger.critical('Test Message #5')
+    logger.debug('Hello, Im Herbert.')
+    logger.info('I will be your logging guide for today.')
+    logger.warning('You only need to call create_logger(None) for the root logger.')
+    logger.error('Afterwards you can use logging.getLogger("module") to get loggers like me!')
+    logger.critical("That's freaking cool, eh?")
