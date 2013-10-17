@@ -4,23 +4,7 @@
 
 from itertools import product
 from munin.distance import Distance
-
-
-# There does not seem to be a built-in for this.
-float_cmp = lambda a, b: abs(a - b) < 0.00000000001
-
-
-def compare_single_path(left, right):
-    '''Compare a single path with another.
-
-    :returns: The ratio of matching numbers to max. length of both.
-    '''
-    n = 0.0
-    for l, r in zip(left, right):
-        if l != r:
-            break
-        n += 1
-    return 1 - n / (max(len(left), len(right)) or 1)
+from munin.utils import float_cmp
 
 
 class GenreDistance(Distance):
@@ -31,13 +15,29 @@ class GenreDistance(Distance):
     def calculate_distance(self, lefts, rights):
         min_dist = 1.0
         for left, right in product(lefts, rights):
-            min_dist = min(min_dist, compare_single_path(left, right))
+            min_dist = min(min_dist, self.compare_single_path(left, right))
 
             # Optimization: Often we get a high value early.
             if float_cmp(min_dist, 0.0):
                 break
 
         return min_dist
+
+    def compare_single_path(self, left, right):
+        '''Compare a single path with another.
+
+        :returns: The ratio of matching numbers to max. length of both.
+        '''
+        rule = self.check_single_rule(left, right)
+        if rule is not None:
+            return rule.distance
+
+        n = 0.0
+        for l, r in zip(left, right):
+            if l != r:
+                break
+            n += 1
+        return 1 - n / (max(len(left), len(right)) or 1)
 
 
 if __name__ == '__main__':
@@ -55,11 +55,12 @@ if __name__ == '__main__':
                 ((), (), 1)
             ]
 
+            calc = GenreDistance()
             for left, right, result in inputs:
                 self.assertTrue(
-                        float_cmp(compare_single_path(left, right), result)
+                        float_cmp(calc.compare_single_path(left, right), result)
                         and
-                        float_cmp(compare_single_path(right, left), result)
+                        float_cmp(calc.compare_single_path(right, left), result)
                 )
 
     class TestGenreDistance(unittest.TestCase):
@@ -101,5 +102,15 @@ if __name__ == '__main__':
             # Passing a non-iterable:
             with self.assertRaises(TypeError):
                 calc.calculate_distance([1], [2])
+
+        def test_rule(self):
+            calc = GenreDistance()
+            calc.add_single_rule((1, 0), (0, 1), distance=0.5)
+            print(calc)
+            self.assertTrue(float_cmp(calc.calculate_distance([(1, 0)], [(0, 1)]), 0.5))
+            self.assertTrue(float_cmp(calc.calculate_distance([(0, 1)], [(1, 0)]), 0.5))
+
+            # TODO: this should not pass.
+            self.assertTrue(float_cmp(calc.calculate_distance([(1, 1)], [(1, 0)]), 0.5))
 
     unittest.main()

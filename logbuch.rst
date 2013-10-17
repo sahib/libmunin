@@ -73,3 +73,19 @@ Mit anderen Worten: Die kleinste Distanz die beim Vergleichen aller Elemente mit
 allen Elementen der anderen Liste entsteht. Ist einfach zu erklären  und gibt im
 Grunde die ordentlichsten und realitätsnahesten Ergebnisse beim Vergleichen von
 Genres.
+
+
+- class Distance: Diese Klasse könnte bereits Regeln einführen und allgemein
+  implementieren. 
+
+  Eine REgel wäre zB: 'rock' ==> 'metal':0.0 (wieder bei unseren genre beispiel,
+  soll aber allgemein sein). Die Regel heißt: Wer rock hört, hört mit einer
+  hohen Wahrscheinlichkeit auch metal. Die 0.0 ist die Distanz die dafür
+  angenommen wird (maximale ähnlichkeit.). Regeln können auch bidirektional sein:
+
+    'rock' <=> 'metal':0.0
+
+  in diesem Fall gilt auch das Inverse: Wer gern Metal hört, hört auch gern Rock.
+
+
+    
