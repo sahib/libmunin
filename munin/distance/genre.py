@@ -17,7 +17,7 @@ class GenreDistance(Distance):
         for left, right in product(lefts, rights):
             min_dist = min(min_dist, self.compare_single_path(left, right))
 
-            # Optimization: Often we get a high value early.
+            # Optimization: Often we get a low value early.
             if float_cmp(min_dist, 0.0):
                 break
 
@@ -28,7 +28,7 @@ class GenreDistance(Distance):
 
         :returns: The ratio of matching numbers to max. length of both.
         '''
-        rule = self.check_single_rule(left, right)
+        rule = self.lookup_rule(left, right)
         if rule is not None:
             return rule.distance
 
@@ -105,12 +105,11 @@ if __name__ == '__main__':
 
         def test_rule(self):
             calc = GenreDistance()
-            calc.add_single_rule((1, 0), (0, 1), distance=0.5)
-            print(calc)
-            self.assertTrue(float_cmp(calc.calculate_distance([(1, 0)], [(0, 1)]), 0.5))
-            self.assertTrue(float_cmp(calc.calculate_distance([(0, 1)], [(1, 0)]), 0.5))
+            calc.add_rule((1, 0, 1), (0, 1, 0), distance=0.5)
+            self.assertTrue(float_cmp(calc.calculate_distance([(1, 0, 1)], [(0, 1, 0)]), 0.5))
+            self.assertTrue(float_cmp(calc.calculate_distance([(0, 1, 0)], [(1, 0, 1)]), 0.5))
 
-            # TODO: this should not pass.
-            self.assertTrue(float_cmp(calc.calculate_distance([(1, 1)], [(1, 0)]), 0.5))
+            self.assertTrue(float_cmp(calc.calculate_distance([(1, 1)], [(1, 1)]), 0.0))
+            self.assertTrue(float_cmp(calc.calculate_distance([(1, 1)], [(2, 0)]), 1.0))
 
     unittest.main()

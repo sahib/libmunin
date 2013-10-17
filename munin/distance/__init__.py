@@ -5,62 +5,120 @@ import time
 
 
 class Rule:
-    def __init__(self, base, deduction, distance=0.0, is_bidir=True, timestamp=None):
-        self.timestamp = time.time() if timestamp is None else timestamp
-        self.base, self.deduction = base, deduction
-        self.distance, self.is_bidir = distance, is_bidir
+    def __init__(self, given, cons, distance=0.0, is_bidir=True):
+        # Take the current time if not
+        self._timestamp = time.time()
+        self._given, self._cons = given, cons
+        self._distance, self._is_bidir = distance, is_bidir
+
+    timestamp = property(
+            lambda self: self._timestamp,
+            doc='Return a Unix timestamp when the rule was created.'
+    )
+
+    given = property(
+            lambda self: self._given,
+            doc='The predicate of the rule (The "rock" in "rock" => "metal")'
+    )
+
+    cons = property(
+            lambda self: self._cons,
+            doc='The consequence of the rule (The "metal" in "rock" => "metal")'
+    )
+
+    distance = property(
+            lambda self: self._distance,
+            doc='The distance of the rule (1.0 = bad association, 0.0 = good one)'
+    )
+
+    is_bidir = property(
+        lambda self: self._is_bidir,
+        doc='True if the rule is bidirectional (works in both ways)'
+    )
 
 
+# TODO: Rename it to DistanceCalculator?
 class Distance:
     def __init__(self):
         # TODO: Load from/save to file.
         # TODO: Implement list rules. (does this even make sense?)
         self._rules = {}
-        self._inv_rules = {}
-
-    def add_single_rule(self, base, deduction, distance=0.0, is_bidir=True, timestamp=None):
-        if base == deduction:
-            raise ValueError(
-                'Selfmapped rules do not make sense: {a} ==> {a}'.format(
-                    a=base
-                )
-            )
-
-        rule = Rule(base, deduction, distance, is_bidir, timestamp)
-        self._rules[base] = rule
-        if is_bidir is True:
-            self._inv_rules[deduction] = rule
-
-    def remove_single_rule(self, base, deduction=None, is_bidir=True):
-        del self._inv_rules[base]
-        if is_bidir is True and deduction is not None:
-            del self._inv_rules[deduction]
 
     def __repr__(self):
+        'Simple table of rules'
         lines = []
-        for rule in self.rules():
-            lines.append(
-                '{base:<8} {symbol} {ded:<8} [{dist:+f}] ({time})'.format(
-                    base=rule.base,
-                    symbol='<=>' if rule.is_bidir else '==>',
-                    ded=rule.deduction,
-                    dist=rule.distance,
-                    time=time.asctime(time.localtime(rule.timestamp))
-                )
+        for rule in self.rule_items():
+            line = '{0:<8} {1} {2:<8} [{3:+f}] ({4})'.format(
+                rule.given, '<=>' if rule.is_bidir else '==>', rule.cons,
+                rule.distance, time=time.asctime(time.localtime(rule.timestamp))
             )
+            lines.append(line)
         return '\n'.join(lines)
 
-    def rules(self):
-        return self._rules.values()
+    ##########################
+    #  Rules Implementation  #
+    ##########################
 
-    def check_single_rule(self, elem_a, elem_b):
-        rule = self._rules.get(elem_a, self._inv_rules.get(elem_a))
-        if rule is not None and rule.deduction == elem_b:
-            return rule
+    def add_rule(self, given, cons, distance=0.0, is_bidir=True):
+        '''Add a new rule with a given predicate and a consequence.
 
-        rule = self._rules.get(elem_b, self._inv_rules.get(elem_b))
-        if rule is not None and rule.deduction == elem_a:
-            return rule
+        The rule will be saved and instead of computing the result between
+        those two elements the supplied distance will be used.
+
+        If the rule shall work in both ways you can set is_bidir to True.
+        Raises a ValueError when given and cons is the same (which is silly).
+        '''
+        if given == cons:
+            raise ValueError(
+                'Selfmapped rules do not make sense: {a} ==> {a}'.format(
+                    a=given
+                )
+            )
+
+        rule = Rule(given, cons, distance, is_bidir)
+        self._rules.setdefault(given, {})[cons] = rule
+        if is_bidir:
+            self._rules.setdefault(cons, {})[given] = rule
+
+    def remove_single_rule(self, given, cons, is_bidir=True):
+        '''Remove a single rule determined by given and cons.
+
+        If is_bidir is True, also the swapped variant will be deleted.
+        Will raise a KeyError if the rule does not exist.
+        '''
+        section = self._rules.get(given)
+        if section is not None:
+            del section[cons]
+            if len(section) is 0:
+                del self._rules[given]
+
+        if is_bidir:
+            # Swap arguments:
+            self.remove_single_rule(cons, given, is_bidir=False)
+
+    def rule_items(self):
+        'Return a set of all known rules specific to this Distance'
+        def _iterator():
+            for given, cons_dict in self._rules.items():
+                for cons, rule in cons_dict.items():
+                    yield rule
+        return set(_iterator())
+
+    def lookup_rule(self, given, cons, is_bidir=True):
+        '''Lookup a single rule.
+
+        :returns: The distance initially supplied with the rule.
+        '''
+        section = self._rules.get(given)
+        if section is not None:
+            return section.get(cons)
+
+        if is_bidir:
+            return self.lookup_rule(cons, given, is_bidir=False)
+
+    ##############################
+    #  Interface for subclasses  #
+    ##############################
 
     def calculate_distance(self, list_a, list_b):
         # Default to max. diversity:
@@ -70,15 +128,18 @@ class Distance:
 if __name__ == '__main__':
     import unittest
 
+    # TODO: Finish these.
     class DistanceTest(unittest.TestCase):
         def test_simple(self):
             dist = Distance()
-            dist.add_single_rule('rock', 'metal')
+            dist.add_rule('rock', 'metal')
 
             with self.assertRaises(ValueError):
-                dist.add_single_rule('rock', 'rock')
+                dist.add_rule('rock', 'rock')
 
-            dist.add_single_rule('pop', 'rock', is_bidir=False)
+            dist.add_rule('pop', 'rock', is_bidir=False)
             print(dist)
+            print(dist.lookup_rule('pop', 'rock'))
+            print(dist.lookup_rule('rock', 'pop'))
 
     unittest.main()
