@@ -2,92 +2,46 @@
 # encoding: utf-8
 
 
+from itertools import product
 from munin.distance import Distance
 
 
-'''
-
-    >>> a
-    [(85, 0), (190, 2), (190, 6)]
-    >>> b
-    [(85, 0), (190, 2, 0), (190, 2, 1), (190, 6)]
-    >>>
-
-
-'''
+# There does not seem to be a built-in for this.
+float_cmp = lambda a, b: abs(a - b) < 0.00000000001
 
 
 def compare_single_path(left, right):
+    '''Compare a single path with another.
+
+    :returns: The ratio of matching numbers to max. length of both.
+    '''
     n = 0.0
     for l, r in zip(left, right):
-        if l == r:
-            n += 1
-        else:
+        if l != r:
             break
-
+        n += 1
     return 1 - n / (max(len(left), len(right)) or 1)
 
 
 class GenreDistance(Distance):
-    def _calculate_distance(self, lefts, rights):
-        # sa, sb = set(lefts), set(rights)
-        # sect = sa & sb
-        # diff = (sa | sb) - sect
-        # print(sa, sb, sect, diff, sep='\n')
+    '''Distance Calculator for comparing two lists of GenrePaths.
 
-        dists = 0.0
-        tries = 0.0
-        # for a in lefts:
-        #     for b in lefts:
-        #         dists += compare_single_path(a, b)
-        #         tries += 1
-        for a, b in zip(lefts, rights):
-            dists += compare_single_path(a, b)
-            tries += 1
-
-        return (dists / tries) if tries is not 0 else 1.0
-
+    (Lists of GenrePaths as returned by the GenreTree Provider)
+    '''
     def calculate_distance(self, lefts, rights):
-        lefts = sorted(lefts)
-        rights = sorted(rights)
+        min_dist = 1.0
+        for left, right in product(lefts, rights):
+            min_dist = min(min_dist, compare_single_path(left, right))
 
-        dists, tries, r_idx = 0.0, 0, 0
-
-        for left in lefts:
-            # Optimization: Since the pathlist is sorted we can pop items that
-            # are smaller anyway (yielding a distance of 0)
-            first_index = left[0]
-            while left > rights[r_idx]:
-                # One might argue that we could increment tries here:
-                r_idx += 1
-
-            print(rights[r_idx:])
-
-            # If there's nothing left to compare we can break just fine.
-            if r_idx >= len(rights):
+            # Optimization: Often we get a high value early.
+            if float_cmp(min_dist, 0.0):
                 break
 
-            # Actually compare the selected paths.
-            for candidate in rights[r_idx:]:
-                print('     ', left, candidate)
-
-                if first_index == candidate[0]:
-                    print('      ###', compare_single_path(left, candidate))
-                    dists += compare_single_path(left, candidate)
-                    tries += 1
-                else:
-                    print('     ', 'break')
-                    break
-
-        print('Tries', tries)
-        print('Dists', dists)
-        return (dists / tries) if tries is not 0 else 1.0
+        return min_dist
 
 
 if __name__ == '__main__':
     import unittest
-
-    float_cmp = lambda a, b: abs(a - b) < 0.00000000001
 
     class TestSinglePathCompare(unittest.TestCase):
         def test_valid(self):
@@ -111,15 +65,41 @@ if __name__ == '__main__':
     class TestGenreDistance(unittest.TestCase):
         def test_valid(self):
             calc = GenreDistance()
+
+            def full_cross_compare(expected):
+                self.assertTrue(float_cmp(calc.calculate_distance(a, b), expected))
+                self.assertTrue(float_cmp(calc.calculate_distance(b, a), expected))
+                self.assertTrue(float_cmp(calc.calculate_distance(a, a), 0.0))
+                self.assertTrue(float_cmp(calc.calculate_distance(b, b), 0.0))
+
             a = [(85, 0), (190, 2), (190, 6)]
             b = [(85, 0), (190, 2, 0), (190, 2, 1), (190, 6)]
-            print('   =', calc.calculate_distance(a, b))
-            print('   =', calc.calculate_distance(b, a))
-            print('   =', calc.calculate_distance(a, a))
-            print('   =', calc.calculate_distance(b, b))
+            full_cross_compare(0.0)
+
+            a = [(1, 0), (0, 1)]
+            b = [(0, 0), (1, 0)]
+            full_cross_compare(0.0)
+
+            a = [(0, 1)]
+            b = [(1, 0)]
+            full_cross_compare(1.0)
+
+            a = [(1, 0)]
+            b = [(1, 1)]
+            full_cross_compare(0.5)
 
         def test_invalid(self):
             'Test rather unusual corner cases'
-            pass
+            calc = GenreDistance()
+            self.assertTrue(float_cmp(calc.calculate_distance([], []), 1.0))
+            self.assertTrue(float_cmp(calc.calculate_distance([], [(1, 0)]), 1.0))
+            self.assertTrue(float_cmp(calc.calculate_distance([], ['berta']), 1.0))
+
+            # Funny one (strings are iterable)
+            self.assertTrue(float_cmp(calc.calculate_distance(['berta'], ['berta']), 0.0))
+
+            # Passing a non-iterable:
+            with self.assertRaises(TypeError):
+                calc.calculate_distance([1], [2])
 
     unittest.main()

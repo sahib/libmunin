@@ -61,3 +61,15 @@ Ein Problem dass gelöst werden will:
 
     Einfach weiter im Graph traversieren und nur Attribute mit dieser lokalen 
     Attributmaske betrachten?
+
+
+17. Oktober 2013
+================
+
+Problem: (Ich nenns mal Sam): https://gist.github.com/sahib/7013716
+
+Lösung war jetzt am Ende einfach: Man nehme die Single Linkage beider Cluster.
+Mit anderen Worten: Die kleinste Distanz die beim Vergleichen aller Elemente mit
+allen Elementen der anderen Liste entsteht. Ist einfach zu erklären  und gibt im
+Grunde die ordentlichsten und realitätsnahesten Ergebnisse beim Vergleichen von
+Genres.
