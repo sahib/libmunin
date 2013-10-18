@@ -9,7 +9,6 @@ import logging.handlers
 #          Code taken from moosecat (shameless self-plagiatism)           #
 ###########################################################################
 
-
 # Loggin related
 COLORED_FORMAT = "%(asctime)s%(reset)s %(log_color)s{logsymbol} \
 %(levelname)-8s%(reset)s %(bold_blue)s[%(filename)s:%(lineno)3d]%(reset)s \

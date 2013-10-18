@@ -3,15 +3,18 @@
 
 
 from itertools import product
-from munin.distance import Distance
+from munin.distance import DistanceCalculator
 from munin.utils import float_cmp
 
 
-class GenreDistance(Distance):
-    '''Distance Calculator for comparing two lists of GenrePaths.
+class GenreDistance(DistanceCalculator):
+    '''DistanceCalculator Calculator for comparing two lists of GenrePaths.
 
     (Lists of GenrePaths as returned by the GenreTree Provider)
     '''
+    def __init__(self):
+        DistanceCalculator.__init__(self, 'genre')
+
     def calculate_distance(self, lefts, rights):
         min_dist = 1.0
         for left, right in product(lefts, rights):
