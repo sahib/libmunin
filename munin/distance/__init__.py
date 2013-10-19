@@ -7,16 +7,32 @@ import parse
 LOGGER = logging.getLogger('libmunin')
 
 
+# Parsing is done by the excellent parse module.
 RULE_PARSE_PATTERN = parse.compile(
-    '{given} {symbol:W}=> {cons} = {distance:f} [{timestamp:ti}]'
+    '{given} {is_bidir:W}=> {cons} = {distance:f} [{timestamp:ti}]'
 )
 
+# Sadly, it does not have the exact same format as std's format()
 RULE_WRITE_PATTERN = \
     '{given} {symbol} {cons} = {distance:+f} [{timestamp}]'
 
 
 class Rule:
+    '''A rule is a mapping from one element to another, associated with a weighting,
+    and a timestamp.
+
+    In less theory this means: You can weight certain pairs of input and give
+    them manually a rating (or "distance"). Even less theory you can for example
+    make a rule like this: ::
+
+        >>> Rule.from_string('Hard Rock <=> Metal = 0.25')
+        <Rule.from_string("hard rock ==> metal = +0.25 [2013-10-19T13:46:05.215541]")>
+    '''
     def __init__(self, given, cons, distance=0.0, is_bidir=True, timestamp=None):
+        '''You usually do not need to call this yourself.
+
+        Use the rules created by other modules or Rule.from_string()
+        '''
         # Take the current time if not
         self._timestamp = timestamp or datetime.datetime.today()
         self._given, self._cons = given, cons
@@ -33,10 +49,15 @@ class Rule:
         If the format could not be applied, None will be returned.
         The date in square brackets is ISO 8601 encoded.
         '''
+        # Silly workaround for allowing rules that do not have a timestamp.
+        # We just append the current date as timestamp in square brackets.
+        description = description.strip()
+        if not description.endswith(']'):
+            description += ' [' + datetime.datetime.today().isoformat() + ']'
+
         result = RULE_PARSE_PATTERN.parse(description)
         if result is not None:
-            result.named['is_bidir'] = result.named['symbol'] == '<'
-            result.named.pop('symbol')
+            result.named['is_bidir'] = (result.named['is_bidir'] == '<')
             return Rule(**result.named)
         else:
             LOGGER.warning('Unable to parse rule: ' + description)
@@ -79,7 +100,6 @@ class Rule:
 
 class DistanceCalculator:
     def __init__(self, name):
-        # TODO: Load from/save to file.
         self._rules = {}
         self._name = name
 
@@ -199,5 +219,7 @@ if __name__ == '__main__':
                     rule.format_rule(),
                     Rule.from_string(rule.format_rule()).format_rule()
             )
+
+            print(Rule.from_string('berta blues ==> hardcore herbert = 1.0'))
 
     unittest.main()
