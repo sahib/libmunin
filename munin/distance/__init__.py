@@ -98,7 +98,7 @@ class Rule:
         return '<Rule.from_string("' + self.format_rule() + '")>'
 
 
-class DistanceCalculator:
+class DistanceMeasure:
     def __init__(self, name):
         self._rules = {}
         self._name = name
@@ -112,7 +112,7 @@ class DistanceCalculator:
     ##########################
 
     def format_rules(self):
-        return '\n'.join([rule.format_rule() for rule in self.rule_items()])
+        return '\n'.join(rule.format_rule() for rule in self.rule_items())
 
     def add_rule(self, given, cons, distance=0.0, is_bidir=True):
         '''Add a new rule with a given predicate and a consequence.
@@ -152,7 +152,7 @@ class DistanceCalculator:
             self.remove_single_rule(cons, given, is_bidir=False)
 
     def rule_items(self):
-        'Return a set of all known rules specific to this DistanceCalculator'
+        'Return a set of all known rules specific to this DistanceMeasure'
         def _iterator():
             for given, cons_dict in self._rules.items():
                 for cons, rule in cons_dict.items():
@@ -202,7 +202,7 @@ if __name__ == '__main__':
 
     class DistanceTest(unittest.TestCase):
         def test_simple(self):
-            dist = DistanceCalculator(name='test')
+            dist = DistanceMeasure(name='test')
             dist.add_rule('rock', 'metal')
             self.assertTrue(len(dist.rule_items()) is 1)
 
@@ -220,6 +220,10 @@ if __name__ == '__main__':
                     Rule.from_string(rule.format_rule()).format_rule()
             )
 
-            print(Rule.from_string('berta blues ==> hardcore herbert = 1.0'))
+            # Test if the ommitted timestamp works fine:
+            self.assertEqual(
+                Rule.from_string('berta blues ==> hardcore herbert = 1.0').given,
+                'berta blues'
+            )
 
     unittest.main()
