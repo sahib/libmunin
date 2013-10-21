@@ -1,3 +1,2 @@
 parse
-python-igraph
 PyStemmer
