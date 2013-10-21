@@ -8,6 +8,19 @@ from shutil import rmtree
 from copy import copy
 
 
+'''
+:mod:`parrot` -- Dead parrot access
+===================================
+
+:synopsis: Analyze and reanimate dead parrots.
+.. moduleauthor:: Eric Cleese <eric@python.invalid>
+.. moduleauthor:: John Idle <john@python.invalid>
+
+
+Test.
+'''
+
+
 class Song(Mapping):
     '''A song is a readonly mapping of keys to values (like a readonly dict).
 
@@ -18,7 +31,9 @@ class Song(Mapping):
 
     Internally a list is used to store the values, leaving the keys in the
     Session objects - for many instances this saves a considerable amount
-    of memory. (TODO: Make some numbers [up])
+    of memory.
+
+    .. todo:: Make some numbers up to prove this :-)
     '''
     def __init__(self, session, value_dict, default_value=None):
         '''Creates a Song (a set of attributes) that behaves like a dictionary.
@@ -74,7 +89,7 @@ class Song(Mapping):
     #################################
 
     def to_dict(self):
-        'Shortcut for dict(iter(song))'
+        'Shortcut for ``dict(iter(song))``'
         return dict(iter(song))
 
 

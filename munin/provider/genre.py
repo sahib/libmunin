@@ -145,8 +145,11 @@ def unflatten_list(root):
 
     Example:
 
-        Input: ['melodic death metal', 'brutal death metal', 'j-pop']
-        Output:
+        Input: ::
+
+            ['melodic death metal', 'brutal death metal', 'j-pop']
+
+        Output: ::
 
             metal
             |-melodic death
@@ -375,6 +378,7 @@ def load_genre_tree(pickle_path):
 
 
 class GenreTreeProvider(DirectProvider):
+    'Normalize a genre by matching it agains precalculated Tree of sub genres'
     def __init__(self, quality='all'):
         '''Creates a GenreTreeProvider with a certain quality.
 
@@ -387,16 +391,16 @@ class GenreTreeProvider(DirectProvider):
 
         The Quality levels are:
 
-            - 'all': Try to find all possible paths through the Tree, sorted
+            - ``all``: Try to find all possible paths through the Tree, sorted
                by the first index (which is useful for comparing.)
-            - 'single': Simply take the first possible path found. Fastest.
-            - 'best_two': Like list, but also uses the reverse word list in a
+            - ``single``: Simply take the first possible path found. Fastest.
+            - ``best_two``: Like list, but also uses the reverse word list in a
               second try. Might give better results than 'single' at the cost
               of some speed.
 
-        Default is 'all'.
+        Default is ``all``.
 
-        :param quality: One of 'all', 'best_two'  'single' [default: 'all']
+        :param quality: One of ``all``, ``best_two``  ``single`` [*default:* ``all``]
         '''
         DirectProvider.__init__(self, 'GenreTree')
         self._root = load_genre_tree(get_cache_path('genre_tree.dump'))
@@ -407,6 +411,7 @@ class GenreTreeProvider(DirectProvider):
         }.get(quality, build_genre_path_all)
 
     def process(self, input_value):
+        'Subclassed from Provider, will be called for you on the input.'
         result = []
         for sub_genre in prepare_genre_list(input_value):
             words = prepare_single_genre(sub_genre)
@@ -414,7 +419,15 @@ class GenreTreeProvider(DirectProvider):
         return result
 
     def resolve_path(self, path):
-        'Resolve a path like (197, 1, 0) t0 ["metal", "death", "brutal"]'
+        '''Resolve a path like: ::
+
+            (197, 1, 0)
+
+        to: ::
+
+            ["metal", "death", "brutal"]
+        '''
+
         return self._root.resolve_path(path)
 
 
