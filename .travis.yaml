@@ -1,0 +1,10 @@
+language: python
+python:
+  - "3.2"
+  - "3.3"
+
+# command to install dependencies
+install: "pip install parse PyStemmer igraph --use-mirrors"
+
+# command to run tests
+script: run_tests.sh

@@ -63,6 +63,16 @@ class Rule:
             LOGGER.warning('Unable to parse rule: ' + description)
 
     def format_rule(self):
+        '''Format the rule in a way that Rule.from_string can read it.
+
+        Format: ::
+
+            "genre one <=> genre two = distance_as_float [Timestamp]"
+
+        Example: ::
+
+            "metal <=> rock = 1.0 [2013-10-18T16:22:44.395925]"
+        '''
         return RULE_WRITE_PATTERN.format(
             given=self.given, symbol='<=>' if self.is_bidir else '==>',
             cons=self.cons, distance=self.distance,
