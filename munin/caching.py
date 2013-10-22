@@ -3,6 +3,7 @@
 
 
 import os
+import os.path as path
 
 try:
     from xdg import BaseDirectory
@@ -28,14 +29,14 @@ def get_cache_path(extra_name=None):
     :param extra_name: Extra path component to append to the path (or None).
     :returns: The full path, e.g.: /home/user/.cache/libmunin/<extra_name>
     '''
-    if HAS_XDG:
+    if HAS_XDG and 0:
         base_dir = BaseDirectory.xdg_cache_home
     else:
-        base_dir = os.environ.get('XDG_CACHE_HOME') or os.path.join(os.path.expanduser('~', '.cache'))
+        base_dir = os.environ.get('XDG_CACHE_HOME') or path.join(path.expanduser('~'), '.cache')
 
-    base_dir = os.path.join(base_dir, 'libmunin')
+    base_dir = path.join(base_dir, 'libmunin')
     check_or_mkdir(base_dir)
-    return base_dir if not extra_name else os.path.join(base_dir, extra_name)
+    return base_dir if not extra_name else path.join(base_dir, extra_name)
 
 
 if __name__ == '__main__':
