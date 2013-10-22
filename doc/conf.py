@@ -20,6 +20,37 @@ import os
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('../'))
 
+###################################################
+#  Trick to mock the depedencies for readthedocs  #
+###################################################
+
+
+class Mock:
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __call__(self, *args, **kwargs):
+        return Mock()
+
+    @classmethod
+    def __getattr__(cls, name):
+        if name in ('__file__', '__path__'):
+            return '/dev/null'
+        elif name[0] == name[0].upper():
+            mockType = type(name, (), {})
+            mockType.__module__ = __name__
+            return mockType
+        else:
+            return Mock()
+
+
+MOCK_MODULES = []
+with open('../requirements.txt', 'r') as handle:
+    for line in handle:
+        mod_name, *_ = line.split(' ', maxsplit=1)
+        sys.modules[mod_name] = Mock()
+
+
 # -- General configuration -----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
