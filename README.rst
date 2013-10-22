@@ -1,6 +1,9 @@
 Installation
 ============
 
+.. image:: https://travis-ci.org/sahib/libmunin.png?branch=master   
+    :target: https://travis-ci.org/sahib/libmunin
+
 Required externam programs
 --------------------------
 
