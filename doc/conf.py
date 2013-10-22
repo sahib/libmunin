@@ -47,8 +47,8 @@ class Mock:
 MOCK_MODULES = []
 with open('../requirements.txt', 'r') as handle:
     for line in handle:
-        mod_name, *_ = line.split(' ', maxsplit=1)
-        sys.modules[mod_name] = Mock()
+        mod_name = line.split(' ', maxsplit=1)[0]
+        sys.modules[mod_name.strip()] = Mock()
 
 
 # -- General configuration -----------------------------------------------------
