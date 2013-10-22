@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+
 from munin.provider import DirectProvider
 from bidict import bidict
 

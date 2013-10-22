@@ -13,10 +13,5 @@ Reference
 
 ===========
 
-.. automodule:: munin.caching
-    :members:
-
-===========
-
 .. automodule:: munin.utils
     :members:

@@ -1,6 +1,37 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+'''Get a list of genre via echonest and try to make a Tree out of them:
+
+* Genres:  ::
+
+    Melodic Death Metal
+    Pagan Metal
+    Japan Pop
+
+* Tree: ::
+
+    music
+    |- pop
+        |- japan
+    |- metal
+        |- pagan
+        |- death
+            |- melodic
+
+
+This tree can be then used to map arbitrary genre names to a path in this tree.
+The advantage from this is that only paths (== a list of indices)
+through the tree can be saved, instead of whole genre strings.
+These indices can also be compared very easily.
+
+With above's example: ::
+
+    'Melodic death-metal' = metal -> death -> melodic (Path: 0, 1, 1, 0)
+    'Pagan Metal'         = metal -> pagan (Path: 0, 1, 0)
+    'Japan Pop Music'     = pop -> japan (Path: 0, 0, 0)
+'''
+
 import urllib.request
 import pickle
 import json
@@ -12,38 +43,7 @@ STEMMER = Stemmer('english')
 
 # Internal imports:
 from munin.provider import DirectProvider
-from munin.caching import get_cache_path
-
-'''
-Get a list of genre via echonest and try to make a Tree out of them:
-
-    Genres:
-        Melodic Death Metal
-        Pagan Metal
-        Japan Pop
-
-    Tree:
-
-        music
-        |- pop
-          |- japan
-        |- metal
-          |- pagan
-          |- death
-             |- melodic
-
-
-This tree can be then used to map arbitrary genre names to a path in this tree.
-The advantage from this is that only paths (== a list of indices)
-through the tree can be saved, instead of whole genre strings.
-These indices can also be compared very easily.
-
-With above's example:
-
-    'Melodic death-metal' = metal -> death -> melodic (Path: 0, 1, 1, 0)
-    'Pagan Metal'         = metal -> pagan (Path: 0, 1, 0)
-    'Japan Pop Music'     = pop -> japan (Path: 0, 0, 0)
-'''
+from munin.session import get_cache_path
 
 
 def load_genrelist_from_echonest(dump_path=None):

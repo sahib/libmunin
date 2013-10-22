@@ -1,15 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from collections import Mapping
-from shutil import rmtree
-from copy import copy
-
-import tarfile
-import shutil
-import pickle
-import os
-
 '''
 :mod:`parrot` -- Dead parrot access
 ===================================
@@ -18,6 +9,15 @@ import os
 .. moduleauthor:: Eric Cleese <eric@python.invalid>
 .. moduleauthor:: John Idle <john@python.invalid>
 '''
+
+from collections import Mapping
+from shutil import rmtree
+from copy import copy
+
+import tarfile
+import shutil
+import pickle
+import os
 
 try:
     from xdg import BaseDirectory

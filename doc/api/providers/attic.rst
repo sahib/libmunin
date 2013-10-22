@@ -10,3 +10,4 @@ Reference
 ---------
 
 .. automodule:: munin.provider.attic
+    :members: 
