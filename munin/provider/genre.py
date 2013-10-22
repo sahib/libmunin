@@ -426,6 +426,14 @@ class GenreTreeProvider(DirectProvider):
         to: ::
 
             ["metal", "death", "brutal"]
+
+        To get back the actual genre, do this: ::
+
+            >>> ' '.join(reversed(provider.resolve_path((197, 1, 0))))
+            "brutal death metal"
+
+        :param path: A tuple of integers.
+        :returns: A list of subgenres ordered by specialization.
         '''
 
         return self._root.resolve_path(path)
