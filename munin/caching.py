@@ -31,7 +31,7 @@ def get_cache_path(extra_name=None):
     if HAS_XDG:
         base_dir = BaseDirectory.xdg_cache_home
     else:
-        base_dir = os.environ['XDG_CACHE_HOME'] or '~/.cache/'
+        base_dir = os.environ.get('XDG_CACHE_HOME') or '~/.cache/'
 
     base_dir = os.path.join(base_dir, 'libmunin')
     check_or_mkdir(base_dir)
