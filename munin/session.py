@@ -7,6 +7,10 @@ from collections import Mapping
 from shutil import rmtree
 from copy import copy
 
+import tarfile
+import shutil
+import pickle
+import os
 
 '''
 :mod:`parrot` -- Dead parrot access
@@ -94,38 +98,86 @@ class Song(Mapping):
 
 
 class Session:
-    def __init__(self, name, attribute_mask):
+    def __init__(self, name, attribute_mask, path=None):
+        # Make access to the attribute mask more efficient
         self._attribute_mask = copy(attribute_mask)
         self._attribute_list = list(attribute_mask)
         self._listidx_to_key = {k: i for i, k in enumerate(self._attribute_list)}
+        self._path = os.path.join(path, name) if path else get_cache_path(name)
+
+        self._create_file_structure(self._path)
+
+    def _create_file_structure(self, path):
+        if os.path.isfile(path):
+            os.remove(path)
+        if os.path.isdir(path):
+            rmtree(path, ignore_errors=True)
+
+        os.mkdir(path)
+        for subdir in ['distances', 'providers', 'rules']:
+            os.mkdir(os.path.join(path, subdir))
+
+    def _compress_directory(self, path, remove=True):
+        with tarfile.open(path + '.gz', 'w:gz') as tar:
+            tar.add(path, arcname='')
+
+        if remove is True:
+            shutil.rmtree(path)
+
+    ###############################
+    #  Attribute Mask Attributes  #
+    ###############################
 
     # Make this only gettable, so we can distribute the reference
     # around all session objects.
     @property
     def attribute_mask(self):
+        'Returns a copy of the attribute mask (as passed in)'
         return copy(self._attribute_mask)
 
     @property
     def attribute_mask_len(self):
+        'Returns the length of the attribte mask (number of keys)'
         return len(self._attribute_mask)
 
     def attribute_mask_key_at_index(self, idx):
+        'Retrieve the key of the attribute mask at index ``idx``'
         return self._attribute_list[idx]
 
     def attribute_mask_index_for_key(self, key):
+        'Retrieve the index for the key given by ``key``'
         return self._listidx_to_key[key]
 
-    @staticmethod
-    def load_from(session_name):
-        base = get_cache_path(session_name)
-        os.path.join()
-        return Session(session_name, {})
+    ############################
+    #  Caching Implementation  #
+    ############################
 
-    def save_to(self, name):
-        base = get_cache_path(name)
-        if os.path.exists(path):
-            rmtree(base)
-        check_or_mkdir(base)
+    @staticmethod
+    def from_archive_path(full_path, name=None):
+        base_path, _ = os.path.splitext(full_path)
+        with tarfile.open(full_path, 'r:*') as tar:
+            tar.extractall(base_path)
+
+        with open(os.path.join(base_path, 'mask.pickle'), 'rb') as file_handle:
+            mask = pickle.load(file_handle)
+
+        name = name or os.path.basename(base_path)
+        return Session(name, mask, path=base_path)
+
+    @staticmethod
+    def from_name(session_name):
+        return Session.from_archive_path(
+                get_cache_path(session_path),
+                name=session_path
+        )
+
+    def save(self, compress=True):
+        '''Save the session (and all caches) to disk.
+        '''
+        with open(os.path.join(self._path, 'mask.pickle'), 'wb') as handle:
+            pickle.dump(self._attribute_mask, handle)
+
+        self._compress_directory(self._path)
 
 
 if __name__ == '__main__':
@@ -177,5 +229,25 @@ if __name__ == '__main__':
                 set(song.values()),
                 set(['alpine brutal death metal', 'Herbert'])
             )
+
+    class SessionTests(unittest.TestCase):
+        def setUp(self):
+            self._session = Session('session_test', {
+                'genre': None,
+                'artist': None
+            }, path='/tmp')
+
+        def test_writeout(self):
+            self._session.save()
+            path = '/tmp/session_test.gz'
+            self.assertTrue(os.path.isfile(path))
+            new_session = Session.from_archive_path(path)
+            self.assertTrue(os.path.isdir(path[:-3]))
+            self.assertEqual(
+                    new_session.attribute_mask,
+                    {'genre': None, 'artist': None}
+            )
+
+        # TODO: This needs more testing.
 
     unittest.main()

@@ -43,7 +43,7 @@ class Mock:
 
 
 MOCK_MODULES = []
-with open('../requirements.txt', 'r') as handle:
+with open('../pip_requirements.txt', 'r') as handle:
     for line in handle:
         if line.startswith('#: '):
             sys.modules[line[3:].strip()] = Mock()
