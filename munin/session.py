@@ -1,15 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-'''
-:mod:`parrot` -- Dead parrot access
-===================================
-
-:synopsis: Analyze and reanimate dead parrots.
-.. moduleauthor:: Eric Cleese <eric@python.invalid>
-.. moduleauthor:: John Idle <john@python.invalid>
-'''
-
 from collections import Mapping
 from shutil import rmtree
 from copy import copy

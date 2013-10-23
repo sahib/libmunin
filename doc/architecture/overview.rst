@@ -34,7 +34,17 @@ Inputs
 Internal
 --------
 
-.. todo:: Actually write this.
+.. digraph:: foo
+
+    node [shape=record];
+
+    distance [label="<distance>Distance" center=true];
+    distance_measure [label="<dm>DistanceMeasure"]
+    apriorio [label=""<apriori>Apriori"]
+    rule [label="<rule>Rule"]
+    
+    distance_measure -> distance [label=" calculates"]
+
 
 Outputs
 -------
