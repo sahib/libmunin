@@ -88,4 +88,17 @@ Genres.
   in diesem Fall gilt auch das Inverse: Wer gern Metal hört, hört auch gern Rock.
 
 
-    
+23. Oktober 2013
+================
+
+Das Grobe Design steht im Grunde. Es wurde ein sphinx-dummy erstellt der auf RTD 
+auch buildet. Unittest wurden für die meisten Module bereits implementiert,
+und bei jedem commit laufen die für python3 und python2 durch. Praktisch :)
+
+Grober Plan ist bis ca. 10.11 einen groben Prototypen fertig zu haben. 
+
+Sonstige Neuerungen:
+
+- Ein AtticProvider wurde implementiert. (Caching von input values)
+- Eine Songklasse wurde implementiert (ein readonly Mapping) 
+  Diese sollen dann später auch die Distanzen zu allen anderen Songs kennen.
