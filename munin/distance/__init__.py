@@ -1,10 +1,22 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+# stdlib:
 import datetime
 import logging
+
+# External:
 import parse
+
+# Internal:
+from munin.utils import SessionMapping, float_cmp
+
 LOGGER = logging.getLogger('libmunin')
+
+
+###########################################################################
+#                               Rule Class                                #
+###########################################################################
 
 
 # Parsing is done by the excellent parse module.
@@ -108,6 +120,10 @@ class Rule:
         return '<Rule.from_string("' + self.format_rule() + '")>'
 
 
+###########################################################################
+#                          DistanceMeasure Class                          #
+###########################################################################
+
 class DistanceMeasure:
     def __init__(self, name):
         self._rules = {}
@@ -207,10 +223,46 @@ class DistanceMeasure:
         return 1.0
 
 
+###########################################################################
+#                             Distance Class                              #
+###########################################################################
+
+
+class Distance(SessionMapping):
+    def __init__(self, session):
+        # Use only a list internally to save the values.
+        # Keys are stored shared in the Session object.
+        SessionMapping.__init__(self, session, default_value=None)
+
+    def weight(self):
+        results = []
+        max_weight = 0.0
+
+        # Collect a list of (weight, dists) and the max weight.
+        for key, dist in self.items():
+            if dist is not None:
+                weight = self._session.attribute_mask_weight_for_key(key)
+                max_weight = max(max_weight, weight)
+                results.append((weight, dist))
+
+        # Check for potential ZeroDivisionErrors
+        res_len = len(results)
+        if float_cmp(max_weight, 0.0) or res_len is 0:
+            return 1.0
+
+        # Return the average distance with weight applied.
+        return sum(map(lambda e: (e[0] / max_weight) * e[1], results)) / res_len
+
+
+###########################################################################
+#                               Unit tests                                #
+###########################################################################
+
 if __name__ == '__main__':
     import unittest
+    from munin.session import Session
 
-    class DistanceTest(unittest.TestCase):
+    class DistanceMeasureTest(unittest.TestCase):
         def test_simple(self):
             dist = DistanceMeasure(name='test')
             dist.add_rule('rock', 'metal')
@@ -235,5 +287,18 @@ if __name__ == '__main__':
                 Rule.from_string('berta blues ==> hardcore herbert = 1.0').given,
                 'berta blues'
             )
+
+    class DistanceTesst(unittest.TestCase):
+
+        def setUp(self):
+            self._session = Session('test', {
+                'genre': (None, None, 0.7),
+                'random': (None, None, 0.8)
+            })
+
+        def test_weight(self):
+            # TODO
+            dist = Distance(self._session)
+            self.assertTrue(float_cmp(dist.weight(), 1.0))
 
     unittest.main()

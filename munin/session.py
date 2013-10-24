@@ -45,15 +45,24 @@ def get_cache_path(extra_name=None):
     return base_dir if not extra_name else os.path.join(base_dir, extra_name)
 
 
-
-
 class Session:
     def __init__(self, name, attribute_mask, path=None):
         # Make access to the attribute mask more efficient
         self._attribute_mask = copy(attribute_mask)
-        self._attribute_list = list(attribute_mask)
+        self._attribute_list = sorted(attribute_mask)
         self._listidx_to_key = {k: i for i, k in enumerate(self._attribute_list)}
         self._path = os.path.join(path, name) if path else get_cache_path(name)
+
+        # Lookup tables for those attributes (fast access is crucial here)
+        self._key_to_providers = {}
+        self._key_to_dmeasures = {}
+        self._key_to_weighting = {}
+
+        for key, descr in self._attribute_mask.items():
+            provider, distance_measure, weight = descr
+            self._key_to_providers[key] = provider
+            self._key_to_dmeasures[key] = distance_measure
+            self._key_to_weighting[key] = weight
 
         self._create_file_structure(self._path)
 
@@ -98,6 +107,15 @@ class Session:
         'Retrieve the index for the key given by ``key``'
         return self._listidx_to_key[key]
 
+    def attribute_mask_provider_for_key(self, key):
+        return self._key_to_providers[key]
+
+    def attribute_mask_distance_measure_for_key(self, key):
+        return self._key_to_dmeasures[key]
+
+    def attribute_mask_weight_for_key(self, key):
+        return self._key_to_weighting[key]
+
     ############################
     #  Caching Implementation  #
     ############################
@@ -136,8 +154,8 @@ if __name__ == '__main__':
     class SessionTests(unittest.TestCase):
         def setUp(self):
             self._session = Session('session_test', {
-                'genre': None,
-                'artist': None
+                'genre': (None, None, 0.2),
+                'artist': (None, None, 0.3)
             }, path='/tmp')
 
         def test_writeout(self):
@@ -148,7 +166,7 @@ if __name__ == '__main__':
             self.assertTrue(os.path.isdir(path[:-3]))
             self.assertEqual(
                     new_session.attribute_mask,
-                    {'genre': None, 'artist': None}
+                    {'genre': (None, None, 0.1), 'artist': (None, None, 0.1)}
             )
 
         # TODO: This needs more testing.
