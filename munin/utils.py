@@ -6,10 +6,11 @@ Commonly utility functions used througout.
 '''
 
 from collections import Mapping, Hashable
+import sys
 
 
 # There does not seem to be a built-in for this.
-float_cmp = lambda a, b: abs(a - b) < 0.00000000001
+float_cmp = lambda a, b: abs(a - b) < sys.float_info.epsilon
 
 
 class SessionMapping(Mapping):
