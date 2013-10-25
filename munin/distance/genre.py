@@ -12,8 +12,8 @@ class GenreDistance(DistanceMeasure):
 
     (Lists of GenrePaths as returned by the GenreTree Provider)
     '''
-    def __init__(self):
-        DistanceMeasure.__init__(self, 'genre')
+    def __init__(self, provider):
+        DistanceMeasure.__init__(self, provider, 'GenreTree')
 
     def calculate_distance(self, lefts, rights):
         '''Calculate distance between two genre paths by using complete linkage.
@@ -51,6 +51,7 @@ class GenreDistance(DistanceMeasure):
 
 if __name__ == '__main__':
     import unittest
+    from munin.provider.genre import GenreTreeProvider
 
     class TestSinglePathCompare(unittest.TestCase):
         def test_valid(self):
@@ -64,7 +65,7 @@ if __name__ == '__main__':
                 ((), (), 1)
             ]
 
-            calc = GenreDistance()
+            calc = GenreDistance(GenreTreeProvider())
             for left, right, result in inputs:
                 self.assertTrue(
                         float_cmp(calc.compare_single_path(left, right), result)
@@ -74,7 +75,7 @@ if __name__ == '__main__':
 
     class TestGenreDistance(unittest.TestCase):
         def test_valid(self):
-            calc = GenreDistance()
+            calc = GenreDistance(GenreTreeProvider())
 
             def full_cross_compare(expected):
                 self.assertTrue(float_cmp(calc.calculate_distance(a, b), expected))
@@ -100,7 +101,7 @@ if __name__ == '__main__':
 
         def test_invalid(self):
             'Test rather unusual corner cases'
-            calc = GenreDistance()
+            calc = GenreDistance(GenreTreeProvider())
             self.assertTrue(float_cmp(calc.calculate_distance([], []), 1.0))
             self.assertTrue(float_cmp(calc.calculate_distance([], [(1, 0)]), 1.0))
             self.assertTrue(float_cmp(calc.calculate_distance([], ['berta']), 1.0))
@@ -113,7 +114,7 @@ if __name__ == '__main__':
                 calc.calculate_distance([1], [2])
 
         def test_rule(self):
-            calc = GenreDistance()
+            calc = GenreDistance(GenreTreeProvider())
             calc.add_rule((1, 0, 1), (0, 1, 0), distance=0.5)
             self.assertTrue(float_cmp(calc.calculate_distance([(1, 0, 1)], [(0, 1, 0)]), 0.5))
             self.assertTrue(float_cmp(calc.calculate_distance([(0, 1, 0)], [(1, 0, 1)]), 0.5))

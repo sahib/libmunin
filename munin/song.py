@@ -166,7 +166,7 @@ if __name__ == '__main__':
             })
 
             song_one.distance_add(song_two, 0.7)
-            song_one.distance_add(song_one, 421)
+            song_one.distance_add(song_one, 421)  # this should be clamped to 1
             self.assertEqual(song_one.distance_get(song_one), 0.0)
             self.assertEqual(song_one.distance_get(song_two), 0.7)
 

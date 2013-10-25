@@ -1,6 +1,20 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+'''
+.. currentmodule:: munin.session
+
+:class:`Session` is the main entrance to using libmunin.
+It implements a caching layer around the lower level API, being able to
+save a usage-*Session* for later re-use. The session data will be saved packed
+on disk as a .gzip archive.
+
+Apart from this it holds the **Attribute Mask** - in simple words:
+the part where you tell libmunin what data you have to offer and how
+you want to configure the processing of it.
+'''
+
+# Standard:
 from shutil import rmtree
 from copy import copy
 
@@ -9,11 +23,16 @@ import shutil
 import pickle
 import os
 
+# External:
 try:
     from xdg import BaseDirectory
     HAS_XDG = True
 except ImportError:
     HAS_XDG = False
+
+# Internal:
+from munin.distance import DistanceMeasure
+from munin.provider import DirectProvider
 
 
 def check_or_mkdir(path):
@@ -60,6 +79,16 @@ class Session:
 
         for key, descr in self._attribute_mask.items():
             provider, distance_measure, weight = descr
+
+            # Use the default provider:
+            if provider is None:
+                provider = DirectProvider()
+
+            # Use the standard __eq__ as default:
+            if distance_measure is None:
+                distance_measure = DistanceMeasure(provider)
+
+            # buildup the indices:
             self._key_to_providers[key] = provider
             self._key_to_dmeasures[key] = distance_measure
             self._key_to_weighting[key] = weight
@@ -141,6 +170,8 @@ class Session:
 
     def save(self, compress=True):
         '''Save the session (and all caches) to disk.
+
+        :param compress: Compress the resulting folder with **gzip**?
         '''
         with open(os.path.join(self._path, 'mask.pickle'), 'wb') as handle:
             pickle.dump(self._attribute_mask, handle)

@@ -1,6 +1,19 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+'''
+.. currentmodule:: munin.provider.attic
+
+Overview
+--------
+
+The Attic Provider is useful when the caching of a value is desired for memory
+efficieny. Instead of saving a potentially often duplicated value seperate
+only a ID to a Lookuptable is stored.
+
+Reference
+---------
+'''
 
 from munin.provider import DirectProvider
 from bidict import bidict
@@ -11,11 +24,11 @@ class AtticProvider(DirectProvider):
     def __init__(self):
         '''This provider is useful for data may suffer heavily from duplication.
 
-        Instead from passing it through like the ``DirectProvider`` we'll return
+        Instead from passing it through like :class:`munin.provider.DirectProvider` we'll return
         an index that can be compared directly too for equality.
 
         If you want to transform the index back to the actual value you
-        can use the ``lookup()`` method.
+        can use the :func:`lookup` method.
 
         .. note::
 

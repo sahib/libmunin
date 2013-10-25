@@ -4,6 +4,7 @@
 # stdlib:
 import datetime
 import logging
+from operator import eq
 
 # External:
 import parse
@@ -125,9 +126,10 @@ class Rule:
 ###########################################################################
 
 class DistanceMeasure:
-    def __init__(self, name):
+    def __init__(self, provider, name='Default'):
         self._rules = {}
         self._name = name
+        self._provider = provider
 
     def __repr__(self):
         'Prints a simple table of rules'
@@ -216,11 +218,20 @@ class DistanceMeasure:
     ##############################
 
     def get_name(self):
+        '''Return the name of this distance measure (for display purpose)'''
         return self._name
 
     def calculate_distance(self, list_a, list_b):
+        '''Compare both lists with eq by default.
+
+        This goes through both lists and counts the matching elements.
+        Order matters here.
+
+        :return: Number of matches divivded through the max length of both lists.
+        '''
         # Default to max. diversity:
-        return 1.0
+        n_max = max(len(list_a), len(list_b))
+        return 1.0 if n_max is 0 else sum(map(eq, zip(list_a, list_b))) / n_max
 
 
 ###########################################################################
@@ -256,6 +267,7 @@ class Distance(SessionMapping):
 
         # Collect a list of (weight, dists) and the max weight.
         for key, dist in self.items():
+            # Do not insert not calculated distances.
             if dist is not None:
                 weight = self._session.attribute_mask_weight_for_key(key)
                 max_weight = max(max_weight, weight)
@@ -277,10 +289,11 @@ class Distance(SessionMapping):
 if __name__ == '__main__':
     import unittest
     from munin.session import Session
+    from munin.provider import DirectProvider
 
     class DistanceMeasureTest(unittest.TestCase):
         def test_simple(self):
-            dist = DistanceMeasure(name='test')
+            dist = DistanceMeasure(provider=DirectProvider(), name='test')
             dist.add_rule('rock', 'metal')
             self.assertTrue(len(dist.rule_items()) is 1)
 

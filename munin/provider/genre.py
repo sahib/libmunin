@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-'''Get a list of genre via echonest and try to make a Tree out of them:
+'''
+Overview
+--------
+
+Get a list of genre via echonest and try to make a Tree out of them:
 
 * Genres:  ::
 
@@ -30,6 +34,12 @@ With above's example: ::
     'Melodic death-metal' = metal -> death -> melodic (Path: 0, 1, 1, 0)
     'Pagan Metal'         = metal -> pagan (Path: 0, 1, 0)
     'Japan Pop Music'     = pop -> japan (Path: 0, 0, 0)
+
+The actual Tree is of course a littler larger and gives you in most cases a path
+with 2-3 elements.
+
+Reference
+---------
 '''
 
 import urllib.request
@@ -52,6 +62,7 @@ def load_genrelist_from_echonest(dump_path=None):
     This requires a working internet connection obviously.
 
     :param dump_path: Pickle the list under this path.
+    :type dump_path: string
     :returns: a list with ~700 genres.
     '''
     URL = 'http://developer.echonest.com/api/v4/artist/list_genres?api_key=ZSIUEIVVZGJVJVWIS&format=json'
@@ -401,6 +412,7 @@ class GenreTreeProvider(DirectProvider):
         Default is ``all``.
 
         :param quality: One of ``all``, ``best_two``  ``single`` [*default:* ``all``]
+        :type quality: String
         '''
         DirectProvider.__init__(self, 'GenreTree')
         self._root = load_genre_tree(get_cache_path('genre_tree.dump'))
@@ -432,8 +444,10 @@ class GenreTreeProvider(DirectProvider):
             >>> ' '.join(reversed(provider.resolve_path((197, 1, 0))))
             "brutal death metal"
 
-        :param path: A tuple of integers.
+        :param path: The path to resolve.
+        :type path: tuple of ints
         :returns: A list of subgenres ordered by specialization.
+        :rtype: list of strings
         '''
 
         return self._root.resolve_path(path)

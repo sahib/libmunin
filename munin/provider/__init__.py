@@ -19,6 +19,9 @@ class DirectProvider(Provider):
     '''Direct Providers usually get a single input value and process them
     in some way (for example normalize them). Usually they have no sideeffects.
     '''
+    def __init__(self, name='Direct'):
+        Provider.__init__(self, name)
+
     def process(self, input_value):
         # Default Implementations will only passthrough the value.
         return input_value
