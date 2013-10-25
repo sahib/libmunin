@@ -166,7 +166,7 @@ if __name__ == '__main__':
             self.assertTrue(os.path.isdir(path[:-3]))
             self.assertEqual(
                     new_session.attribute_mask,
-                    {'genre': (None, None, 0.1), 'artist': (None, None, 0.1)}
+                    {'genre': (None, None, 0.2), 'artist': (None, None, 0.3)}
             )
 
         # TODO: This needs more testing.

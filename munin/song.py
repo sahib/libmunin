@@ -111,8 +111,8 @@ if __name__ == '__main__':
     class SongTests(unittest.TestCase):
         def setUp(self):
             self._session = Session('test', {
-                'genre': None,
-                'artist': None
+                'genre': (None, None, 0.1),
+                'artist': (None, None, 0.1)
             })
 
         def test_song_basic_mapping(self):
