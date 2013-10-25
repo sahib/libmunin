@@ -229,12 +229,28 @@ class DistanceMeasure:
 
 
 class Distance(SessionMapping):
+    ''
     def __init__(self, session):
+        '''A Distance saves the distances created by providers and boil it down
+        to a single distance float.
+
+        :param session: The session this distance belongs to. Only valid in it.
+        '''
         # Use only a list internally to save the values.
         # Keys are stored shared in the Session object.
         SessionMapping.__init__(self, session, default_value=None)
+        self._distance = self.weight()
+
+    @property
+    def distance(self):
+        'Return the condensed and weighted distance'
+        return self._distance
 
     def weight(self):
+        '''Compute the weighted distance from all seperate sources.
+
+        This is public for testing and validation.
+        '''
         results = []
         max_weight = 0.0
 
