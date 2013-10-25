@@ -4,7 +4,7 @@
 # stdlib:
 import datetime
 import logging
-from operator import eq
+from operator import ne
 
 # External:
 import parse
@@ -231,7 +231,7 @@ class DistanceMeasure:
         '''
         # Default to max. diversity:
         n_max = max(len(list_a), len(list_b))
-        return 1.0 if n_max is 0 else sum(map(eq, zip(list_a, list_b))) / n_max
+        return 1.0 if n_max is 0 else sum(map(ne, zip(list_a, list_b))) / n_max
 
 
 ###########################################################################
