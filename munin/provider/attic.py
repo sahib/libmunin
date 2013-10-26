@@ -11,6 +11,16 @@ The Attic Provider is useful when the caching of a value is desired for memory
 efficieny. Instead of saving a potentially often duplicated value seperate
 only a ID to a Lookuptable is stored.
 
+**Usage Example:** ::
+
+    >>> p = AtticProvider()
+    >>> p.process('Breaking Berta')  # First remember it...
+    1
+    >>> p.process('Breaking Berta')  # Same!
+    1
+    >>> p.process('Game of Loans')   # New values get autoincremented.
+    2
+
 Reference
 ---------
 '''

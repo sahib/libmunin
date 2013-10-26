@@ -27,7 +27,7 @@ class Song(SessionMapping, Hashable):
     def __init__(self, session, value_dict, default_value=None):
         '''Creates a Song (a set of attributes) that behaves like a dictionary.
 
-        :param session: A Session object (the session this song belongs to)
+        :param session: A Session objective (the session this song belongs to)
         :param value_dict: A mapping from the keys to the values you want to set.
         :param default_value: The value to be returned for valid but unset keys.
         '''

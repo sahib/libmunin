@@ -16,12 +16,12 @@ Get a list of genre via echonest and try to make a Tree out of them:
 * Tree: ::
 
     music
-    |- pop
-        |- japan
-    |- metal
-        |- pagan
-        |- death
-            |- melodic
+     +-- pop
+     |    +-- japan
+     +-- metal
+          +-- death
+          |    +-- melodic
+          +-- pagan
 
 
 This tree can be then used to map arbitrary genre names to a path in this tree.

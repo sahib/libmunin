@@ -22,12 +22,12 @@ LOGGER = logging.getLogger('libmunin')
 
 # Parsing is done by the excellent parse module.
 RULE_PARSE_PATTERN = parse.compile(
-    '{subject} {is_bidir:W}=> {object} = {distance:f} [{timestamp:ti}]'
+    '{subject} {is_bidir:W}=> {objective} = {distance:f} [{timestamp:ti}]'
 )
 
 # Sadly, it does not have the exact same format as std's format()
 RULE_WRITE_PATTERN = \
-    '{subject} {symbol} {object} = {distance:+f} [{timestamp}]'
+    '{subject} {symbol} {objective} = {distance:+f} [{timestamp}]'
 
 
 class Rule:
@@ -41,19 +41,19 @@ class Rule:
         >>> Rule.from_string('Hard Rock <=> Metal = 0.25')
         <Rule.from_string("hard rock ==> metal = +0.25 [2013-10-19T13:46:05.215541]")>
     '''
-    def __init__(self, subject, object, distance=0.0, is_bidir=True, timestamp=None):
+    def __init__(self, subject, objective, distance=0.0, is_bidir=True, timestamp=None):
         '''You usually do not need to call this yourself.
 
         Use the rules created by other modules or :func:`from_string()`
         '''
         # Take the current time if not
         self._timestamp = timestamp or datetime.datetime.today()
-        self._given, self._object = subject, object
+        self._given, self._objective = subject, objective
         self._distance, self._is_bidir = distance, is_bidir
 
     @staticmethod
     def from_string(description):
-        '''Converts a string formatted rule to a Rule object.
+        '''Converts a string formatted rule to a Rule objective.
 
         The format goes like this: ::
 
@@ -88,7 +88,7 @@ class Rule:
         '''
         return RULE_WRITE_PATTERN.format(
             subject=self.subject, symbol='<=>' if self.is_bidir else '==>',
-            object=self.object, distance=self.distance,
+            objective=self.objective, distance=self.distance,
             timestamp=self.timestamp.isoformat()
         )
     timestamp = property(
@@ -101,9 +101,9 @@ class Rule:
             doc='The predicate of the rule (The *"rock"* in ``"rock => metal"``)'
     )
 
-    object = property(
-            lambda self: self._object,
-            doc='The objectequence of the rule (The *"metal"* in ``"rock => metal"``)'
+    objective = property(
+            lambda self: self._objective,
+            doc='The objectiveequence of the rule (The *"metal"* in ``"rock => metal"``)'
     )
 
     distance = property(
@@ -141,62 +141,62 @@ class DistanceMeasure:
     def format_rules(self):
         return '\n'.join(rule.format_rule() for rule in self.rule_items())
 
-    def add_rule(self, subject, object, distance=0.0, is_bidir=True):
-        '''Add a new rule with a subject predicate and a objectequence.
+    def add_rule(self, subject, objective, distance=0.0, is_bidir=True):
+        '''Add a new rule with a subject predicate and a objectiveequence.
 
         The rule will be saved and instead of computing the result between
         those two elements the supplied distance will be used.
 
         If the rule shall work in both ways you can set is_bidir to True.
-        Raises a ValueError when subject and object is the same (which is silly).
+        Raises a ValueError when subject and objective is the same (which is silly).
         '''
-        if subject == object:
+        if subject == objective:
             raise ValueError(
                 'Selfmapped rules do not make sense: {a} ==> {a}'.format(
                     a=subject
                 )
             )
 
-        rule = Rule(subject, object, distance, is_bidir)
-        self._rules.setdefault(subject, {})[object] = rule
+        rule = Rule(subject, objective, distance, is_bidir)
+        self._rules.setdefault(subject, {})[objective] = rule
         if is_bidir:
-            self._rules.setdefault(object, {})[subject] = rule
+            self._rules.setdefault(objective, {})[subject] = rule
 
-    def remove_single_rule(self, subject, object, is_bidir=True):
-        '''Remove a single rule determined by subject and object.
+    def remove_single_rule(self, subject, objective, is_bidir=True):
+        '''Remove a single rule determined by subject and objective.
 
         If is_bidir is True, also the swapped variant will be deleted.
         Will raise a KeyError if the rule does not exist.
         '''
         section = self._rules.get(subject)
         if section is not None:
-            del section[object]
+            del section[objective]
             if len(section) is 0:
                 del self._rules[subject]
 
         if is_bidir:
             # Swap arguments:
-            self.remove_single_rule(object, subject, is_bidir=False)
+            self.remove_single_rule(objective, subject, is_bidir=False)
 
     def rule_items(self):
         'Return a set of all known rules specific to this DistanceMeasure'
         def _iterator():
-            for subject, object_dict in self._rules.items():
-                for object, rule in object_dict.items():
+            for subject, objective_dict in self._rules.items():
+                for objective, rule in objective_dict.items():
                     yield rule
         return set(_iterator())
 
-    def lookup_rule(self, subject, object, is_bidir=True):
+    def lookup_rule(self, subject, objective, is_bidir=True):
         '''Lookup a single rule.
 
         :returns: The distance initially supplied with the rule.
         '''
         section = self._rules.get(subject)
         if section is not None:
-            return section.get(object)
+            return section.get(objective)
 
         if is_bidir:
-            return self.lookup_rule(object, subject, is_bidir=False)
+            return self.lookup_rule(objective, subject, is_bidir=False)
 
     def save_rules(self, rule_file):
         '''Aboslute path to the rule file.'''
@@ -210,7 +210,7 @@ class DistanceMeasure:
         with open(rule_file, 'r') as handle:
             for line in handle:
                 rule = Rule.from_string(line)
-                self.add_rule(rule.subject, rule.object, rule.distance, rule.is_bidir)
+                self.add_rule(rule.subject, rule.objective, rule.distance, rule.is_bidir)
 
     ##############################
     #  Interface for subclasses  #
@@ -247,7 +247,7 @@ class Distance(SessionMapping):
         :param session: The session this distance belongs to. Only valid in it.
         '''
         # Use only a list internally to save the values.
-        # Keys are stored shared in the Session object.
+        # Keys are stored shared in the Session objective.
         SessionMapping.__init__(self, session, default_value=None)
         self._distance = self.weight()
 
@@ -301,7 +301,7 @@ if __name__ == '__main__':
 
             dist.add_rule('pop', 'rock', is_bidir=False)
             self.assertTrue(len(dist.rule_items()) is 2)
-            self.assertTrue(dist.lookup_rule('pop', 'rock').object == 'rock')
+            self.assertTrue(dist.lookup_rule('pop', 'rock').objective == 'rock')
             self.assertEqual(dist.lookup_rule('rock', 'pop'), None)
 
             rule = dist.lookup_rule('pop', 'rock')
