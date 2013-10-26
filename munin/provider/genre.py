@@ -53,7 +53,7 @@ STEMMER = Stemmer('english')
 
 # Internal imports:
 from munin.provider import DirectProvider
-from munin.session import get_cache_path
+from munin.session import get_cache_path, check_or_mkdir
 
 
 def load_genrelist_from_echonest(dump_path=None):
