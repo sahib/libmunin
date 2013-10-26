@@ -377,7 +377,6 @@ def load_genre_tree(pickle_path):
     except (OSError, IOError):
         check_or_mkdir(get_cache_path(None))
         root = build_genre_tree()
-        root = build_genre_tree()
 
         # Write it to disk for the next time:
         if root is not None:
