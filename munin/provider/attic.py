@@ -18,8 +18,14 @@ only a ID to a Lookuptable is stored.
     1
     >>> p.process('Breaking Berta')  # Same!
     1
+    >>> p.is_valid_index(2)
+    False
     >>> p.process('Game of Loans')   # New values get autoincremented.
     2
+    >>> p.is_valid_index(2)
+    True
+    >>> p.lookup(2)
+    'Game of Loans'
 
 Reference
 ---------
