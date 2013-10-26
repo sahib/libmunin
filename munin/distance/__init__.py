@@ -22,12 +22,12 @@ LOGGER = logging.getLogger('libmunin')
 
 # Parsing is done by the excellent parse module.
 RULE_PARSE_PATTERN = parse.compile(
-    '{given} {is_bidir:W}=> {cons} = {distance:f} [{timestamp:ti}]'
+    '{subject} {is_bidir:W}=> {object} = {distance:f} [{timestamp:ti}]'
 )
 
 # Sadly, it does not have the exact same format as std's format()
 RULE_WRITE_PATTERN = \
-    '{given} {symbol} {cons} = {distance:+f} [{timestamp}]'
+    '{subject} {symbol} {object} = {distance:+f} [{timestamp}]'
 
 
 class Rule:
@@ -35,27 +35,27 @@ class Rule:
     and a timestamp.
 
     In less theory this means: You can weight certain pairs of input and give
-    them manually a rating (or "distance"). Even less theory you can for example
+    them manually a rating (or *"distance"*). Even less theory you can for example
     make a rule like this: ::
 
         >>> Rule.from_string('Hard Rock <=> Metal = 0.25')
         <Rule.from_string("hard rock ==> metal = +0.25 [2013-10-19T13:46:05.215541]")>
     '''
-    def __init__(self, given, cons, distance=0.0, is_bidir=True, timestamp=None):
+    def __init__(self, subject, object, distance=0.0, is_bidir=True, timestamp=None):
         '''You usually do not need to call this yourself.
 
-        Use the rules created by other modules or Rule.from_string()
+        Use the rules created by other modules or :func:`from_string()`
         '''
         # Take the current time if not
         self._timestamp = timestamp or datetime.datetime.today()
-        self._given, self._cons = given, cons
+        self._given, self._object = subject, object
         self._distance, self._is_bidir = distance, is_bidir
 
     @staticmethod
     def from_string(description):
         '''Converts a string formatted rule to a Rule object.
 
-        The format goes like this:
+        The format goes like this: ::
 
             "metal <=> rock = 1.0 [2013-10-18T16:22:44.395925]"
 
@@ -87,24 +87,23 @@ class Rule:
             "metal <=> rock = 1.0 [2013-10-18T16:22:44.395925]"
         '''
         return RULE_WRITE_PATTERN.format(
-            given=self.given, symbol='<=>' if self.is_bidir else '==>',
-            cons=self.cons, distance=self.distance,
+            subject=self.subject, symbol='<=>' if self.is_bidir else '==>',
+            object=self.object, distance=self.distance,
             timestamp=self.timestamp.isoformat()
         )
-
     timestamp = property(
             lambda self: self._timestamp,
-            doc='Return a datetime when the rule was created.'
+            doc='Return a :class:`datetime.datetime` when the rule was created.'
     )
 
-    given = property(
+    subject = property(
             lambda self: self._given,
-            doc='The predicate of the rule (The "rock" in "rock" => "metal")'
+            doc='The predicate of the rule (The *"rock"* in ``"rock => metal"``)'
     )
 
-    cons = property(
-            lambda self: self._cons,
-            doc='The consequence of the rule (The "metal" in "rock" => "metal")'
+    object = property(
+            lambda self: self._object,
+            doc='The objectequence of the rule (The *"metal"* in ``"rock => metal"``)'
     )
 
     distance = property(
@@ -142,62 +141,62 @@ class DistanceMeasure:
     def format_rules(self):
         return '\n'.join(rule.format_rule() for rule in self.rule_items())
 
-    def add_rule(self, given, cons, distance=0.0, is_bidir=True):
-        '''Add a new rule with a given predicate and a consequence.
+    def add_rule(self, subject, object, distance=0.0, is_bidir=True):
+        '''Add a new rule with a subject predicate and a objectequence.
 
         The rule will be saved and instead of computing the result between
         those two elements the supplied distance will be used.
 
         If the rule shall work in both ways you can set is_bidir to True.
-        Raises a ValueError when given and cons is the same (which is silly).
+        Raises a ValueError when subject and object is the same (which is silly).
         '''
-        if given == cons:
+        if subject == object:
             raise ValueError(
                 'Selfmapped rules do not make sense: {a} ==> {a}'.format(
-                    a=given
+                    a=subject
                 )
             )
 
-        rule = Rule(given, cons, distance, is_bidir)
-        self._rules.setdefault(given, {})[cons] = rule
+        rule = Rule(subject, object, distance, is_bidir)
+        self._rules.setdefault(subject, {})[object] = rule
         if is_bidir:
-            self._rules.setdefault(cons, {})[given] = rule
+            self._rules.setdefault(object, {})[subject] = rule
 
-    def remove_single_rule(self, given, cons, is_bidir=True):
-        '''Remove a single rule determined by given and cons.
+    def remove_single_rule(self, subject, object, is_bidir=True):
+        '''Remove a single rule determined by subject and object.
 
         If is_bidir is True, also the swapped variant will be deleted.
         Will raise a KeyError if the rule does not exist.
         '''
-        section = self._rules.get(given)
+        section = self._rules.get(subject)
         if section is not None:
-            del section[cons]
+            del section[object]
             if len(section) is 0:
-                del self._rules[given]
+                del self._rules[subject]
 
         if is_bidir:
             # Swap arguments:
-            self.remove_single_rule(cons, given, is_bidir=False)
+            self.remove_single_rule(object, subject, is_bidir=False)
 
     def rule_items(self):
         'Return a set of all known rules specific to this DistanceMeasure'
         def _iterator():
-            for given, cons_dict in self._rules.items():
-                for cons, rule in cons_dict.items():
+            for subject, object_dict in self._rules.items():
+                for object, rule in object_dict.items():
                     yield rule
         return set(_iterator())
 
-    def lookup_rule(self, given, cons, is_bidir=True):
+    def lookup_rule(self, subject, object, is_bidir=True):
         '''Lookup a single rule.
 
         :returns: The distance initially supplied with the rule.
         '''
-        section = self._rules.get(given)
+        section = self._rules.get(subject)
         if section is not None:
-            return section.get(cons)
+            return section.get(object)
 
         if is_bidir:
-            return self.lookup_rule(cons, given, is_bidir=False)
+            return self.lookup_rule(object, subject, is_bidir=False)
 
     def save_rules(self, rule_file):
         '''Aboslute path to the rule file.'''
@@ -211,7 +210,7 @@ class DistanceMeasure:
         with open(rule_file, 'r') as handle:
             for line in handle:
                 rule = Rule.from_string(line)
-                self.add_rule(rule.given, rule.cons, rule.distance, rule.is_bidir)
+                self.add_rule(rule.subject, rule.object, rule.distance, rule.is_bidir)
 
     ##############################
     #  Interface for subclasses  #
@@ -302,7 +301,7 @@ if __name__ == '__main__':
 
             dist.add_rule('pop', 'rock', is_bidir=False)
             self.assertTrue(len(dist.rule_items()) is 2)
-            self.assertTrue(dist.lookup_rule('pop', 'rock').cons == 'rock')
+            self.assertTrue(dist.lookup_rule('pop', 'rock').object == 'rock')
             self.assertEqual(dist.lookup_rule('rock', 'pop'), None)
 
             rule = dist.lookup_rule('pop', 'rock')
@@ -313,7 +312,7 @@ if __name__ == '__main__':
 
             # Test if the ommitted timestamp works fine:
             self.assertEqual(
-                Rule.from_string('berta blues ==> hardcore herbert = 1.0').given,
+                Rule.from_string('berta blues ==> hardcore herbert = 1.0').subject,
                 'berta blues'
             )
 

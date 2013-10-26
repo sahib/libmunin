@@ -374,7 +374,7 @@ def load_genre_tree(pickle_path):
     try:
         with open(pickle_path, 'rb') as fh:
             return pickle.load(fh)
-    except OSError:
+    except (OSError, IOError):
         root = build_genre_tree()
 
         # Write it to disk for the next time:
