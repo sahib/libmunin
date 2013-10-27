@@ -27,24 +27,20 @@ Glossary
         These results are weighted, so that e.g. ``genre`` gets a higher
         precedence, and summed up to one number.
 
+        **See also:** :term:`DistanceMatrix`
+
     DistanceMatrix
 
         A **DM** caches all calculated Distances. The size of the matrix ``D``
-        is the ``NxN`` if ``N`` is the number of songs loaded in a
-        :term:`Context`.
+        is ``NxN`` if ``N`` is the number of songs loaded in a :term:`Session`.
 
         You can assume:
 
             :math:`D(i, j) = D(j, i) \forall i,j \in D`
 
-            :math:`D(i, i) = 1.0 \forall i \in D`
+            :math:`D(i, i) = 0.0 \forall i \in D`
 
-    Context
+    Session
 
-        A Context is one handle of libmunin. One Context has one Music Database
-        and one Listen History as Input and outputs Recomnendations based on
-        that. 
-
-        You can have more than one Context, and therefore more than one Stream
-        of Recomnendations.
-
+        A Session is the usage of *libmunin* over the time on one music
+        collection. It can be saved to disk and later resumed.

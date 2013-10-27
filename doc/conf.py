@@ -139,7 +139,7 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if on_rtd:
     html_theme = 'default'
 else:
-    html_theme = 'armstrong'
+    html_theme = 'sphinx_rtd_theme'
 
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -152,7 +152,7 @@ html_theme_path = ['_themes']
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-# html_title = 'libmunin ({version}) apidoc'.format(version=version)
+html_title = 'libmunin ({version}) apidoc'.format(version=version)
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None

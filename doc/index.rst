@@ -1,26 +1,40 @@
-.. libmunin api doc documentation master file, created by
-   sphinx-quickstart on Mon Oct 21 16:42:48 2013.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 ``libmunin`` Developer Manual
 =============================
 
-**libmunin** is a versatile library that can do music recomnendations based on
-datamining algorithms. You give it your music collection and use it some time
-in the background so it can learn and will give you some clever advice.
+**libmunin** is a versatile python library that can do music recomnendations
+based on datamining algorithms. You give it your music collection, some time
+to learn in the background and in return it will give you some clever
+recomnendations.
 
 If you wonder what ravens have to do with this: Go to wikipedia_. 
 
-    | *In Norse mythology, Huginn (from Old Norse "thought") and Muninn (Old Norse "memory" or "mind")*
+    | *In Norse mythology, Hugin (from Old Norse "thought") and Munin (Old Norse "memory" or "mind")*
     | *are a pair of ravens that fly all over the world, Midgard, and bring information to the god Odin.*
 
 .. _wikipedia: http://en.wikipedia.org/wiki/Huginn_and_Muninn
 
+**Key Features:**
+
+Ability to…
+
+.. hlist::
+    :columns: 2
+
+    * …recomend *N* songs to a song *X*. 
+    * …recomend *N* songs based on a certain attribute.
+    * …do mood-analysis and keyword-extraction.
+    * …create and honor Rules (like ``rock ==> metal = cool!``)
+    * …monitor the user's behaviour by creating Rules.
+    * …extend the API to fit your custom project.
+
+.. image:: _static/logo.png
+    :width: 20%
+
+
 =============================
 
 Design
-------
+======
 
 .. toctree::
     :glob: 
@@ -30,7 +44,7 @@ Design
     glossary
 
 Developer Section
------------------
+=================
 
 .. toctree::
     :glob:
@@ -40,20 +54,14 @@ Developer Section
     todo
 
 User Section
-------------
+============
 
 .. toctree::
 
     cmdline
 
-
 Indices and tables
 ==================
 
-* :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
--------
-
-[*Last build:* |today|]

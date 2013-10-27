@@ -3,17 +3,17 @@
 
 
 from itertools import product
-from munin.distance import DistanceMeasure
+from munin.distance import DistanceFunction
 from munin.utils import float_cmp
 
 
-class GenreDistance(DistanceMeasure):
-    '''DistanceMeasure Calculator for comparing two lists of GenrePaths.
+class GenreTreeDistance(DistanceFunction):
+    '''DistanceFunction Calculator for comparing two lists of GenrePaths.
 
     (Lists of GenrePaths as returned by the GenreTree Provider)
     '''
     def __init__(self, provider):
-        DistanceMeasure.__init__(self, provider, 'GenreTree')
+        DistanceFunction.__init__(self, provider, 'GenreTree')
 
     def calculate_distance(self, lefts, rights):
         '''Calculate distance between two genre paths by using complete linkage.
@@ -35,7 +35,7 @@ class GenreDistance(DistanceMeasure):
     def compare_single_path(self, left, right):
         '''Compare a single path with another.
 
-        :returns: The ratio of matching numbers to max. length of both.
+        :returns: The ratio of matching numbers divided by max. length of both.
         '''
         rule = self.lookup_rule(left, right)
         if rule is not None:
@@ -65,7 +65,7 @@ if __name__ == '__main__':
                 ((), (), 1)
             ]
 
-            calc = GenreDistance(GenreTreeProvider())
+            calc = GenreTreeDistance(GenreTreeProvider())
             for left, right, result in inputs:
                 self.assertTrue(
                         float_cmp(calc.compare_single_path(left, right), result)
@@ -73,9 +73,9 @@ if __name__ == '__main__':
                         float_cmp(calc.compare_single_path(right, left), result)
                 )
 
-    class TestGenreDistance(unittest.TestCase):
+    class TestGenreTreeDistance(unittest.TestCase):
         def test_valid(self):
-            calc = GenreDistance(GenreTreeProvider())
+            calc = GenreTreeDistance(GenreTreeProvider())
 
             def full_cross_compare(expected):
                 self.assertTrue(float_cmp(calc.calculate_distance(a, b), expected))
@@ -101,7 +101,7 @@ if __name__ == '__main__':
 
         def test_invalid(self):
             'Test rather unusual corner cases'
-            calc = GenreDistance(GenreTreeProvider())
+            calc = GenreTreeDistance(GenreTreeProvider())
             self.assertTrue(float_cmp(calc.calculate_distance([], []), 1.0))
             self.assertTrue(float_cmp(calc.calculate_distance([], [(1, 0)]), 1.0))
             self.assertTrue(float_cmp(calc.calculate_distance([], ['berta']), 1.0))
@@ -114,7 +114,7 @@ if __name__ == '__main__':
                 calc.calculate_distance([1], [2])
 
         def test_rule(self):
-            calc = GenreDistance(GenreTreeProvider())
+            calc = GenreTreeDistance(GenreTreeProvider())
             calc.add_rule((1, 0, 1), (0, 1, 0), distance=0.5)
             self.assertTrue(float_cmp(calc.calculate_distance([(1, 0, 1)], [(0, 1, 0)]), 0.5))
             self.assertTrue(float_cmp(calc.calculate_distance([(0, 1, 0)], [(1, 0, 1)]), 0.5))

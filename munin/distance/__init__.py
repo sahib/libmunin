@@ -12,7 +12,7 @@ import parse
 # Internal:
 from munin.utils import SessionMapping, float_cmp
 
-LOGGER = logging.getLogger('libmunin')
+LOGGER = logging.getLogger(__name__)
 
 
 ###########################################################################
@@ -103,7 +103,7 @@ class Rule:
 
     objective = property(
             lambda self: self._objective,
-            doc='The objectiveequence of the rule (The *"metal"* in ``"rock => metal"``)'
+            doc='The objective of the rule (The *"metal"* in ``"rock => metal"``)'
     )
 
     distance = property(
@@ -121,11 +121,24 @@ class Rule:
 
 
 ###########################################################################
-#                          DistanceMeasure Class                          #
+#                          DistanceFunction Class                          #
 ###########################################################################
 
-class DistanceMeasure:
+class DistanceFunction:
+    'A **DistanceFunction** calculates a **Distance**'
     def __init__(self, provider, name='Default'):
+        '''This class is supposed to be overriden, but can also be used
+        as fallback.
+
+        .. todo:: Write documentation for rules.
+
+        ``__call__`` is implemented as shortcut to :func:`calculate_distance`
+
+        :param provider: Provider to be used to normalize Rules.
+        :type provider: instance of :class:`munin.provider.Provider`
+        :param name: Name of the DistanceFunction (used for display)
+        :type name: String.
+        '''
         self._rules = {}
         self._name = name
         self._provider = provider
@@ -134,15 +147,21 @@ class DistanceMeasure:
         'Prints a simple table of rules'
         return self.format_rules()
 
+    def __call__(self, list_a, list_b):
+        'Shortcut for :func:`calculate_distance`'
+        return self.calculate_distance(self, list_a, list_b)
+
     ##########################
     #  Rules Implementation  #
     ##########################
 
     def format_rules(self):
+        '''Return a string with a list of rules.
+        '''
         return '\n'.join(rule.format_rule() for rule in self.rule_items())
 
     def add_rule(self, subject, objective, distance=0.0, is_bidir=True):
-        '''Add a new rule with a subject predicate and a objectiveequence.
+        '''Add a new rule with a subject predicate and a objective.
 
         The rule will be saved and instead of computing the result between
         those two elements the supplied distance will be used.
@@ -179,7 +198,7 @@ class DistanceMeasure:
             self.remove_single_rule(objective, subject, is_bidir=False)
 
     def rule_items(self):
-        'Return a set of all known rules specific to this DistanceMeasure'
+        'Return a set of all known rules specific to this DistanceFunction'
         def _iterator():
             for subject, objective_dict in self._rules.items():
                 for objective, rule in objective_dict.items():
@@ -217,7 +236,7 @@ class DistanceMeasure:
     ##############################
 
     def get_name(self):
-        '''Return the name of this distance measure (for display purpose)'''
+        '''Return the name of this DistanceFunction (for display purpose)'''
         return self._name
 
     def calculate_distance(self, list_a, list_b):
@@ -239,22 +258,41 @@ class DistanceMeasure:
 
 
 class Distance(SessionMapping):
-    ''
-    def __init__(self, session):
+    'A **Distance** between two Songs.'
+    def __init__(self, session, song_a, song_b):
         '''A Distance saves the distances created by providers and boil it down
-        to a single distance float.
+        to a single distance float by weighting the individual distances of each
+        song's attributes and building the average of it.
 
         :param session: The session this distance belongs to. Only valid in it.
+        :type session: Instance of :class:`munin.session.Session`
+        :param song_a: Song to calculate distance from.
+        :type song_a: Instance of :class:`munin.song.Song`
+        :param song_b: Song to calculate distance to.
+        :type song_b: Instance of :class:`munin.song.Song`
         '''
         # Use only a list internally to save the values.
         # Keys are stored shared in the Session objective.
         SessionMapping.__init__(self, session, default_value=None)
         self._distance = self.weight()
 
+        # Readonly properites for now:
+        self._song_a, self._song_b = song_a, song_b
+
     @property
     def distance(self):
         'Return the condensed and weighted distance'
         return self._distance
+
+    @property
+    def song_a(self):
+        'The `a` in `dist(a, b)`'
+        return self._song_a
+
+    @property
+    def song_b(self):
+        'The `b` in `dist(a, b)`'
+        return self._song_b
 
     def weight(self):
         '''Compute the weighted distance from all seperate sources.
@@ -290,9 +328,9 @@ if __name__ == '__main__':
     from munin.session import Session
     from munin.provider import DirectProvider
 
-    class DistanceMeasureTest(unittest.TestCase):
+    class DistanceFunctionTest(unittest.TestCase):
         def test_simple(self):
-            dist = DistanceMeasure(provider=DirectProvider(), name='test')
+            dist = DistanceFunction(provider=DirectProvider(), name='test')
             dist.add_rule('rock', 'metal')
             self.assertTrue(len(dist.rule_items()) is 1)
 
@@ -326,7 +364,7 @@ if __name__ == '__main__':
 
         def test_weight(self):
             # TODO
-            dist = Distance(self._session)
+            dist = Distance(self._session, None, None)
             self.assertTrue(float_cmp(dist.weight(), 1.0))
 
     unittest.main()

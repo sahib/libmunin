@@ -6,8 +6,7 @@ from collections import Hashable
 from munin.utils import SessionMapping
 from logging import getLogger
 
-
-LOGGER = getLogger('munin.song')
+LOGGER = getLogger(__name__)
 
 
 class Song(SessionMapping, Hashable):

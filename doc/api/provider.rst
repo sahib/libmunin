@@ -1,3 +1,6 @@
+
+.. _provider_chapter:
+
 Direct Provider and Indirect Providers
 ======================================
 

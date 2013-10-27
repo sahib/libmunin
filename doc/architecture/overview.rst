@@ -2,13 +2,12 @@ Overview
 ========
 
 .. figure:: /_static/arch.png
-   :width: 100%
-   :alt: You should actually see an Image here.
+    :width: 100%
+    :alt: You should actually see an Image here.
 
-   Complete Overview of one libmunin :term:`Context`.
+    Overview over a :term:`Session`.
 
-   Click the Image to enlarge.
-
+    Fullsize version: https://raw.github.com/sahib/libmunin/master/expose/arch.png
 
 -----------
 

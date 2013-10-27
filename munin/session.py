@@ -31,7 +31,7 @@ except ImportError:
     HAS_XDG = False
 
 # Internal:
-from munin.distance import DistanceMeasure
+from munin.distance import DistanceFunction
 from munin.provider import DirectProvider
 
 
@@ -86,7 +86,7 @@ class Session:
 
             # Use the standard __eq__ as default:
             if distance_measure is None:
-                distance_measure = DistanceMeasure(provider)
+                distance_measure = DistanceFunction(provider)
 
             # buildup the indices:
             self._key_to_providers[key] = provider
