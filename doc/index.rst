@@ -27,8 +27,10 @@ Ability to…
     * …monitor the user's behaviour by creating Rules.
     * …extend the API to fit your custom project.
 
-.. image:: _static/logo.png
-    :width: 20%
+.. sidebar:: Logo
+
+   .. image:: _static/logo.png
+       :width: 20%
 
 
 =============================
