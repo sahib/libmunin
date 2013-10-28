@@ -24,8 +24,10 @@ only a ID to a Lookuptable is stored.
     2
     >>> p.is_valid_index(2)
     True
-    >>> p.lookup(2)
+    >>> p.reverse(2)
     'Game of Loans'
+
+As seen above: This Provider is reversable. (``is_reversible`` will yield True)
 
 Reference
 ---------
@@ -44,13 +46,13 @@ class AtticProvider(DirectProvider):
         an index that can be compared directly too for equality.
 
         If you want to transform the index back to the actual value you
-        can use the :func:`lookup` method.
+        can use the :func:`reverse` method.
 
         .. note::
 
             Input values must be hashable for this to work.
         '''
-        DirectProvider.__init__(self, 'Attic')
+        DirectProvider.__init__(self, 'Attic', is_reversible=True)
         self._store = bidict()
         self._last_id = 0
 
@@ -61,29 +63,35 @@ class AtticProvider(DirectProvider):
         :returns: An unique index.
         '''
         if input_value in self._store:
-            return self._store[input_value]
+            return [self._store[input_value]]
 
         self._last_id += 1
         self._store[input_value] = self._last_id
-        return self._last_id
+        return [self._last_id]
 
-    def is_valid_index(self, idx):
+    def is_valid_index(self, idx_list_or_scalar):
         '''Checks if an index is valid.
 
         .. note:: All indices returned by ``process()`` should be valid.
 
-        :param idx: The index to check.
-        :returns: True if valid.
+        :param idx_list_or_scalar: The index to check.
+        :type idx_list_or_scalar: Either a single int or a list of ints.
+        :returns: True if (all are) valid.
         '''
-        return idx > 0 and idx <= self._last_id
+        is_valid = lambda idx: idx > 0 and idx <= self._last_id
+        try:
+            return all(is_valid(idx) for idx in idx_list_or_scalar)
+        except TypeError:
+            # Assume it's only one index
+            return is_valid(idx_list_or_scalar)
 
-    def lookup(self, idx):
-        '''Transform the index back to an actual value.
+    def reverse(self, idx_list):
+        '''Transform the indices back to an actual value.
 
-        :param idx: The index to transform.
+        :param idx_list: A list of indices to transform.
         '''
         # BiDict backwards mapping syntax:
-        return self._store[:idx]
+        return [self._store[:idx] for idx in idx_list]
 
 
 if __name__ == '__main__':
@@ -92,15 +100,15 @@ if __name__ == '__main__':
     class AtticTests(unittest.TestCase):
         def test_storage(self):
             provider = AtticProvider()
-            self.assertEqual(provider.process('Akrea'), 1)
-            self.assertEqual(provider.process('Akrea'), 1)
-            self.assertEqual(provider.process('akrea'), 2)
+            self.assertEqual(provider.process('Akrea'), [1])
+            self.assertEqual(provider.process('Akrea'), [1])
+            self.assertEqual(provider.process('akrea'), [2])
 
-            self.assertEqual(provider.lookup(1), 'Akrea')
-            self.assertEqual(provider.lookup(2), 'akrea')
+            self.assertEqual(provider.reverse([1]), ['Akrea'])
+            self.assertEqual(provider.reverse([2]), ['akrea'])
 
             with self.assertRaises(KeyError):
-                self.assertEqual(provider.lookup(3), None)
+                self.assertEqual(provider.reverse([3]), None)
 
             self.assertTrue(provider.is_valid_index(1))
             self.assertTrue(provider.is_valid_index(2))

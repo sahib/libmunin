@@ -102,3 +102,15 @@ Sonstige Neuerungen:
 - Ein AtticProvider wurde implementiert. (Caching von input values)
 - Eine Songklasse wurde implementiert (ein readonly Mapping) 
   Diese sollen dann später auch die Distanzen zu allen anderen Songs kennen.
+
+28. Oktober 2013
+================
+
+Gestern noch einen bugreport bei Readthedocs gefiled, die pushen auch gleich auf
+den produktionserver ohne vorher zu testen. überall Helden :)
+Hoffentlich geht der buidl bald wieder.
+
+Heute das erste mal in der Doku das Wort "injektiv" (oder auch umkehrbar
+gnnant) benutzt. Fühl mich wie in Mathematikerelch. Bin mit dem Fahrrad in die
+FH gefahren, Zwille hat in Mathe wieder Matrizen bei Koeffizienten gesehen...
+Also ganz normal der Tag bisher.

@@ -412,10 +412,12 @@ class GenreTreeProvider(DirectProvider):
 
         Default is ``all``.
 
+        This provider is reversible.
+
         :param quality: One of ``all``, ``best_two``  ``single`` [*default:* ``all``]
         :type quality: String
         '''
-        DirectProvider.__init__(self, 'GenreTree')
+        DirectProvider.__init__(self, 'GenreTree', is_reversible=True)
         self._root = load_genre_tree(get_cache_path('genre_tree.dump'))
         self._build_func = {
             'all': build_genre_path_all,
@@ -431,6 +433,14 @@ class GenreTreeProvider(DirectProvider):
             result += self._build_func(self._root, words)
         return result
 
+    def reverse(self, output_values):
+        '''Translate the paths in output_values back to genre strings.
+
+        :returns:  A list of genre strings.
+        :rtype: [str]
+        '''
+        return [' '.join(reversed(self.resolve_path(p))) for p in output_values]
+
     def resolve_path(self, path):
         '''Resolve a path like: ::
 
@@ -445,12 +455,13 @@ class GenreTreeProvider(DirectProvider):
             >>> ' '.join(reversed(provider.resolve_path((197, 1, 0))))
             "brutal death metal"
 
+        or just use :func:`reverse`.
+
         :param path: The path to resolve.
         :type path: tuple of ints
         :returns: A list of subgenres ordered by specialization.
         :rtype: list of strings
         '''
-
         return self._root.resolve_path(path)
 
 
@@ -459,59 +470,85 @@ class GenreTreeProvider(DirectProvider):
 ###########################################################################
 
 if __name__ == '__main__':
+    # TODO: Finally write some tests?
     import sys
-    if len(sys.argv) < 2:
-        print('Usage: {program} "metalcore/melodic death metal"'.format(
-            program=sys.argv[0]
-        ))
-        sys.exit(1)
 
-    root = load_genre_tree(get_cache_path('genre_tree.dump'))
+    if not '--cli' in sys.argv:
+        import unittest
 
-    # Uncomment to get the whole list:
-    root.print_tree()
+        class TestGenreTreeProvider(unittest.TestCase):
+            def test_process(self):
+                test_data = {
+                    'metalcore': ['metal core', 'metal'],
+                    'Dark Atmospheric Black Funeral Doom Metal': [
+                        'funeral doom',
+                        'dark black metal',
+                        'atmospheric black metal'
+                    ]
+                }
+                prov = GenreTreeProvider()
+                for value, expected in test_data.items():
+                    resolved = prov.reverse(prov.process(value))
+                    for expectation in expected:
+                        self.assertTrue(expectation in resolved)
 
-    # Split the genre description and normalize each before finding the path:
-    for sub_genre in prepare_genre_list(sys.argv[1]):
-        words = prepare_single_genre(sub_genre)
+        unittest.main()
 
-        print()
-        print('///////////////')
-        print('All Possible  :')
-        for path in build_genre_path_all(root, words):
-            print('   ', path, root.resolve_path(path))
+    ###########################################################################
+    #               Other commandline utility for visualization               #
+    ###########################################################################
+    else:
+        if len(sys.argv) < 2:
+            print('Usage: {program} "metalcore/melodic death metal"'.format(
+                program=sys.argv[0]
+            ))
+            sys.exit(1)
 
-        paths = build_genre_path_best_of_two(root, words)
-        print('Input Genre   :', sub_genre)
-        print('Prepared Words:', words)
-        print('Result Path   :', paths)
-        if paths:
-            print('Resolved      :', root.resolve_path(paths[0]))
-        print('---------------')
+        root = load_genre_tree(get_cache_path('genre_tree.dump'))
 
-    # Silly graph drawing playground ahead:
-    def draw_genre_path(root):
-        import networkx as nx
-        import matplotlib.pyplot as plt
+        # Uncomment to get the whole list:
+        root.print_tree()
 
-        # Build up the Tree recursively:
-        def recursive(root, _graph=None):
-            g = _graph or nx.DiGraph()
-            for child in root.children:
-                g.add_edge(root.genre, child.genre)
-                recursive(child, _graph=g)
-            return g
+        # Split the genre description and normalize each before finding the path:
+        for sub_genre in prepare_genre_list(sys.argv[1]):
+            words = prepare_single_genre(sub_genre)
 
-        graph = recursive(root)
-        nx.draw_networkx(
-             graph,
-             pos=nx.spring_layout(graph, dim=2, k=0.05, scale=100, iterations=10),
-             width=0.2, node_size=150, alpha=0.2, node_color='#A0CBE2',
-             font_size=2, arrows=False, node_shape=' '
-        )
+            print()
+            print('///////////////')
+            print('All Possible  :')
+            for path in build_genre_path_all(root, words):
+                print('   ', path, root.resolve_path(path))
 
-        plt.savefig("graph.pdf")
-        plt.savefig('graph.png', dpi=1000)
+            paths = build_genre_path_best_of_two(root, words)
+            print('Input Genre   :', sub_genre)
+            print('Prepared Words:', words)
+            print('Result Path   :', paths)
+            if paths:
+                print('Resolved      :', root.resolve_path(paths[0]))
+            print('---------------')
 
-    # Uncomment this line to enable graph writing:
-    #draw_genre_path(root)
+        # Silly graph drawing playground ahead:
+        def draw_genre_path(root):
+            import networkx as nx
+            import matplotlib.pyplot as plt
+
+            # Build up the Tree recursively:
+            def recursive(root, _graph=None):
+                g = _graph or nx.DiGraph()
+                for child in root.children:
+                    g.add_edge(root.genre, child.genre)
+                    recursive(child, _graph=g)
+                return g
+
+            graph = recursive(root)
+            nx.draw_networkx(
+                graph,
+                pos=nx.spring_layout(graph, dim=2, k=0.05, scale=100, iterations=10),
+                width=0.2, node_size=150, alpha=0.2, node_color='#A0CBE2',
+                font_size=2, arrows=False, node_shape=' '
+            )
+
+            plt.savefig("graph.pdf")
+            plt.savefig('graph.png', dpi=1000)
+        # Uncomment this line to enable graph writing:
+        #draw_genre_path(root)

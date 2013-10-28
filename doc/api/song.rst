@@ -1,11 +1,5 @@
-Session Handling
-================
-
-Overview
---------
-
-Reference
----------
+The ``Song`` Class
+==================
 
 .. automodule:: munin.session
     :members:

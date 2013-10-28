@@ -32,16 +32,42 @@ class CompositeProvider(DirectProvider):
 
         :param provider_list: A ordered list of provider objects.
         '''
+        self._provider_list = provider_list
         DirectProvider.__init__(self, 'Composite({provs})'.format(
-            provs=' | '.join(prov.get_name() for prov in provider_list)
+            provs=' | '.join(prov.get_name() for prov in provider_list),
+            is_reversible=True
         ))
+
+    def reverse(self, output_values):
+        '''Try to reverse the output_values with all providers that support that.
+
+        If a provider is encounter that has is_reversible set to False we stop
+        and return the intermediate result as best match.
+
+        (Therefore this function is not guaranteed to be fully reversible).
+        '''
+        for provider in self._provider_list:
+            if not provider.is_reversible:
+                break
+            output_values = provider.reverse(output_values)
+        return output_values
 
     def process(self, input_value):
         'Apply all providers on the input_value'
         result = input_value
-        for provider in provider_list:
+        for provider in self._provider_list:
             # Loop-prevention:
             if provider is not self:
                 r_last = provider.process(input_value)
                 result = r_last if r_last is not None else result
         return result
+
+if __name__ == '__main__':
+    import unittest
+
+    class CompositeProviderTests(unittest.TestCase):
+        def test_process(self):
+            pass
+            # TODO: Write tests.
+
+    unittest.main()

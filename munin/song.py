@@ -10,7 +10,11 @@ LOGGER = getLogger(__name__)
 
 
 class Song(SessionMapping, Hashable):
-    '''A song is a readonly mapping of keys to values (like a readonly dict).
+    '''
+    Overview
+    --------
+
+    A song is a readonly mapping of keys to values (like a readonly dict).
 
     The keys will depend on the attribute mask in the session.
     The values will be passed as value_dict to the constructor.
@@ -22,6 +26,9 @@ class Song(SessionMapping, Hashable):
     of memory.
 
     .. todo:: Make some numbers up to prove this :-)
+
+    Reference
+    ---------
     '''
     def __init__(self, session, value_dict, default_value=None):
         '''Creates a Song (a set of attributes) that behaves like a dictionary.
@@ -73,7 +80,7 @@ class Song(SessionMapping, Hashable):
     def distance_del(self, other_song):
         '''Delete the relation to ``other_song``
 
-        :raises: A **KeyError** if no such key exists.
+        :raises: A :class:`KeyError` if no such key exists.
         '''
         self._distances.pop(other_song)
         other_song._distances.pop(self)
