@@ -475,7 +475,6 @@ class GenreTreeProvider(DirectProvider):
 ###########################################################################
 
 if __name__ == '__main__':
-    # TODO: Finally write some tests?
     import sys
 
     if not '--cli' in sys.argv:

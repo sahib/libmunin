@@ -65,6 +65,18 @@ class Song(SessionMapping, Hashable):
     #  Distance Relations API  #
     ############################
 
+    def distance_compute(self, other_song):
+        # TODO: This is plain ugly.
+        common_keys = set(self.keys()) & set(other_song.keys())
+        result_distance = Distance(self._session, self, other_song)
+        for key in common_keys:
+            distance_func = self._session.attribute_mask_distance_function_for_key(key)
+            result_distance[key] = distance_func.calculate_distance(
+                    self[key],
+                    other_song[key]
+            )
+        return result_distance
+
     def distance_add(self, other_song, distance):
         '''Add a relation to ``other_song`` with a certain distance.
 

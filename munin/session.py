@@ -139,11 +139,13 @@ class Session:
     def attribute_mask_provider_for_key(self, key):
         return self._key_to_providers[key]
 
-    def attribute_mask_distance_measure_for_key(self, key):
+    def attribute_mask_distance_function_for_key(self, key):
         return self._key_to_dmeasures[key]
 
     def attribute_mask_weight_for_key(self, key):
         return self._key_to_weighting[key]
+
+    # TODO: Rename this to smth. easier.
 
     ############################
     #  Caching Implementation  #
