@@ -22,6 +22,8 @@ class GenreTreeDistance(DistanceFunction):
         :param rights: A list of Genre Paths to compare with.
         :returns: A distance between 0.0 and 1.0 (max diversity.)
         '''
+        lefts, rights = self.apply_reverse_both(lefts, rights)
+
         min_dist = 1.0
         for left, right in product(lefts, rights):
             min_dist = min(min_dist, self.compare_single_path(left, right))

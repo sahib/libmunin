@@ -59,7 +59,7 @@ class DirectProvider(Provider):
 
     def process(self, input_value):
         # Default Implementations will only passthrough the value.
-        return [input_value]
+        return (input_value, )
 
     def reverse(self, output_values):
         '''Reverse the value previously processed by :func:`process`.
@@ -86,7 +86,7 @@ class DirectProvider(Provider):
         :param output_value: A value previously returned from :func:`process`.
         :return: A value similar to the input value you gave into :func:`process`.
         '''
-        return output_values
+        return tuple(output_values)
 
 
 class IndirectProvider(Provider):

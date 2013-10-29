@@ -432,7 +432,7 @@ class GenreTreeProvider(DirectProvider):
         for sub_genre in prepare_genre_list(input_value):
             words = prepare_single_genre(sub_genre)
             result += self._build_func(self._root, words)
-        return result
+        return tuple(result)
 
     def reverse(self, output_values):
         '''Translate the paths in output_values back to genre strings.
@@ -440,7 +440,11 @@ class GenreTreeProvider(DirectProvider):
         :returns:  A list of genre strings.
         :rtype: [str]
         '''
-        return [' '.join(reversed(self.resolve_path(p))) for p in output_values]
+        results = []
+        for output_value in output_values:
+            val = (' '.join(reversed(self.resolve_path(p))) for p in output_value)
+            results.append(tuple(val))
+        return tuple(results)
 
     def resolve_path(self, path):
         '''Resolve a path like: ::
@@ -489,9 +493,9 @@ if __name__ == '__main__':
                 }
                 prov = GenreTreeProvider()
                 for value, expected in test_data.items():
-                    resolved = prov.reverse(prov.process(value))
+                    resolved = prov.reverse(tuple([prov.process(value)]))
                     for expectation in expected:
-                        self.assertTrue(expectation in resolved)
+                        self.assertTrue(expectation in resolved[0])
 
         unittest.main()
 

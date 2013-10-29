@@ -4,7 +4,6 @@
 # stdlib:
 import datetime
 import logging
-from operator import ne
 
 # External:
 import parse
@@ -126,7 +125,7 @@ class Rule:
 
 class DistanceFunction:
     'A **DistanceFunction** calculates a **Distance**'
-    def __init__(self, provider, name='Default'):
+    def __init__(self, provider, name='Default', to_reverse=None):
         '''This class is supposed to be overriden, but can also be used
         as fallback.
 
@@ -142,6 +141,7 @@ class DistanceFunction:
         self._rules = {}
         self._name = name
         self._provider = provider
+        self._to_reverse = to_reverse or []
 
     def __repr__(self):
         'Prints a simple table of rules'
@@ -243,13 +243,41 @@ class DistanceFunction:
         '''Compare both lists with eq by default.
 
         This goes through both lists and counts the matching elements.
-        Order matters here.
+        The lists are sorted in before.
 
         :return: Number of matches divivded through the max length of both lists.
         '''
+        list_a, list_b = self.apply_reverse_both(list_a, list_b)
+
         # Default to max. diversity:
         n_max = max(len(list_a), len(list_b))
-        return 1.0 if n_max is 0 else sum(map(ne, zip(list_a, list_b))) / n_max
+        if n_max is 0:
+            return 1.0
+
+        return 1.0 - sum(a == b for a, b in zip(sorted(list_a), sorted(list_b))) / n_max
+
+    def apply_reverse_both(self, lefts, rights):
+        '''Convienience function that applies :func:`apply_reverse` to both lists.
+
+        :param lefts: A list of input values.
+        :param rights: Another list of input values.
+        :return: A tuple of two lists.
+        '''
+        return self.apply_reverse(lefts), self.apply_reverse(rights)
+
+    def apply_reverse(self, input_values):
+        '''Apply the ``reverse()`` function of the providers in the ``to_reverse``
+        list passed to ``__init__()`` to each value in ``input_values.``
+        '''
+        if not self._to_reverse:
+            return input_values
+
+        return [self.apply_reverse_single(value) for value in input_values]
+
+    def apply_reverse_single(self, single_value):
+        for provider in self._to_reverse:
+            single_value = provider.reverse((single_value, ))
+        return single_value
 
 
 ###########################################################################
@@ -354,8 +382,32 @@ if __name__ == '__main__':
                 'berta blues'
             )
 
-    class DistanceTesst(unittest.TestCase):
+        def test_apply(self):
+            from munin.provider.attic import AtticProvider
+            provider = AtticProvider()
+            dist = DistanceFunction(
+                    provider=provider,
+                    to_reverse=[provider],
+                    name='test'
+            )
 
+            a = provider.process('Akrea')
+            b = provider.process('Berta')
+            c = provider.process('akrea'.capitalize())
+
+            self.assertEqual(a, (1, ))
+            self.assertEqual(b, (2, ))
+            self.assertEqual(c, (1, ))
+
+            self.assertAlmostEqual(dist.calculate_distance(a, b), 1.0)
+            self.assertAlmostEqual(dist.calculate_distance(a, c), 0.0)
+            self.assertAlmostEqual(dist.calculate_distance([], []), 1.0)
+            self.assertAlmostEqual(
+                    dist.calculate_distance(a + b, c),
+                    0.5
+            )
+
+    class DistanceTest(unittest.TestCase):
         def setUp(self):
             self._session = Session('test', {
                 'genre': (None, None, 0.7),

@@ -34,21 +34,29 @@ class CompositeProvider(DirectProvider):
         '''
         self._provider_list = provider_list
         DirectProvider.__init__(self, 'Composite({provs})'.format(
-            provs=' | '.join(prov.get_name() for prov in provider_list),
+            provs=' | '.join(prov.name for prov in provider_list),
             is_reversible=True
         ))
 
-    def reverse(self, output_values):
-        '''Try to reverse the output_values with all providers that support that.
+    @property
+    def is_reversible(self):
+        '''Checks if all providers in this composite provider are reversible.
 
-        If a provider is encounter that has is_reversible set to False we stop
-        and return the intermediate result as best match.
-
-        (Therefore this function is not guaranteed to be fully reversible).
+        :returns: True if so.
         '''
-        for provider in self._provider_list:
+        return all(provider.is_reversible for provider in self._provider_list)
+
+    def reverse(self, output_values):
+        '''Try to reverse the output_values with all known providers.
+
+        This function will only work in a sensible way if :func:`is_reversible`
+        yield `True`.
+
+        .. seealso:: :func:`munin.provider.DirectProvider.reverse`
+        '''
+        for provider in reversed(self._provider_list):
             if not provider.is_reversible:
-                break
+                raise AttributeError('Provider {p} is not reversible'.format(p=provider.name))
             output_values = provider.reverse(output_values)
         return output_values
 
@@ -58,16 +66,26 @@ class CompositeProvider(DirectProvider):
         for provider in self._provider_list:
             # Loop-prevention:
             if provider is not self:
-                r_last = provider.process(input_value)
-                result = r_last if r_last is not None else result
+                last = provider.process(result)
+                if last is None:
+                    break
+                result = last
         return result
+
 
 if __name__ == '__main__':
     import unittest
 
     class CompositeProviderTests(unittest.TestCase):
         def test_process(self):
-            pass
-            # TODO: Write tests.
+            from munin.provider.attic import AtticProvider
+            from munin.provider.genre import GenreTreeProvider
+
+            one = GenreTreeProvider()
+            two = AtticProvider()
+            prv = CompositeProvider([one, two])
+            a = prv.process('metalcore')
+            self.assertEqual(a, (1, ))
+            self.assertEqual(prv.reverse(a), one.reverse(two.reverse(a)))
 
     unittest.main()

@@ -63,11 +63,11 @@ class AtticProvider(DirectProvider):
         :returns: An unique index.
         '''
         if input_value in self._store:
-            return [self._store[input_value]]
+            return (self._store[input_value], )
 
         self._last_id += 1
         self._store[input_value] = self._last_id
-        return [self._last_id]
+        return (self._last_id, )
 
     def is_valid_index(self, idx_list_or_scalar):
         '''Checks if an index is valid.
@@ -91,7 +91,7 @@ class AtticProvider(DirectProvider):
         :param idx_list: A list of indices to transform.
         '''
         # BiDict backwards mapping syntax:
-        return [self._store[:idx] for idx in idx_list]
+        return tuple(self._store[:idx] for idx in idx_list)
 
 
 if __name__ == '__main__':
@@ -100,15 +100,15 @@ if __name__ == '__main__':
     class AtticTests(unittest.TestCase):
         def test_storage(self):
             provider = AtticProvider()
-            self.assertEqual(provider.process('Akrea'), [1])
-            self.assertEqual(provider.process('Akrea'), [1])
-            self.assertEqual(provider.process('akrea'), [2])
+            self.assertEqual(provider.process('Akrea'), (1, ))
+            self.assertEqual(provider.process('Akrea'), (1, ))
+            self.assertEqual(provider.process('akrea'), (2, ))
 
-            self.assertEqual(provider.reverse([1]), ['Akrea'])
-            self.assertEqual(provider.reverse([2]), ['akrea'])
+            self.assertEqual(provider.reverse((1, )), ('Akrea', ))
+            self.assertEqual(provider.reverse((2, )), ('akrea', ))
 
             with self.assertRaises(KeyError):
-                self.assertEqual(provider.reverse([3]), None)
+                self.assertEqual(provider.reverse((3, )), None)
 
             self.assertTrue(provider.is_valid_index(1))
             self.assertTrue(provider.is_valid_index(2))
