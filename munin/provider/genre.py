@@ -213,7 +213,7 @@ def build_genre_tree():
     try:
         with open(dump_path, 'rb') as f:
             genres = pickle.load(f)
-    except (OSError, IOError):
+    except (OSError, IOError, AttributeError):
         genres = load_genrelist_from_echonest(dump_path)
 
     # Create the root node ('music' is always optional)
@@ -374,7 +374,8 @@ def load_genre_tree(pickle_path):
     try:
         with open(pickle_path, 'rb') as fh:
             return pickle.load(fh)
-    except (OSError, IOError):
+    except (OSError, IOError, AttributeError):
+        # AttributeError might happen when the pickle file is invalid.
         check_or_mkdir(get_cache_path(None))
         root = build_genre_tree()
 
