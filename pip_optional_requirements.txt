@@ -1,0 +1,12 @@
+# Lines beginning with a #: give the import name of the package.
+# This is used to mock these packages in Sphinx.
+# The package name followed by it will be used on TravisCI to install deps.
+# See this for the exact format: http://www.pip-installer.org/en/latest/cookbook.html#requirements-files
+
+# Data Retrieval:
+#: plyr
+plyr
+
+# Optional Deps:
+#: colorlog
+colorlog

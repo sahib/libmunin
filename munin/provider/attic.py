@@ -7,7 +7,7 @@
 Overview
 --------
 
-The Attic Provider is useful when the caching of a value is desired for memory
+sphinx_rtd_themeThe Attic Provider is useful when the caching of a value is desired for memory
 efficieny. Instead of saving a potentially often duplicated value seperate
 only a ID to a Lookuptable is stored.
 

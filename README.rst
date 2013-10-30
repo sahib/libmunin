@@ -1,3 +1,18 @@
+Introduction
+============
+
+``libmunin`` is a fancy music recomnendations library which is based on
+datamining algorithms of all kind. `Bonus:` It's able to learn from you!
+I write it for my bachelor thesis and therefore it's still in developement.
+
+Documentation is build on every commit http://www.readthedocs.org:
+
+    http://libmunin-api.readthedocs.org/en/latest/
+
+Tests are run on every commit via http://travis-ci.org:
+
+    https://travis-ci.org/sahib/libmunin
+
 Installation
 ============
 
@@ -15,7 +30,7 @@ Your distribution might package it or you can compile it from here:
 
     http://pwsp.net/~qbob/moodbar-0.1.2.tar.gz
 
-The moodbar is not strictly required but recomnend.
+The moodbar is not strictly required but recomnended.
 
 Required Python Modules
 -----------------------
@@ -24,22 +39,11 @@ All modules are Python3 compatible:
 
 .. code-block:: bash
 
-    $ sudo pip install:
-        parse     # Easy string parsing.
-        PyStemmer # Stemming Library (Attention: Wrapper around C-Library)
-        igraph    # Graph Building and Plotting Framework
+    $ sudo pip install -r pip_requirements.txt --use-mirrors"
 
-Optional modules:
+Optional modules and modules useful for Data-Retrieval
+------------------------------------------------------
 
 .. code-block:: bash
 
-    $ sudo pip install < 
-        pyxdg    # Adhering to XDG_CACHE_HOME (works fine without).
-        colorlog # Colorful messages for the commandline.
-
-Useful modules for Data-Retrieval:
-
-.. code-block:: bash
-
-    $ sudo pip install
-        plyr    # Wrapper around libglyr for retrieving lyrics
+    $ sudo pip install -r pip_optional_requirements.txt --use-mirrors"
