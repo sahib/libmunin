@@ -39,11 +39,11 @@ All modules are Python3 compatible:
 
 .. code-block:: bash
 
-    $ sudo pip install -r pip_requirements.txt --use-mirrors"
+    $ sudo pip install -r pip_requirements.txt --use-mirrors
 
 Optional modules and modules useful for Data-Retrieval
 ------------------------------------------------------
 
 .. code-block:: bash
 
-    $ sudo pip install -r pip_optional_requirements.txt --use-mirrors"
+    $ sudo pip install -r pip_optional_requirements.txt --use-mirrors
