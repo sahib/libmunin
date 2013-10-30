@@ -43,7 +43,7 @@ class Song(SessionMapping, Hashable):
 
         # Insert the data to the store:
         for key, value in value_dict.items():
-            self._store[session.attribute_mask_index_for_key(key)] = value
+            self._store[session.index_for_key(key)] = value
 
         # Update hash on creation
         self._update_hash()
@@ -70,7 +70,7 @@ class Song(SessionMapping, Hashable):
         common_keys = set(self.keys()) & set(other_song.keys())
         result_distance = Distance(self._session, self, other_song)
         for key in common_keys:
-            distance_func = self._session.attribute_mask_distance_function_for_key(key)
+            distance_func = self._session.distance_function_for_key(key)
             result_distance[key] = distance_func.calculate_distance(
                     self[key],
                     other_song[key]

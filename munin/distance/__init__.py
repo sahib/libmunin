@@ -334,7 +334,7 @@ class Distance(SessionMapping):
         for key, dist in self.items():
             # Do not insert not calculated distances.
             if dist is not None:
-                weight = self._session.attribute_mask_weight_for_key(key)
+                weight = self._session.weight_for_key(key)
                 max_weight = max(max_weight, weight)
                 results.append((weight, dist))
 

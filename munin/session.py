@@ -124,28 +124,26 @@ class Session:
         return copy(self._attribute_mask)
 
     @property
-    def attribute_mask_len(self):
+    def mask_length(self):
         'Returns the length of the attribte mask (number of keys)'
         return len(self._attribute_mask)
 
-    def attribute_mask_key_at_index(self, idx):
+    def key_at_index(self, idx):
         'Retrieve the key of the attribute mask at index ``idx``'
         return self._attribute_list[idx]
 
-    def attribute_mask_index_for_key(self, key):
+    def index_for_key(self, key):
         'Retrieve the index for the key given by ``key``'
         return self._listidx_to_key[key]
 
-    def attribute_mask_provider_for_key(self, key):
+    def provider_for_key(self, key):
         return self._key_to_providers[key]
 
-    def attribute_mask_distance_function_for_key(self, key):
+    def distance_function_for_key(self, key):
         return self._key_to_dmeasures[key]
 
-    def attribute_mask_weight_for_key(self, key):
+    def weight_for_key(self, key):
         return self._key_to_weighting[key]
-
-    # TODO: Rename this to smth. easier.
 
     ############################
     #  Caching Implementation  #
