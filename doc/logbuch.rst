@@ -1,5 +1,8 @@
+Logbuch: developement log (german)
+==================================
+
 14. Oktober 2013
-================
+----------------
 
 Das erste Problem wurde gesichtet: Genre Normalisierung. (Ich nenn es Sören.)
 Lösungsansatz mit einem Genre-Baum der von einer Genre-Liste von echonest
@@ -24,7 +27,7 @@ liefert: ::
   Man beachte die teilweise angegebenen Genre Namen!
 
 15. Oktober 2013
-================
+----------------
 
 Die tolle iisys Hardware macht mal wieder Probleme. Heureka. Kein Internet.
 
@@ -36,7 +39,7 @@ Die tolle iisys Hardware macht mal wieder Probleme. Heureka. Kein Internet.
     http://marsyas.info/
 
 16. Oktober 2013
-================
+----------------
 
 Hardware geht wieder... waren zu blöd zu merken dass es da noch ne externe NIC
 gab. Die geht dann auch problemlos. Schade dass wir dafür nicht bezahlt wurden
@@ -64,7 +67,7 @@ Ein Problem dass gelöst werden will:
 
 
 17. Oktober 2013
-================
+----------------
 
 Problem: (Ich nenns mal Sam): https://gist.github.com/sahib/7013716
 
@@ -89,7 +92,7 @@ Genres.
 
 
 23. Oktober 2013
-================
+----------------
 
 Das Grobe Design steht im Grunde. Es wurde ein sphinx-dummy erstellt der auf RTD 
 auch buildet. Unittest wurden für die meisten Module bereits implementiert,
@@ -104,7 +107,7 @@ Sonstige Neuerungen:
   Diese sollen dann später auch die Distanzen zu allen anderen Songs kennen.
 
 28. Oktober 2013
-================
+----------------
 
 Gestern noch einen bugreport bei Readthedocs gefiled, die pushen auch gleich auf
 den produktionserver ohne vorher zu testen. überall Helden :)
@@ -116,7 +119,7 @@ FH gefahren, Zwille hat in Mathe wieder Matrizen bei Koeffizienten gesehen...
 Also ganz normal der Tag bisher.
 
 30. Oktober 2013
-================
+----------------
 
 Heute lange Diskussion mit Katzen über beide Projekte (morgen nochmal
 detailliert über seins). Neue Erkenntnis:

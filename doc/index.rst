@@ -54,6 +54,7 @@ Developer Section
 
     api/*
     todo
+    logbuch
 
 User Section
 ============
