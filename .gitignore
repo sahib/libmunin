@@ -25,3 +25,5 @@ _build
 *.synctex.gz
 *.dump
 __pycache__
+.ropeproject
+doc/_themes

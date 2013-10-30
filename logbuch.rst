@@ -114,3 +114,16 @@ Heute das erste mal in der Doku das Wort "injektiv" (oder auch umkehrbar
 gnnant) benutzt. Fühl mich wie in Mathematikerelch. Bin mit dem Fahrrad in die
 FH gefahren, Zwille hat in Mathe wieder Matrizen bei Koeffizienten gesehen...
 Also ganz normal der Tag bisher.
+
+30. Oktober 2013
+================
+
+Heute lange Diskussion mit Katzen über beide Projekte (morgen nochmal
+detailliert über seins). Neue Erkenntnis:
+
+    - Regeln gelten pro Key in der Attributmaske
+    - Eine Distanzmatrix ist schlicht zu teuer.
+    - Graph wird direkt aus Songliste gebaut. 
+    - Jeder Song speichert N ähnlichste Songs. (N wählbar, sessionweit)
+
+Sonstiger Grundtenor: Die Lösung ist schenjal. Im Babsi-Sinne, also negativ :)
