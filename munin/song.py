@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 
+from bisect import bisect, insort
 from collections import Hashable
 from logging import getLogger
 LOGGER = getLogger(__name__)
@@ -59,10 +60,6 @@ class Song(SessionMapping, Hashable):
         self._neighbors = neighbors
         self._max_distance = max_distance
 
-        # The worst song we have in self._distances.
-        # This is used to delete it in constant time.
-        self._worst_song = None
-
         # Update hash on creation
         self._update_hash()
 
@@ -97,6 +94,8 @@ class Song(SessionMapping, Hashable):
     def distance_add(self, other_song, distance, _bidir=True):
         '''Add a relation to ``other_song`` with a certain distance.
 
+        .. note:: Currently this function has a complexity of O(n)
+
         :param other_song: The song to add a relation to. Will also add a
                            relation in other_song to self with same Distance.
         :type other_song: :class:`munin.song.Song`
@@ -107,16 +106,14 @@ class Song(SessionMapping, Hashable):
         dist_value = distance.distance
         if dist_value <= self._max_distance:
             if len(self._distances) > self._neighbors:
-                # delete the worst one.
-                if self._worst_song is not None:
-                    self._distances[self._worst_song].pop()
+                # Find the worst song in the dictionary
+                worst_song, _ = max(self._distances.items(), key=lambda x: x[1])
+
+                # delete the worst one to make place:
+                self._distances.pop(worst_song)
 
             # Add the relation:
             self._distances[other_song] = distance
-
-            # Check if we've found a new worst-song:
-            if self._worst_song is None or dist_value < self._distances[self._worst_song].distance:
-                self._worst_song = other_song
 
         # Repeat procedure for the other song:
         if _bidir is True:
@@ -219,6 +216,7 @@ if __name__ == '__main__':
                 'artist': 'Gustl'
             })
 
+            # Mock the distance class (so we need no session)
             class DistanceDummy:
                 def __init__(self, d):
                     self.distance = d
@@ -226,26 +224,38 @@ if __name__ == '__main__':
                 def __eq__(self, other):
                     return self.distance == other.distance
 
+                def __lt__(self, other):
+                    return self.distance > other.distance
+
+                def __repr__(self):
+                    return str(self.distance)
+
             song_one.distance_add(song_two, DistanceDummy(0.7))
             song_one.distance_add(song_one, DistanceDummy(421))  # this should be clamped to 1
             self.assertEqual(song_one.distance_get(song_one), DistanceDummy(0.0))
             self.assertEqual(song_one.distance_get(song_two), DistanceDummy(0.7))
 
-            # TODO: Test neighbors and max_distance parameter.
-            song_two = Song(self._session, {
-                'genre': 0
+            # Check if max_distance works correctly
+            prev_len = len(song_one._distances)
+            song_one.distance_add(song_two, DistanceDummy(1.0))
+            self.assertEqual(len(song_one._distances), prev_len)
+
+            # Test "only keep the best songs"
+            song_base = Song(self._session, {
+                'genre': 0,
                 'artist': 0
             })
 
-            N = 101
+            N = 200
             for idx in range(1, N + 1):
                 song = Song(self._session, {
                     'genre': str(idx),
                     'artist': str(idx)
                 })
-
                 song_base.distance_add(song, DistanceDummy(idx / N))
 
-
+            values = sorted(song_base._distances.items(), key=lambda x: x[1])
+            self.assertEqual(values[+0][1].distance, (N - 1) / N)
+            self.assertEqual(values[-1][1].distance, (N - 100 - 1) / N)
 
     unittest.main()

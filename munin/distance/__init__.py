@@ -302,6 +302,12 @@ class Distance(SessionMapping):
         SessionMapping.__init__(self, session, dist_dict, default_value=None)
         self._distance = self.weight()
 
+    def __eq__(self, other):
+        return float_cmp(self.distance, other.distance)
+
+    def __lt__(self, other):
+        return self.distance < other.distance
+
     @property
     def distance(self):
         'Return the condensed and weighted distance'
