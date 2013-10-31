@@ -3,10 +3,12 @@
 
 
 from collections import Hashable
-from munin.utils import SessionMapping
 from logging import getLogger
-
 LOGGER = getLogger(__name__)
+
+
+from munin.distance import Distance
+from munin.utils import SessionMapping, float_cmp
 
 
 class Song(SessionMapping, Hashable):
@@ -30,20 +32,36 @@ class Song(SessionMapping, Hashable):
     Reference
     ---------
     '''
-    def __init__(self, session, value_dict, default_value=None):
+    def __init__(self, session, value_dict, neighbors=100, max_distance=0.999, default_value=None):
         '''Creates a Song (a set of attributes) that behaves like a dictionary.
 
         :param session: A Session objective (the session this song belongs to)
+        :type session: :class:`munin.session.Session`
         :param value_dict: A mapping from the keys to the values you want to set.
+        :type value_dict: Mapping
         :param default_value: The value to be returned for valid but unset keys.
+        :param neighbors: max. numbers of neighbor-distances to save.
+        :type neighbor: positive int
+        :param max_distance: The minimal distance for :func:`distance_add` -
+                             You should try to keep this small (i.e. only
+                             filter 1.0 distances)
+        :type max_distance: float
         '''
         # Make sure the list is as long as the attribute_mask
-        SessionMapping.__init__(self, session, default_value=default_value)
+        SessionMapping.__init__(
+                self, session,
+                input_dict=value_dict,
+                default_value=default_value
+        )
         self._distances = {}
 
-        # Insert the data to the store:
-        for key, value in value_dict.items():
-            self._store[session.index_for_key(key)] = value
+        # Settings:
+        self._neighbors = neighbors
+        self._max_distance = max_distance
+
+        # The worst song we have in self._distances.
+        # This is used to delete it in constant time.
+        self._worst_song = None
 
         # Update hash on creation
         self._update_hash()
@@ -66,28 +84,43 @@ class Song(SessionMapping, Hashable):
     ############################
 
     def distance_compute(self, other_song):
-        # TODO: This is plain ugly.
+        distance_dict = {}
         common_keys = set(self.keys()) & set(other_song.keys())
-        result_distance = Distance(self._session, self, other_song)
         for key in common_keys:
             distance_func = self._session.distance_function_for_key(key)
-            result_distance[key] = distance_func.calculate_distance(
+            distance_dict[key] = distance_func.calculate_distance(
                     self[key],
                     other_song[key]
             )
-        return result_distance
+        return Distance(self._session, distance_dict)
 
-    def distance_add(self, other_song, distance):
+    def distance_add(self, other_song, distance, _bidir=True):
         '''Add a relation to ``other_song`` with a certain distance.
 
-        :raises: A **KeyError** if no such key exists.
+        :param other_song: The song to add a relation to. Will also add a
+                           relation in other_song to self with same Distance.
+        :type other_song: :class:`munin.song.Song`
+        :param distance: The Distance to add to the "edge".
+        :type distance: :class:`munin.distance.Distance`
         '''
         # Make sure that same songs always get 0.0 as distance.
-        if hash(self) == hash(other_song):
-            distance = 0.0
+        dist_value = distance.distance
+        if dist_value <= self._max_distance:
+            if len(self._distances) > self._neighbors:
+                # delete the worst one.
+                if self._worst_song is not None:
+                    self._distances[self._worst_song].pop()
 
-        self._distances[other_song] = distance
-        other_song._distances[self] = distance
+            # Add the relation:
+            self._distances[other_song] = distance
+
+            # Check if we've found a new worst-song:
+            if self._worst_song is None or dist_value < self._distances[self._worst_song].distance:
+                self._worst_song = other_song
+
+        # Repeat procedure for the other song:
+        if _bidir is True:
+            other_song.distance_add(self, distance, _bidir=False)
 
     def distance_del(self, other_song):
         '''Delete the relation to ``other_song``
@@ -104,7 +137,10 @@ class Song(SessionMapping, Hashable):
         :param default_value: The default value to return (default to None)
         :returns: A Distance.
         '''
-        return self._distances.get(other_song, default_value)
+        if self is other_song:
+            return self.distance_compute(self)
+        else:
+            return self._distances.get(other_song, default_value)
 
     #################################
     #  Additional helper functions  #
@@ -183,9 +219,18 @@ if __name__ == '__main__':
                 'artist': 'Gustl'
             })
 
-            song_one.distance_add(song_two, 0.7)
-            song_one.distance_add(song_one, 421)  # this should be clamped to 1
-            self.assertEqual(song_one.distance_get(song_one), 0.0)
-            self.assertEqual(song_one.distance_get(song_two), 0.7)
+            class DistanceDummy:
+                def __init__(self, d):
+                    self.distance = d
+
+                def __eq__(self, other):
+                    return self.distance == other.distance
+
+            song_one.distance_add(song_two, DistanceDummy(0.7))
+            song_one.distance_add(song_one, DistanceDummy(421))  # this should be clamped to 1
+            self.assertEqual(song_one.distance_get(song_one), DistanceDummy(0.0))
+            self.assertEqual(song_one.distance_get(song_two), DistanceDummy(0.7))
+
+            # TODO: Test neighbors and max_distance parameter.
 
     unittest.main()

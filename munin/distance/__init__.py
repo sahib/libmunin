@@ -287,64 +287,48 @@ class DistanceFunction:
 
 class Distance(SessionMapping):
     'A **Distance** between two Songs.'
-    def __init__(self, session, song_a, song_b):
+    def __init__(self, session, dist_dict):
         '''A Distance saves the distances created by providers and boil it down
         to a single distance float by weighting the individual distances of each
         song's attributes and building the average of it.
 
         :param session: The session this distance belongs to. Only valid in it.
         :type session: Instance of :class:`munin.session.Session`
-        :param song_a: Song to calculate distance from.
-        :type song_a: Instance of :class:`munin.song.Song`
-        :param song_b: Song to calculate distance to.
-        :type song_b: Instance of :class:`munin.song.Song`
+        :param dist_dict: A mapping to read the distance values from.
+        :type dist_dict: mapping<str, float>
         '''
         # Use only a list internally to save the values.
         # Keys are stored shared in the Session objective.
-        SessionMapping.__init__(self, session, default_value=None)
+        SessionMapping.__init__(self, session, dist_dict, default_value=None)
         self._distance = self.weight()
-
-        # Readonly properites for now:
-        self._song_a, self._song_b = song_a, song_b
 
     @property
     def distance(self):
         'Return the condensed and weighted distance'
         return self._distance
 
-    @property
-    def song_a(self):
-        'The `a` in `dist(a, b)`'
-        return self._song_a
-
-    @property
-    def song_b(self):
-        'The `b` in `dist(a, b)`'
-        return self._song_b
-
     def weight(self):
         '''Compute the weighted distance from all seperate sources.
 
         This is public for testing and validation.
         '''
-        results = []
-        max_weight = 0.0
+        weight_sum = 0.0
+        distwg_sum = 0.0
 
         # Collect a list of (weight, dists) and the max weight.
         for key, dist in self.items():
             # Do not insert not calculated distances.
             if dist is not None:
                 weight = self._session.weight_for_key(key)
-                max_weight = max(max_weight, weight)
-                results.append((weight, dist))
+                weight_sum += weight
+                distwg_sum += dist * weight
 
         # Check for potential ZeroDivisionErrors
-        res_len = len(results)
-        if float_cmp(max_weight, 0.0) or res_len is 0:
+        if float_cmp(weight_sum, 0.0):
             return 1.0
 
         # Return the average distance with weight applied.
-        return sum(map(lambda e: (e[0] / max_weight) * e[1], results)) / res_len
+        return distwg_sum / weight_sum
 
 
 ###########################################################################
@@ -410,13 +394,16 @@ if __name__ == '__main__':
     class DistanceTest(unittest.TestCase):
         def setUp(self):
             self._session = Session('test', {
-                'genre': (None, None, 0.7),
-                'random': (None, None, 0.8)
+                'genre': (None, None, 0.5),
+                'random': (None, None, 0.1)
             })
 
         def test_weight(self):
-            # TODO
-            dist = Distance(self._session, None, None)
+            dist = Distance(self._session, {'genre': 1.0})
             self.assertTrue(float_cmp(dist.weight(), 1.0))
+
+            # Compute it manually:
+            dist = Distance(self._session, {'genre': 0.5, 'random': 0.1})
+            self.assertTrue(float_cmp(dist.weight(), (0.5 * 0.5 + 0.1 * 0.1) / 0.6))
 
     unittest.main()

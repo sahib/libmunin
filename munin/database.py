@@ -2,16 +2,28 @@
 # encoding: utf-8
 
 from contextlib import contextmanager
+from itertools import combinations
 
 
 class Database:
+    'Class managing Database concerns.'
     def __init__(self, session):
+        '''
+        .. note::
+
+            The division of :class:`munin.Session` and :class:`Database`
+            is purely cosmetical.
+        '''
         self._session = session
         self._song_list = []
-        self._transaction = False
 
     def rebuild(self):
-        pass
+        for song_a, song_b in combinations(self._song_list):
+            # Compute a Distane object:
+            distance = song_a.distance_compute(song_b)
+
+            # Adding works bidirectional:
+            song_a.distance_add(song_b, distance)
 
     def add(self, song):
         if song is not None:
@@ -19,7 +31,8 @@ class Database:
 
     @contextmanager
     def transaction(self):
-        self._transaction = True
+        yield
+        self.rebuild()
 
 
 if __name__ == '__main__':

@@ -33,6 +33,7 @@ except ImportError:
 # Internal:
 from munin.distance import DistanceFunction
 from munin.provider import DirectProvider
+from munin.database import Database
 
 
 def check_or_mkdir(path):
@@ -95,6 +96,9 @@ class Session:
 
         self._create_file_structure(self._path)
 
+        # Create the associated database.
+        self._database = Database(self)
+
     def _create_file_structure(self, path):
         if os.path.isfile(path):
             os.remove(path)
@@ -111,6 +115,10 @@ class Session:
 
         if remove is True:
             shutil.rmtree(path)
+
+    @property
+    def database(self):
+        return self._database
 
     ###############################
     #  Attribute Mask Attributes  #

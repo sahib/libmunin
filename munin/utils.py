@@ -14,10 +14,14 @@ float_cmp = lambda a, b: abs(a - b) < sys.float_info.epsilon
 
 
 class SessionMapping(Mapping):
-    def __init__(self, session, default_value=None):
+    def __init__(self, session, input_dict, default_value=None):
         # Make sure the list is as long as the attribute_mask
         self._store = [default_value] * session.mask_length
         self._session = session
+
+        # Insert the data to the store:
+        for key, value in input_dict.items():
+            self._store[session.index_for_key(key)] = value
 
     ####################################
     #  Mapping Protocol Satisfication  #
