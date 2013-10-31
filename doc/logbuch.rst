@@ -130,3 +130,7 @@ detailliert über seins). Neue Erkenntnis:
     - Jeder Song speichert N ähnlichste Songs. (N wählbar, sessionweit)
 
 Sonstiger Grundtenor: Die Lösung ist schenjal. Im Babsi-Sinne, also negativ :)
+
+Damit ich jetzt nochmal das Theme dastehen habe:
+
+  | Implementierung und Evaluierung eines Musikempfehlungssytems basierend auf Datamining Algorithmen
