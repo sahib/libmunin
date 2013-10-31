@@ -140,16 +140,21 @@ pygments_style = 'sphinx'
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if on_rtd:
     # html_theme = 'sphinx_rtd_theme'
-    html_theme = 'default'
+    html_theme = 'flask'
 else:
     # html_theme = 'armstrong'
-    html_theme = 'armstrong'
+    html_theme = 'flask'
 
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 #html_theme_options = {}
+
+html_theme_options = {
+    'index_logo': '_static/logo.png',
+    'index_logo_height': '0px'
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 html_theme_path = ['_themes']
@@ -163,7 +168,7 @@ html_title = 'libmunin ({version}) apidoc'.format(version=version)
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = '_static/logo.png'
+# html_logo = '_static/logo.png'
 
 github_fork = 'sahib'
 
