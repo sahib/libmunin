@@ -232,5 +232,20 @@ if __name__ == '__main__':
             self.assertEqual(song_one.distance_get(song_two), DistanceDummy(0.7))
 
             # TODO: Test neighbors and max_distance parameter.
+            song_two = Song(self._session, {
+                'genre': 0
+                'artist': 0
+            })
+
+            N = 101
+            for idx in range(1, N + 1):
+                song = Song(self._session, {
+                    'genre': str(idx),
+                    'artist': str(idx)
+                })
+
+                song_base.distance_add(song, DistanceDummy(idx / N))
+
+
 
     unittest.main()
