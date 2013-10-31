@@ -124,10 +124,10 @@ exclude_patterns = ['_build', '_themes/armstrong/README.rst']
 
 # If true, sectionauthor and moduleauthor directives will be shown in the
 # output. They are ignored by default.
-#show_authors = False
+show_authors = True
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = 'tango'
 
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
@@ -153,7 +153,7 @@ else:
 
 html_theme_options = {
     'index_logo': '_static/logo.png',
-    'index_logo_height': '0px'
+    'index_logo_height': '10px'
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
