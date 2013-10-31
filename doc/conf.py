@@ -24,31 +24,33 @@ sys.path.insert(0, os.path.abspath('../'))
 #  Trick to mock the depedencies for readthedocs  #
 ###################################################
 
-# Copied from:
-# http://read-the-docs.readthedocs.org/en/latest/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules
 
+class Mock(object):
+    __all__ = []
 
-class Mock:
     def __init__(self, *args, **kwargs):
         pass
 
     def __call__(self, *args, **kwargs):
-        return Mock()
+        return Mock
 
-    @classmethod
-    def __getattr__(cls, name):
-        if name in ('__file__', '__path__'):
-            return '/dev/null'
-        else:
-            return Mock()
+    def __getattr__(self, name):
+        return Mock
 
 
-MOCK_MODULES = []
-with open('../pip_requirements.txt', 'r') as handle:
-    for line in handle:
-        if line.startswith('#: '):
-            sys.modules[line[3:].strip()] = Mock()
+def mock_modules(pip_file):
+    with open(pip_file, 'r') as handle:
+        for line in handle:
+            if line.startswith('#: '):
+                mod_name = line[3:].strip()
+                print('|--- mocking:', mod_name)
+                sys.modules[mod_name] = Mock()
 
+
+import glob
+for pip_file in glob.glob('../*requirements.txt'):
+    print('+ Reading mocks from:', pip_file)
+    mock_modules(pip_file)
 
 # -- General configuration -----------------------------------------------------
 
@@ -141,7 +143,7 @@ if on_rtd:
     html_theme = 'default'
 else:
     # html_theme = 'armstrong'
-    html_theme = 'flask'
+    html_theme = 'armstrong'
 
 
 # Theme options are theme-specific and customize the look and feel of a theme
