@@ -14,8 +14,7 @@ from munin.utils import SessionMapping, float_cmp
 
 class Song(SessionMapping, Hashable):
     '''
-    Overview
-    --------
+    **Overview**
 
     A song is a readonly mapping of keys to values (like a readonly dict).
 
@@ -30,11 +29,10 @@ class Song(SessionMapping, Hashable):
 
     .. todo:: Make some numbers up to prove this :-)
 
-    Reference
-    ---------
+    **Reference**
     '''
     def __init__(self, session, value_dict, neighbors=100, max_distance=0.999, default_value=None):
-        '''Creates a Song (a set of attributes) that behaves like a dictionary.
+        '''Creates a Song (a set of attributes) that behaves like a dictionary:
 
         :param session: A Session objective (the session this song belongs to)
         :type session: :class:`munin.session.Session`
@@ -81,6 +79,8 @@ class Song(SessionMapping, Hashable):
     ############################
 
     def distance_compute(self, other_song):
+        # TODO: Rename calculate_distance (-> compute?) and Distance*
+        # DistanceFunction
         distance_dict = {}
         common_keys = set(self.keys()) & set(other_song.keys())
         for key in common_keys:
@@ -94,7 +94,10 @@ class Song(SessionMapping, Hashable):
     def distance_add(self, other_song, distance, _bidir=True):
         '''Add a relation to ``other_song`` with a certain distance.
 
-        .. note:: Currently this function has a complexity of O(n)
+        .. warning::
+
+            This function has linear complexity since it needs to find the
+            worst element in case of a deletion.
 
         :param other_song: The song to add a relation to. Will also add a
                            relation in other_song to self with same Distance.
@@ -103,9 +106,9 @@ class Song(SessionMapping, Hashable):
         :type distance: :class:`munin.distance.Distance`
         '''
         # Make sure that same songs always get 0.0 as distance.
-        dist_value = distance.distance
-        if dist_value <= self._max_distance:
-            if len(self._distances) > self._neighbors:
+        if distance.distance <= self._max_distance:
+            # Check if we still have room left
+            if self._neighbors <= len(self._distances):
                 # Find the worst song in the dictionary
                 worst_song, _ = max(self._distances.items(), key=lambda x: x[1])
 

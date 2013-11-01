@@ -1,5 +1,5 @@
 The ``Song`` Class
 ==================
 
-.. automodule:: munin.session
+.. automodule:: munin.song
     :members:

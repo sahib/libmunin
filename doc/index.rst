@@ -1,3 +1,8 @@
+.. title is not shown in flask theme:
+
+libmununin docs
+===============
+
 **Introduction**
 
 **libmunin** is a versatile python library that can do music recomnendations
@@ -16,25 +21,21 @@ If you wonder what ravens have to do with this: Go to wikipedia_.
 
 **Key Features:**
 
-Ability to…
+*Ability to…*
 
-.. hlist::
-    :columns: 2
-
-    * …recomend *N* songs to a song *X*. 
-    * …recomend *N* songs based on a certain attribute.
-    * …do mood-analysis and keyword-extraction.
-    * …create and honor Rules (like ``rock ==> metal = cool!``)
-    * …monitor the user's behaviour by creating Rules.
-    * …extend the API to fit your custom project.
+* …recomend *N* songs to a song *X*. 
+* …recomend *N* songs based on a certain attribute.
+* …do mood-analysis and keyword-extraction.
+* …create and honor Rules (like ``rock ==> metal = cool!``)
+* …monitor the user's behaviour by creating Rules.
+* …extend the API to fit your custom project.
 
 
 ..  .. sidebar:: Sidebar with the very first example!
 
 **Quick Example**
 
-I love to see examples of the library on the frontpage! 
-That's why here's a simple example to get you up and running:
+I love early examples, so here's one:
 
 .. code-block:: python
    
@@ -69,9 +70,7 @@ That's why here's a simple example to get you up and running:
     # We can now use to do useful stuff like recomnendations:
     pass
 
-Oh, oh. That was a lot of stuff for a small example. That's because
-``libmunin`` is really freaking modular. :)
-
+That was quite a lot to grok for a *small* example. 
 Don't worry we discuss every bit of this in the documentation.
 
 =============================
