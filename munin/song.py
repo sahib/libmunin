@@ -108,7 +108,7 @@ class Song(SessionMapping, Hashable):
         # Make sure that same songs always get 0.0 as distance.
         if distance.distance <= self._max_distance:
             # Check if we still have room left
-            if self._neighbors <= len(self._distances):
+            if self._neighbors < len(self._distances):
                 # Find the worst song in the dictionary
                 worst_song, _ = max(self._distances.items(), key=lambda x: x[1])
 
