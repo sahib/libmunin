@@ -51,9 +51,15 @@ class Database:
 
         .. seealso:: :func:`add`
 
+        The song will be configured to the config values set in the Session.
+
         :returns: the added song for convinience
         '''
-        self.add(Song(self._session, value_dict))
+        self.add(Song(
+            self._session, value_dict,
+            neighbors=self._session.config['max_neighbors'],
+            max_distance=self._session.config['max_distance']
+        ))
 
     @contextmanager
     def transaction(self):

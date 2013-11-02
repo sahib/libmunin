@@ -65,13 +65,47 @@ def get_cache_path(extra_name=None):
     return base_dir if not extra_name else os.path.join(base_dir, extra_name)
 
 
+DEFAULT_CONFIG = {
+    'max_neighbors': 100,
+    'max_distance': 0.999
+}
+
+
+DefaultConfig = type('DefaultConfig', (), DEFAULT_CONFIG)
+DefaultConfig.__doc__ = '''
+Example: ::
+
+    >>> from munin.session import DefaultConfig as default
+    >>> default.max_neighbors
+    100
+
+Alternatively without :class:`DefautltConfig`: ::
+
+    >>> from munin.session import DEFAULT_CONFIG
+    >>> DEFAULT_CONFIG['max_neighbors']
+    100
+
+The sole purpose of this class is to save a bit of typing.
+'''
+
+
 class Session:
-    def __init__(self, name, attribute_mask, path=None):
+    '''Main API to *libmunin* and caching layer.'''
+    def __init__(self, name, attribute_mask, path=None, config=None):
+        '''Create a new session:
+
+        :param name: The name of the session. Used to load it again from disk.
+        :param attribute_mask: The attribute mask. See: TODO
+        :param path: The directory to store the sessions in. If none XDG_CACHE_HOME is used.
+        :param config: A dictionary with config values. See :class`DEFAULT_CONFIG` for available keys.
+        '''
+        self._config = config
+        self._path = os.path.join(path, name) if path else get_cache_path(name)
+
         # Make access to the attribute mask more efficient
         self._attribute_mask = copy(attribute_mask)
         self._attribute_list = sorted(attribute_mask)
         self._listidx_to_key = {k: i for i, k in enumerate(self._attribute_list)}
-        self._path = os.path.join(path, name) if path else get_cache_path(name)
 
         # Lookup tables for those attributes (fast access is crucial here)
         self._key_to_providers = {}
@@ -118,7 +152,18 @@ class Session:
 
     @property
     def database(self):
+        'yield the associated :class:`munin.database.Database`'
         return self._database
+
+    @property
+    def config(self):
+        'Return the config dictionary passed to ``__init__``'
+        return self._config
+
+    @property
+    def config_class(self):
+        'Like DefaultConfig, yield a class that has config keys as attributes.'
+        return type('CurrentConfig', (), self._config)
 
     ###############################
     #  Attribute Mask Attributes  #
@@ -145,12 +190,15 @@ class Session:
         return self._listidx_to_key[key]
 
     def provider_for_key(self, key):
+        'Get the provider for the key in ``key``'
         return self._key_to_providers[key]
 
     def distance_function_for_key(self, key):
+        'Get the :class:`munin.distance.DistanceFunction` for ``key``'
         return self._key_to_dmeasures[key]
 
     def weight_for_key(self, key):
+        'Get the weighting (*float*) for ``key``'
         return self._key_to_weighting[key]
 
     ############################
