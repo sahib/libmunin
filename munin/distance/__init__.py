@@ -131,7 +131,7 @@ class DistanceFunction:
 
         .. todo:: Write documentation for rules.
 
-        ``__call__`` is implemented as shortcut to :func:`calculate_distance`
+        ``__call__`` is implemented as shortcut to :func:`compute`
 
         :param provider: Provider to be used to normalize Rules.
         :type provider: instance of :class:`munin.provider.Provider`
@@ -148,8 +148,8 @@ class DistanceFunction:
         return self.format_rules()
 
     def __call__(self, list_a, list_b):
-        'Shortcut for :func:`calculate_distance`'
-        return self.calculate_distance(self, list_a, list_b)
+        'Shortcut for :func:`compute`'
+        return self.compute(list_a, list_b)
 
     ##########################
     #  Rules Implementation  #
@@ -239,7 +239,7 @@ class DistanceFunction:
         '''Return the name of this DistanceFunction (for display purpose)'''
         return self._name
 
-    def calculate_distance(self, list_a, list_b):
+    def compute(self, list_a, list_b):
         '''Compare both lists with eq by default.
 
         This goes through both lists and counts the matching elements.
@@ -286,6 +286,8 @@ class DistanceFunction:
 
 
 class Distance(SessionMapping):
+    __slots__ = ('_distance')
+
     'A **Distance** between two Songs.'
     def __init__(self, session, dist_dict):
         '''A Distance saves the distances created by providers and boil it down
@@ -389,11 +391,11 @@ if __name__ == '__main__':
             self.assertEqual(b, (2, ))
             self.assertEqual(c, (1, ))
 
-            self.assertAlmostEqual(dist.calculate_distance(a, b), 1.0)
-            self.assertAlmostEqual(dist.calculate_distance(a, c), 0.0)
-            self.assertAlmostEqual(dist.calculate_distance([], []), 1.0)
+            self.assertAlmostEqual(dist.compute(a, b), 1.0)
+            self.assertAlmostEqual(dist.compute(a, c), 0.0)
+            self.assertAlmostEqual(dist.compute([], []), 1.0)
             self.assertAlmostEqual(
-                    dist.calculate_distance(a + b, c),
+                    dist.compute(a + b, c),
                     0.5
             )
 

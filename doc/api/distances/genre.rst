@@ -11,12 +11,12 @@ Example
 
 .. code-block:: python
 
-   >>> prov = GenreTreeDistance(genre_tree_provider)
-   >>> prov.compare_single_path((190, 1, 0), (190, 1, 1))
+   >>> dfunc = GenreTreeDistance(genre_tree_provider)
+   >>> dfunc.compare_single_path((190, 1, 0), (190, 1, 1))
    0.333
-   >>> prov.compare_single_path((190, 0, 1), (190, 1, 1))
+   >>> dfunc.compare_single_path((190, 0, 1), (190, 1, 1))
    0.666
-   >>> prov.calculate_distance(
+   >>> dfunc(
    ...     [(190, 1, 0), (190, 1, 1)],
    ...     [(190, 1, 1), (190, 0, 1)]
    ... )

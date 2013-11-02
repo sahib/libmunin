@@ -13,6 +13,8 @@ from munin.utils import SessionMapping, float_cmp
 
 
 class Song(SessionMapping, Hashable):
+    # Note: Use __slots__ (sys.getsizeof will report even more memory, but # pympler less)
+    __slots__ = ('_distances', '_max_distance', '_neighbors', '_hash')
     '''
     **Overview**
 
@@ -79,13 +81,19 @@ class Song(SessionMapping, Hashable):
     ############################
 
     def distance_compute(self, other_song):
-        # TODO: Rename calculate_distance (-> compute?) and Distance*
-        # DistanceFunction
+        '''Compute the distance to another song.
+
+        This is a method of :class:`Song` and not a static method for convinience.
+        If you need a static method do this: ``Song.distance_compute(s1, s2)``.
+
+        :param other_song: a :class:`munin.song.Song`
+        :returns: A :class:`munin.distance.Distance` with according weighting.
+        '''
         distance_dict = {}
         common_keys = set(self.keys()) & set(other_song.keys())
         for key in common_keys:
             distance_func = self._session.distance_function_for_key(key)
-            distance_dict[key] = distance_func.calculate_distance(
+            distance_dict[key] = distance_func(
                     self[key],
                     other_song[key]
             )
@@ -158,6 +166,10 @@ class Song(SessionMapping, Hashable):
         self._hash = hash(tuple(self._store))
 
 
+###########################################################################
+#                            Ifmain Unittests                             #
+###########################################################################
+
 if __name__ == '__main__':
     import unittest
     from munin.session import Session
@@ -185,6 +197,9 @@ if __name__ == '__main__':
                 song = Song(self._session, {'a': 'b'})
 
             song = Song(self._session, {'genre': 'berta'})
+            import sys
+            print(sys.getsizeof(song))
+
             with self.assertRaises(KeyError):
                 song['berta']
 

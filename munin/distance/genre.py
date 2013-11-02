@@ -7,7 +7,7 @@ from munin.distance import DistanceFunction
 from munin.utils import float_cmp
 
 
-class GenreTreeDistance(DistanceFunction):
+class GenreTreeDistanceFunctionFunctionFunction(DistanceFunction):
     '''DistanceFunction Calculator for comparing two lists of GenrePaths.
 
     (Lists of GenrePaths as returned by the GenreTree Provider)
@@ -15,7 +15,7 @@ class GenreTreeDistance(DistanceFunction):
     def __init__(self, provider):
         DistanceFunction.__init__(self, provider, 'GenreTree')
 
-    def calculate_distance(self, lefts, rights):
+    def compute(self, lefts, rights):
         '''Calculate distance between two genre paths by using complete linkage.
 
         :param lefts: A list of Genre Paths.
@@ -67,7 +67,7 @@ if __name__ == '__main__':
                 ((), (), 1)
             ]
 
-            calc = GenreTreeDistance(GenreTreeProvider())
+            calc = GenreTreeDistanceFunctionFunctionFunction(GenreTreeProvider())
             for left, right, result in inputs:
                 self.assertTrue(
                         float_cmp(calc.compare_single_path(left, right), result)
@@ -75,15 +75,15 @@ if __name__ == '__main__':
                         float_cmp(calc.compare_single_path(right, left), result)
                 )
 
-    class TestGenreTreeDistance(unittest.TestCase):
+    class TestGenreTreeDistanceFunctionFunctionFunction(unittest.TestCase):
         def test_valid(self):
-            calc = GenreTreeDistance(GenreTreeProvider())
+            calc = GenreTreeDistanceFunctionFunctionFunction(GenreTreeProvider())
 
             def full_cross_compare(expected):
-                self.assertTrue(float_cmp(calc.calculate_distance(a, b), expected))
-                self.assertTrue(float_cmp(calc.calculate_distance(b, a), expected))
-                self.assertTrue(float_cmp(calc.calculate_distance(a, a), 0.0))
-                self.assertTrue(float_cmp(calc.calculate_distance(b, b), 0.0))
+                self.assertTrue(float_cmp(calc.compute(a, b), expected))
+                self.assertTrue(float_cmp(calc.compute(b, a), expected))
+                self.assertTrue(float_cmp(calc.compute(a, a), 0.0))
+                self.assertTrue(float_cmp(calc.compute(b, b), 0.0))
 
             a = [(85, 0), (190, 2), (190, 6)]
             b = [(85, 0), (190, 2, 0), (190, 2, 1), (190, 6)]
@@ -103,25 +103,25 @@ if __name__ == '__main__':
 
         def test_invalid(self):
             'Test rather unusual corner cases'
-            calc = GenreTreeDistance(GenreTreeProvider())
-            self.assertTrue(float_cmp(calc.calculate_distance([], []), 1.0))
-            self.assertTrue(float_cmp(calc.calculate_distance([], [(1, 0)]), 1.0))
-            self.assertTrue(float_cmp(calc.calculate_distance([], ['berta']), 1.0))
+            calc = GenreTreeDistanceFunctionFunctionFunction(GenreTreeProvider())
+            self.assertTrue(float_cmp(calc.compute([], []), 1.0))
+            self.assertTrue(float_cmp(calc.compute([], [(1, 0)]), 1.0))
+            self.assertTrue(float_cmp(calc.compute([], ['berta']), 1.0))
 
             # Funny one (strings are iterable)
-            self.assertTrue(float_cmp(calc.calculate_distance(['berta'], ['berta']), 0.0))
+            self.assertTrue(float_cmp(calc.compute(['berta'], ['berta']), 0.0))
 
             # Passing a non-iterable:
             with self.assertRaises(TypeError):
-                calc.calculate_distance([1], [2])
+                calc.compute([1], [2])
 
         def test_rule(self):
-            calc = GenreTreeDistance(GenreTreeProvider())
+            calc = GenreTreeDistanceFunctionFunctionFunction(GenreTreeProvider())
             calc.add_rule((1, 0, 1), (0, 1, 0), distance=0.5)
-            self.assertTrue(float_cmp(calc.calculate_distance([(1, 0, 1)], [(0, 1, 0)]), 0.5))
-            self.assertTrue(float_cmp(calc.calculate_distance([(0, 1, 0)], [(1, 0, 1)]), 0.5))
+            self.assertTrue(float_cmp(calc.compute([(1, 0, 1)], [(0, 1, 0)]), 0.5))
+            self.assertTrue(float_cmp(calc.compute([(0, 1, 0)], [(1, 0, 1)]), 0.5))
 
-            self.assertTrue(float_cmp(calc.calculate_distance([(1, 1)], [(1, 1)]), 0.0))
-            self.assertTrue(float_cmp(calc.calculate_distance([(1, 1)], [(2, 0)]), 1.0))
+            self.assertTrue(float_cmp(calc.compute([(1, 1)], [(1, 1)]), 0.0))
+            self.assertTrue(float_cmp(calc.compute([(1, 1)], [(2, 0)]), 1.0))
 
     unittest.main()

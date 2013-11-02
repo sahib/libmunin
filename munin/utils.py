@@ -14,6 +14,9 @@ float_cmp = lambda a, b: abs(a - b) < sys.float_info.epsilon
 
 
 class SessionMapping(Mapping):
+    # Note: Use __slots__ (sys.getsizeof will report even more memory, but # pympler less)
+    __slots__ = ('_store', '_session')
+
     def __init__(self, session, input_dict, default_value=None):
         # Make sure the list is as long as the attribute_mask
         self._store = [default_value] * session.mask_length
