@@ -208,6 +208,7 @@ class Session:
         Example usage: ::
 
             >>> Session.from_archive_path('/tmp/test.gz')
+            <Session object at 0x2343424>
 
         .. note::
 
@@ -249,10 +250,10 @@ class Session:
         with open(os.path.join(self._path, 'session.pickle'), 'wb') as handle:
             pickle.dump(self, handle)
 
-        with tarfile.open(path + '.gz', 'w:gz') as tar:
-            tar.add(path, arcname='')
+        with tarfile.open(self._path + '.gz', 'w:gz') as tar:
+            tar.add(self._path, arcname='')
 
-        shutil.rmtree(path)
+        shutil.rmtree(self._path)
 
 
 if __name__ == '__main__':
