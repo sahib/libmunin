@@ -119,3 +119,4 @@ class IndirectProvider(Provider):
 from munin.provider.genre import GenreTreeProvider
 from munin.provider.attic import AtticProvider
 from munin.provider.composite import CompositeProvider
+from munin.provider.stem import LancasterStemProvider, SnowballStemProvider

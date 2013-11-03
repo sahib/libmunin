@@ -134,3 +134,26 @@ Sonstiger Grundtenor: Die Lösung ist schenjal. Im Babsi-Sinne, also negativ :)
 Damit ich jetzt nochmal das Theme dastehen habe:
 
   | Implementierung und Evaluierung eines Musikempfehlungssytems basierend auf Datamining Algorithmen
+
+
+4. November 2013
+----------------
+
+Einiges ist nun etwas gefestigt. Session caching ist implementiert. 
+
+Eine interessanter Vergleich von Graph-Performance:
+
+    http://graph-tool.skewed.de/performance
+
+Stimmt wohl gar nicht dass NetworkX meist fast gleich schnell ist. Hätte mich
+auch gewundert. Der Benchmarkgraph hat dann sogar vermutlich die gleich
+Dimensionen wie bei mir. 15 Stunden für "betweenness" ist daher kaum
+vertretbar. 
+
+**Nächste Schritte:**
+
+    * Graph builden (auf library einigen)
+    * Sich auf Datamining Framework einigen. (TextBlob? aber kein stemmer)
+    * ``__main__.py`` schreiben.
+    * moosecat auspacken, an mpd 0.18 anpassen und daten mal in libmunin
+      reinschauffeln.
