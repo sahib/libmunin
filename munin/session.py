@@ -114,26 +114,23 @@ class Session:
         self._listidx_to_key = {k: i for i, k in enumerate(self._attribute_list)}
 
         # Lookup tables for those attributes (fast access is crucial here)
-        self._key_to_providers = {}
-        self._key_to_dmeasures = {}
-        self._key_to_weighting = {}
+        def make_index(idx, default_func):
+            items = self._attribute_mask.items()
+            nvlfn = lambda x, d: x if x is not None else d
+            return {key: nvlfn(descr[idx], default_func(key)) for key, descr in items}
 
-        for key, descr in self._attribute_mask.items():
-            provider, distance_measure, weight = descr
+        # Build indices and set default values:
+        self._key_to_providers = make_index(0,
+                lambda key: DirectProvider()
+        )
+        self._key_to_dmeasures = make_index(1,
+                lambda key: DistanceFunction(self._key_to_providers[key])
+        )
+        self._key_to_weighting = make_index(2,
+                lambda key: 1.0
+        )
 
-            # Use the default provider:
-            if provider is None:
-                provider = DirectProvider()
-
-            # Use the standard __eq__ as default:
-            if distance_measure is None:
-                distance_measure = DistanceFunction(provider)
-
-            # buildup the indices:
-            self._key_to_providers[key] = provider
-            self._key_to_dmeasures[key] = distance_measure
-            self._key_to_weighting[key] = weight
-
+        # Needed for later saving
         self._create_file_structure(self._path)
 
         # Create the associated database.
