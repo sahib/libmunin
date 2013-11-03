@@ -146,13 +146,6 @@ class Session:
         for subdir in ['distances', 'providers', 'rules']:
             os.mkdir(os.path.join(path, subdir))
 
-    def _compress_directory(self, path, remove=True):
-        with tarfile.open(path + '.gz', 'w:gz') as tar:
-            tar.add(path, arcname='')
-
-        if remove is True:
-            shutil.rmtree(path)
-
     @property
     def database(self):
         'yield the associated :class:`munin.database.Database`'
@@ -209,21 +202,43 @@ class Session:
     ############################
 
     @staticmethod
-    def from_archive_path(full_path, name=None):
+    def from_archive_path(full_path):
+        '''Load a cached session from a file on the disk.
+
+        Example usage: ::
+
+            >>> Session.from_archive_path('/tmp/test.gz')
+
+        .. note::
+
+            If you prefer to save the sessions in XDG_CACHE_HOME anyway,
+            just use :func:`Session.from_name`.
+
+        :param full_path: a path to a packed session.
+        :type full_path: str
+        :returns: A cached session.
+        :rtype: :class:`Session`
+        '''
         base_path, _ = os.path.splitext(full_path)
         with tarfile.open(full_path, 'r:*') as tar:
             tar.extractall(base_path)
 
         with open(os.path.join(base_path, 'session.pickle'), 'rb') as handle:
-            session = pickle.load(handle)
-
-        return session
+            return pickle.load(handle)
 
     @staticmethod
     def from_name(session_name):
+        '''Like :func:`from_archive_path`, but be clever and load it
+        from *${XDG_CACHE_HOME}/libmunin/<session_name>/session.pickle*
+
+        :param session_name: The name of a session.
+        :type session_name: str
+        :returns: A cached session.
+        :rtype: :class:`Session`
+        '''
         return Session.from_archive_path(
-                get_cache_path(session_path),
-                name=session_path
+            get_cache_path(session_path),
+            name=session_path
         )
 
     def save(self, compress=True):
@@ -234,7 +249,10 @@ class Session:
         with open(os.path.join(self._path, 'session.pickle'), 'wb') as handle:
             pickle.dump(self, handle)
 
-        self._compress_directory(self._path)
+        with tarfile.open(path + '.gz', 'w:gz') as tar:
+            tar.add(path, arcname='')
+
+        shutil.rmtree(path)
 
 
 if __name__ == '__main__':
