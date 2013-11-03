@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+
 import abc
 
 
@@ -109,3 +110,12 @@ class IndirectProvider(Provider):
     def is_reversible(self):
         'For IndirectProvider always False is returned'
         return False
+
+
+###########################################################################
+#                             Import Aliases                              #
+###########################################################################
+
+from munin.provider.genre import GenreTreeProvider
+from munin.provider.attic import AtticProvider
+from munin.provider.composite import CompositeProvider

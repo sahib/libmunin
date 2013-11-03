@@ -31,8 +31,6 @@ except ImportError:
     HAS_XDG = False
 
 # Internal:
-from munin.distance import DistanceFunction
-from munin.provider import DirectProvider
 from munin.database import Database
 
 
@@ -118,6 +116,9 @@ class Session:
             items = self._attribute_mask.items()
             nvlfn = lambda x, d: x if x is not None else d
             return {key: nvlfn(descr[idx], default_func(key)) for key, descr in items}
+
+        from munin.distance import DistanceFunction
+        from munin.provider import DirectProvider
 
         # Build indices and set default values:
         self._key_to_providers = make_index(0,

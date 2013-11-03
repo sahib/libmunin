@@ -47,7 +47,6 @@ import pickle
 import json
 import re
 
-# Pure Python Stemmer - slow as fuck.
 from Stemmer import Stemmer
 STEMMER = Stemmer('english')
 

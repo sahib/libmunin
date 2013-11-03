@@ -348,6 +348,11 @@ class Distance(SessionMapping):
         # Return the average distance with weight applied.
         return distwg_sum / weight_sum
 
+###########################################################################
+#                             Import Aliases                              #
+###########################################################################
+
+from munin.distance.genre import GenreTreeDistance
 
 ###########################################################################
 #                               Unit tests                                #

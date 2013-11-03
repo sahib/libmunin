@@ -7,7 +7,7 @@ from munin.distance import DistanceFunction
 from munin.utils import float_cmp
 
 
-class GenreTreeDistanceFunctionFunctionFunction(DistanceFunction):
+class GenreTreeDistance(DistanceFunction):
     '''DistanceFunction Calculator for comparing two lists of GenrePaths.
 
     (Lists of GenrePaths as returned by the GenreTree Provider)
@@ -67,7 +67,7 @@ if __name__ == '__main__':
                 ((), (), 1)
             ]
 
-            calc = GenreTreeDistanceFunctionFunctionFunction(GenreTreeProvider())
+            calc = GenreTreeDistance(GenreTreeProvider())
             for left, right, result in inputs:
                 self.assertTrue(
                         float_cmp(calc.compare_single_path(left, right), result)
@@ -77,7 +77,7 @@ if __name__ == '__main__':
 
     class TestGenreTreeDistanceFunctionFunctionFunction(unittest.TestCase):
         def test_valid(self):
-            calc = GenreTreeDistanceFunctionFunctionFunction(GenreTreeProvider())
+            calc = GenreTreeDistance(GenreTreeProvider())
 
             def full_cross_compare(expected):
                 self.assertTrue(float_cmp(calc.compute(a, b), expected))
@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
         def test_invalid(self):
             'Test rather unusual corner cases'
-            calc = GenreTreeDistanceFunctionFunctionFunction(GenreTreeProvider())
+            calc = GenreTreeDistance(GenreTreeProvider())
             self.assertTrue(float_cmp(calc.compute([], []), 1.0))
             self.assertTrue(float_cmp(calc.compute([], [(1, 0)]), 1.0))
             self.assertTrue(float_cmp(calc.compute([], ['berta']), 1.0))
@@ -116,7 +116,7 @@ if __name__ == '__main__':
                 calc.compute([1], [2])
 
         def test_rule(self):
-            calc = GenreTreeDistanceFunctionFunctionFunction(GenreTreeProvider())
+            calc = GenreTreeDistance(GenreTreeProvider())
             calc.add_rule((1, 0, 1), (0, 1, 0), distance=0.5)
             self.assertTrue(float_cmp(calc.compute([(1, 0, 1)], [(0, 1, 0)]), 0.5))
             self.assertTrue(float_cmp(calc.compute([(0, 1, 0)], [(1, 0, 1)]), 0.5))
