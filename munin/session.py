@@ -71,8 +71,7 @@ DEFAULT_CONFIG = {
 }
 
 
-DefaultConfig = type('DefaultConfig', (), DEFAULT_CONFIG)
-DefaultConfig.__doc__ = '''
+DefaultConfig = type('DefaultConfig', (), dict(DEFAULT_CONFIG, __doc__='''
 Example: ::
 
     >>> from munin.session import DefaultConfig as default
@@ -87,6 +86,7 @@ Alternatively without :class:`DefautltConfig`: ::
 
 The sole purpose of this class is to save a bit of typing.
 '''
+))
 
 
 class Session:
