@@ -4,6 +4,7 @@
 # stdlib:
 import datetime
 import logging
+import abc
 
 # External:
 import parse
@@ -125,6 +126,9 @@ class Rule:
 
 class DistanceFunction:
     'A **DistanceFunction** calculates a **Distance**'
+
+    __metaclass__ = abc.ABCMeta
+
     def __init__(self, provider, name='Default', to_reverse=None):
         '''This class is supposed to be overriden, but can also be used
         as fallback.
@@ -235,10 +239,12 @@ class DistanceFunction:
     #  Interface for subclasses  #
     ##############################
 
+    @abc.abstractmethod
     def get_name(self):
         '''Return the name of this DistanceFunction (for display purpose)'''
         return self._name
 
+    @abc.abstractmethod
     def compute(self, list_a, list_b):
         '''Compare both lists with eq by default.
 
@@ -255,6 +261,10 @@ class DistanceFunction:
             return 1.0
 
         return 1.0 - sum(a == b for a, b in zip(sorted(list_a), sorted(list_b))) / n_max
+
+    ###############
+    #  Reversing  #
+    ###############
 
     def apply_reverse_both(self, lefts, rights):
         '''Convienience function that applies :func:`apply_reverse` to both lists.

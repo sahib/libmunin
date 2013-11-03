@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import abc
+
 
 class Provider:
     'A Provider transforms (i.e normalizes) a input value'
+
     def __init__(self, name, doc=None):
         '''
         Provider Protocol:
@@ -48,15 +51,19 @@ class DirectProvider(Provider):
     '''Direct Providers usually get a single input value and process them
     in some way (for example normalize them). Usually they have no sideeffects.
     '''
+
+    __metaclass__ = abc.ABCMeta
+
     def __init__(self, name='Direct', is_reversible=True):
         Provider.__init__(self, name)
         self._is_reversible = is_reversible
 
-    @property
+    @abc.abstractproperty
     def is_reversible(self):
         'If *True* this provider is reversible via :func:`reverse` (aka **injective**)'
         return self._is_reversible
 
+    @abc.abstractmethod
     def process(self, input_value):
         # Default Implementations will only passthrough the value.
         return (input_value, )
