@@ -239,8 +239,7 @@ class Session:
         :rtype: :class:`Session`
         '''
         return Session.from_archive_path(
-            get_cache_path(session_path),
-            name=session_path
+            get_cache_path(session_name)
         )
 
     def save(self, compress=True):

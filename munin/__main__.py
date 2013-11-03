@@ -7,13 +7,20 @@ from munin.distance import GenreTreeDistance
 
 
 def main():
+
+    # TODO: This is not yet functional.
+
     # Perhaps we already had an prior session?
-    session = Session.from_name(__name__)
+    session = Session.from_name('test')
+    self._session = Session('session_test', {
+        'genre': (None, None, 0.2),
+        'artist': (None, None, 0.3)
+    }, path='/tmp')
     if session is None:
         # Looks like it didn't exist yet.
         # Well, go and create it!
         session = Session(
-            name='MyNameIsSession',
+            name='test',
             attribute_mask={
                 # Each line goes like this:
                 # 'the-key-you-want-have-in-your-song': (Provider, DistanceFunction, Weighting)
@@ -34,4 +41,4 @@ def main():
 
 
 if __name__ == '__main__':
-    pass
+    main()
