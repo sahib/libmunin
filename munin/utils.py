@@ -36,7 +36,8 @@ class SessionMapping(Mapping):
     def __iter__(self):
         def _iterator():
             for idx, elem in enumerate(self._store):
-                yield self._session.key_at_index(idx), elem
+                if elem is not None:
+                    yield self._session.key_at_index(idx), elem
         return _iterator()
 
     def __len__(self):
@@ -55,7 +56,7 @@ class SessionMapping(Mapping):
     def keys(self):
         # I've had a little too much haskell in my life:
         at = self._session.key_at_index
-        return (at(idx) for idx in range(len(self._store)))
+        return filter(None, (at(idx) for idx in range(len(self._store))))
 
     def items(self):
         return iter(self)
