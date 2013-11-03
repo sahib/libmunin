@@ -85,6 +85,12 @@ Alternatively without :class:`DefautltConfig`: ::
     100
 
 The sole purpose of this class is to save a bit of typing.
+
+
+.. note::
+
+    It is possible to mutate the DEFAULT_CONFIG dict to have the same defaults
+    for every session.
 '''
 ))
 
@@ -99,7 +105,7 @@ class Session:
         :param path: The directory to store the sessions in. If none XDG_CACHE_HOME is used.
         :param config: A dictionary with config values. See :class`DEFAULT_CONFIG` for available keys.
         '''
-        self._config = config
+        self._config = config or DEFAULT_CONFIG
         self._path = os.path.join(path, name) if path else get_cache_path(name)
 
         # Make access to the attribute mask more efficient
@@ -211,11 +217,10 @@ class Session:
         with tarfile.open(full_path, 'r:*') as tar:
             tar.extractall(base_path)
 
-        with open(os.path.join(base_path, 'mask.pickle'), 'rb') as file_handle:
-            mask = pickle.load(file_handle)
+        with open(os.path.join(base_path, 'session.pickle'), 'rb') as handle:
+            session = pickle.load(handle)
 
-        name = name or os.path.basename(base_path)
-        return Session(name, mask, path=base_path)
+        return session
 
     @staticmethod
     def from_name(session_name):
@@ -229,8 +234,8 @@ class Session:
 
         :param compress: Compress the resulting folder with **gzip**?
         '''
-        with open(os.path.join(self._path, 'mask.pickle'), 'wb') as handle:
-            pickle.dump(self._attribute_mask, handle)
+        with open(os.path.join(self._path, 'session.pickle'), 'wb') as handle:
+            pickle.dump(self, handle)
 
         self._compress_directory(self._path)
 
