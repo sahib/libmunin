@@ -5,7 +5,7 @@ python:
 
 before_install: 
     - sudo apt-get -y update
-    - sudo apt-get -y install libigraph0
+    - sudo apt-get -y install libigraph0 libigraph0-dev
 
 # command to install dependencies
 install: "pip install -r pip_requirements.txt --use-mirrors"
