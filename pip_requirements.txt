@@ -9,3 +9,5 @@ parse
 PyStemmer
 #: bidict
 bidict
+#: igraph
+python-igraph

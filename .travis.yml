@@ -4,9 +4,8 @@ python:
   - "3.3"
 
 before_install: 
-    - yes | sudo add-apt-repository ppa:igraph/ppa
     - sudo apt-get -y update
-    - sudo apt-get -y install python-igraph
+    - sudo apt-get -y install libigraph0
 
 # command to install dependencies
 install: "pip install -r pip_requirements.txt --use-mirrors"

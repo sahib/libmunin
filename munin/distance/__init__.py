@@ -149,7 +149,7 @@ class DistanceFunction:
 
     def __repr__(self):
         'Prints a simple table of rules'
-        return self.format_rules()
+        return '<DistanceFunction rules=' + self.format_rules() + '>'
 
     def __call__(self, list_a, list_b):
         'Shortcut for :func:`compute`'
@@ -319,6 +319,9 @@ class Distance(SessionMapping):
 
     def __lt__(self, other):
         return self.distance < other.distance
+
+    def __repr__(self):
+        return '<Distance {d:f}>'.format(d=self.distance)
 
     @property
     def distance(self):

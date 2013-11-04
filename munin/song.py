@@ -13,8 +13,8 @@ from munin.utils import SessionMapping, float_cmp
 
 
 class Song(SessionMapping, Hashable):
-    # Note: Use __slots__ (sys.getsizeof will report even more memory, but # pympler less)
-    __slots__ = ('_distances', '_max_distance', '_neighbors', '_hash')
+    # Note: Use __slots__ (sys.getsizeof will report even more memory, but pympler less)
+    __slots__ = ('_distances', '_max_distance', '_max_neighbors', '_hash', 'uid')
     '''
     **Overview**
 
@@ -33,7 +33,7 @@ class Song(SessionMapping, Hashable):
 
     **Reference**
     '''
-    def __init__(self, session, value_dict, neighbors=100, max_distance=0.999, default_value=None):
+    def __init__(self, session, value_dict, max_neighbors=100, max_distance=0.999, default_value=None):
         '''Creates a Song (a set of attributes) that behaves like a dictionary:
 
         :param session: A Session objective (the session this song belongs to)
@@ -41,10 +41,10 @@ class Song(SessionMapping, Hashable):
         :param value_dict: A mapping from the keys to the values you want to set.
         :type value_dict: Mapping
         :param default_value: The value to be returned for valid but unset keys.
-        :param neighbors: max. numbers of neighbor-distances to save.
+        :param max_neighbors: max. numbers of neighbor-distances to save.
         :type neighbor: positive int
         :param max_distance: The minimal distance for :func:`distance_add` -
-                             You should try to keep this small (i.e. only
+                             You should try to keep this small (i.e. to only
                              filter 1.0 distances)
         :type max_distance: float
         '''
@@ -57,11 +57,13 @@ class Song(SessionMapping, Hashable):
         self._distances = {}
 
         # Settings:
-        self._neighbors = neighbors
+        self._max_neighbors = max_neighbors
         self._max_distance = max_distance
 
         # Update hash on creation
         self._update_hash()
+
+        self.uid = None
 
     #######################
     #  Other convinience  #
@@ -116,7 +118,7 @@ class Song(SessionMapping, Hashable):
         # Make sure that same songs always get 0.0 as distance.
         if distance.distance <= self._max_distance:
             # Check if we still have room left
-            if self._neighbors < len(self._distances):
+            if self._max_neighbors < len(self._distances):
                 # Find the worst song in the dictionary
                 worst_song, _ = max(self._distances.items(), key=lambda x: x[1])
 
@@ -149,6 +151,14 @@ class Song(SessionMapping, Hashable):
             return self.distance_compute(self)
         else:
             return self._distances.get(other_song, default_value)
+
+    def distance_iter(self):
+        '''Iterate over all distances stored in this song.
+
+        :returns: iterable that yields (song, distance) tuples.
+        :rtype: generator
+        '''
+        return self._distances.items()
 
     #################################
     #  Additional helper functions  #
@@ -197,8 +207,6 @@ if __name__ == '__main__':
                 song = Song(self._session, {'a': 'b'})
 
             song = Song(self._session, {'genre': 'berta'})
-            import sys
-            print(sys.getsizeof(song))
 
             with self.assertRaises(KeyError):
                 song['berta']
