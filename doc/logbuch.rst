@@ -157,3 +157,27 @@ vertretbar.
     * ``__main__.py`` schreiben.
     * moosecat auspacken, an mpd 0.18 anpassen und daten mal in libmunin
       reinschauffeln.
+
+5. November 2013
+----------------
+
+Liebes Tagesbuch,
+
+heute hab ich das Problem Dieter getroffen. Dieter ist recht träge und langsam...  
+Ich muss alle 32k songs miteineander vergleichen. Nach einer ersten Hochrechnung
+dauert das in einem günstig geschätzten Fall doch seine 13 Stunden.. was etwas
+viel ist. 
+
+Eigentlich sollte das ja innerhalb von 5 Minuten geschehen sein (praktisch wie
+ein mpd datenbank update - zmd. erwartet das der user (der depp.))
+
+Mögliche Ideen:
+
+1) Rating pro Song einführen (basierend auf Attribut Güte), for loop vergleicht
+   nur songs bei denen die heuristic True liefert.
+   Nachteil: Alles hängt von Güte der Heuristik ab.
+   Vorteil: Ein ganzer Graph wird generiert. Die Heuristik könnte lernfähig
+   sein.
+2) Aufteilung der Songs in Grüppchen, nur Vergleich innerhalb.
+   Nachteil: Kein allgemeiner Graph, viele Untergraphen, Problem der verbinung 
+   dieser. Und was wäre überhaupt das Splitkriterium für die Gruppen?

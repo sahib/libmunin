@@ -168,6 +168,24 @@ class Song(SessionMapping, Hashable):
         'Shortcut for ``dict(iter(song))``'
         return dict(iter(song))
 
+    # TODO: Implement rating.
+    def rating(self):
+        '''Compute the self rating of the song.
+
+        The rating expresses how well the song is defined.
+        In other words: How "comparable" the song is. ("confidence").
+
+        :returns: a list of numbers from 0 (lowest) to 1.0 (highest confidence).
+        :rtype: list
+        '''
+        rating = 0.0
+        ratcnt = 0
+        for key in self.keys():
+            dfunc = self._session.distance_function_for_key(key)
+            rating += dfunc.compute_rating()
+            ratcnt += 1
+        return rating / ratcnt
+
     #############
     #  Private  #
     #############

@@ -262,6 +262,28 @@ class DistanceFunction:
 
         return 1.0 - sum(a == b for a, b in zip(sorted(list_a), sorted(list_b))) / n_max
 
+    @abc.abstractmethod
+    def compute_rating(self):
+        '''Compute a rating from 0.0 (worst) to 1.0 (best).
+
+        The rating should express how well the attribute is defined, i.e
+        how "comparable" it is. With our beloved genre example:
+
+        - 'rock' will have a low rating because it is very common.
+        - 'transilvanian folk rock' will have a higher rating because
+           it is much more specific.
+
+        The rating will be used as source for the heuristic during building
+        the graph. Comparing each song with each other is very expensive,
+        therefore we'll only compare songs that we think are worthy to compare.
+
+        Since it's supposed to be an performance optimization you shouldn't
+        do massive calculations here.
+
+        The default implementation will always return 0.0.
+        '''
+        return 0
+
     ###############
     #  Reversing  #
     ###############

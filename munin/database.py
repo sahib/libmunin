@@ -64,16 +64,25 @@ class Database:
             self._graph.add_vertex(name=str(idx), song=song)
 
         # TODO: All edges get added, which is silly.
+        total = len(self._song_list)
+        total = (total * total) / 2
+        idx = 0
+
+        # Full of TODOG.
+        heuristic = lambda a, b: a.uid % 10 is 0
 
         for song_a, song_b in combinations(self._song_list, 2):
-            # Compute a Distane object:
-            distance = song_a.distance_compute(song_b)
+            if heuristic(song_a, song_b):
+                # Compute a Distane object:
+                distance = song_a.distance_compute(song_b)
 
-            # Adding works bidirectional:
-            song_a.distance_add(song_b, distance)
+                # Adding works bidirectional:
+                song_a.distance_add(song_b, distance)
 
-            # Add it to the graph
-            self._graph.add_edge(song_a.uid, song_b.uid, dist=distance, weight=distance.distance)
+                # Add it to the graph
+                #self._graph.add_edge(song_a.uid, song_b.uid, dist=distance, weight=distance.distance)
+                print(idx / total * 100, '%                ', end='\r')
+            idx += 1
 
         # print('plotting')
         # self.plot()
@@ -139,7 +148,7 @@ if __name__ == '__main__':
 
         def test_basics(self):
             with self._session.database.transaction():
-                N = 20
+                N = 200
                 for i in range(N):
                     self._session.database.add_values({
                         'genre': i / N,
@@ -160,4 +169,19 @@ if __name__ == '__main__':
                     'not_in_session': 42
                 })
 
+    #  unittest.main()
+    # DatabaseTests().test_basic()
+    def main():
+        session = Session('session_test', {
+            'genre': (_DummyProvider(), None, 0.2),
+            'artist': (_DummyProvider(), None, 0.3)
+        }, path='/tmp')
+
+        with session.database.transaction():
+            N = 32000
+            for i in range(N):
+                session.database.add_values({
+                    'genre': i / N,
+                    'artist': i / N
+                })
     unittest.main()
