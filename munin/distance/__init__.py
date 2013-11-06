@@ -263,17 +263,17 @@ class DistanceFunction:
         return 1.0 - sum(a == b for a, b in zip(sorted(list_a), sorted(list_b))) / n_max
 
     @abc.abstractmethod
-    def compute_rating(self):
-        '''Compute a rating from 0.0 (worst) to 1.0 (best).
+    def compute_confidence(self, value_list):
+        '''Compute a confidence from 0.0 (worst) to 1.0 (best).
 
-        The rating should express how well the attribute is defined, i.e
+        The confidence should express how well the attribute is defined, i.e
         how "comparable" it is. With our beloved genre example:
 
-        - 'rock' will have a low rating because it is very common.
-        - 'transilvanian folk rock' will have a higher rating because
+        - 'rock' will have a low confidence because it is very common.
+        - 'transilvanian folk rock' will have a higher confidence because
            it is much more specific.
 
-        The rating will be used as source for the heuristic during building
+        The confidence will be used as source for the heuristic during building
         the graph. Comparing each song with each other is very expensive,
         therefore we'll only compare songs that we think are worthy to compare.
 
@@ -281,6 +281,11 @@ class DistanceFunction:
         do massive calculations here.
 
         The default implementation will always return 0.0.
+
+        :param value_list: A list of value as normally passed to :func:`compute`
+                           (but only for one song).
+        :returns: The confidence from 0.0 (*lowest*) to 1.0 (*highest*)
+        :rtype: float
         '''
         return 0
 

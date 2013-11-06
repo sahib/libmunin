@@ -50,6 +50,10 @@ class GenreTreeDistance(DistanceFunction):
             n += 1
         return 1 - n / (max(len(left), len(right)) or 1)
 
+    def compute_confidence(self, value_list):
+        # 4 is the max depth of the genre tree.
+        return len(value_list) / 4
+
 
 if __name__ == '__main__':
     import unittest

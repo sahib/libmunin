@@ -161,7 +161,7 @@ vertretbar.
 5. November 2013
 ----------------
 
-Liebes Tagesbuch,
+Liebes Logbuch,
 
 heute hab ich das Problem Dieter getroffen. Dieter ist recht träge und langsam...  
 Ich muss alle 32k songs miteineander vergleichen. Nach einer ersten Hochrechnung
@@ -181,3 +181,41 @@ Mögliche Ideen:
 2) Aufteilung der Songs in Grüppchen, nur Vergleich innerhalb.
    Nachteil: Kein allgemeiner Graph, viele Untergraphen, Problem der verbinung 
    dieser. Und was wäre überhaupt das Splitkriterium für die Gruppen?
+
+**Nachtrag:**
+
+   https://gist.github.com/sahib/7327137
+
+6. November 2013
+----------------
+
+Liebes Logbuch,
+
+Heute ging der Tag allein für Heuristiken drauf. Auf folgendes Vorgehen wurde
+sich nun geeinigt (ich mit mit meinem zweiten ich und christoph):
+
+    - Wähle eine Gruppe von Attributen:
+
+      - Dies erfolgt automatisch (beste N attribute die in 90% aller Songs vorkommen): ::
+
+          counter = Counter()
+          for song in self._song_list:
+              counter.update(song.keys())
+          print(counter.most_common())
+
+      - Alternativ kann der user diese selbst setzen. 
+
+    - Berechne die confidence von 1% der möglichen kombinationen. Stelle
+      maximale Streuung (http://de.wikipedia.org/wiki/Korrigierte_Stichprobenvarianz)
+      und average fest.
+
+      *Iterationstrategie:* :: 
+      
+        >>> song_list[::step=int(len(song_list) / 100)]  # für große song_list
+        >>> song_list[::step=int(len(song_list) / 10)]   # len(song_list) < 1000
+        >>> song_list                                    # len(song_list) < 100
+
+      
+    - Wähle ein MAX_CONFIDENCE die diese Werte wiederspiegelt. (TODO: Gauss?)
+    - Die Heuristik wird dann diese MAX_CONFIDENCE als Maß für die
+      Vergleichbarkeit zweier Songs nehmen.

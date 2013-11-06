@@ -117,6 +117,7 @@ class Session:
             nvlfn = lambda x, d: x if x is not None else d
             return {key: nvlfn(descr[idx], default_func(key)) for key, descr in items}
 
+        # Import this locally, since we might get circular import otherway:
         from munin.distance import DistanceFunction
         from munin.provider import DirectProvider
 
