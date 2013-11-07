@@ -58,17 +58,6 @@ class Database:
             counter.update(song.keys())
         print(counter.most_common())
 
-    def sample_max_confidence(self):
-        step_divisor = 100
-        if len(self._song_list) < 1000:
-            step_divisor = 10
-        elif len(self._song_list) < 100:
-            step_divisor = 1
-
-        average_confidence = 0
-        for song in self._song_list[::max(0, len(self._song_list) // step_divisor)]:
-            _, confidence = song.confidence
-
     def rebuild(self):
         '''Rebuild all distances and the associated graph.
 
@@ -76,60 +65,6 @@ class Database:
         '''
         self._graph = igraph.Graph()
         self.find_common_attributes()
-
-        # Add N vertices to the graph
-        # self._graph.add_vertices(len(self._song_list))
-        # for idx, song in enumerate(self._song_list):
-        #    self._graph.add_vertex(name=str(idx), song=song)
-        for song in self._song_list:
-            song.calculate_confidence()
-
-        MAX_DIFF = 1.0 * self._session.mask_length
-
-        def heuristic(song_a, song_b):
-            filled_a, confidence_a = song_a.confidence
-            filled_b, confidence_b = song_b.confidence
-
-            # print(filled_a, confidence_a, filled_b, confidence_b)
-            if abs(filled_a - filled_b) > 0.5:
-                return False
-
-            diff = sum(
-                abs(a - b) for a, b in zip(confidence_a, confidence_b)
-                if a is not None and b is not None
-            )
-            # print('Diff', diff)
-            if diff > MAX_DIFF:
-                return False
-
-            return True
-
-        print()
-
-        total = len(self._song_list)
-        total = total * total / 2
-        idx = 0
-        compares = 0
-
-        for song_a, song_b in combinations(self._song_list, 2):
-            # print(song_a, song_b)
-            if heuristic(song_a, song_b):
-                # Compute a Distane object:
-                distance = song_a.distance_compute(song_b)
-
-                # Adding works bidirectional:
-                song_a.distance_add(song_b, distance)
-
-                # Add it to the graph
-                #self._graph.add_edge(song_a.uid, song_b.uid, dist=distance, weight=distance.distance)
-                # print(idx / total * 100, '%                ', end='\r')
-
-                compares += 1
-
-            idx += 1
-        print('In total', compares, idx, compares / idx * 100, '                      ')
-        # print('plotting')
-        # self.plot()
 
     def add_song(self, song):
         '''Add a single song to the database.
@@ -213,8 +148,6 @@ if __name__ == '__main__':
                     'not_in_session': 42
                 })
 
-    #  unittest.main()
-    # DatabaseTests().test_basic()
     def main():
         from munin.distance import DistanceFunction
 
@@ -241,4 +174,3 @@ if __name__ == '__main__':
                     'artist': i / N
                 })
     unittest.main()
-    # main()

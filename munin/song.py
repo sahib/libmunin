@@ -12,10 +12,6 @@ from munin.distance import Distance
 from munin.utils import SessionMapping, float_cmp
 
 
-# External:
-import numpy as np
-
-
 class Song(SessionMapping, Hashable):
     # Note: Use __slots__ (sys.getsizeof will report even more memory, but pympler less)
     __slots__ = ('_distances', '_max_distance', '_max_neighbors', '_hash', '_confidence', 'uid')
@@ -68,29 +64,6 @@ class Song(SessionMapping, Hashable):
         self._update_hash()
 
         self.uid = None
-
-    def calculate_confidence(self):
-        '''Compute the self rating of the song.
-
-        The rating expresses how well the song is defined.
-        In other words: How "comparable" the song is or how much "confidence"
-        in terms of usability we have in it's data.
-
-        :returns: a list of numbers from 0 (lowest) to 1.0 (highest confidence).
-        :rtype: list
-        '''
-
-        result = []
-        filled_values = 0
-
-        for key, value in self.items():
-            # print(key, value)
-            if value is not None:
-                dfunc = self._session.distance_function_for_key(key)
-                result.append(dfunc.compute_confidence(value))
-                filled_values += 1
-
-        self._confidence = (filled_values / self._session.mask_length, result)
 
     #######################
     #  Other convinience  #
@@ -315,14 +288,5 @@ if __name__ == '__main__':
             values = sorted(song_base._distances.items(), key=lambda x: x[1])
             self.assertEqual(values[+0][1].distance, (N - 1) / N)
             self.assertEqual(values[-1][1].distance, (N - 100 - 1) / N)
-
-        def test_confidence(self):
-            song_one = Song(self._session, {
-                'genre': 'alpine brutal death metal',
-                'artist': 'Herbert'
-            })
-
-            # TODO
-            # print(song_one.confidence())
 
     unittest.main()

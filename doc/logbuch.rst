@@ -219,3 +219,13 @@ sich nun geeinigt (ich mit mit meinem zweiten ich und christoph):
     - Wähle ein MAX_CONFIDENCE die diese Werte wiederspiegelt. (TODO: Gauss?)
     - Die Heuristik wird dann diese MAX_CONFIDENCE als Maß für die
       Vergleichbarkeit zweier Songs nehmen.
+
+
+7. November 2013
+----------------
+
+Heuristik wurde verworfen.
+
+Neuer Ansatz inspiriert von zuviel Kaffee, Seb und bestätigt durch dieses Paper:
+
+http://machinelearning.wustl.edu/mlpapers/paper_files/jmlr10_chen09b.pdf
