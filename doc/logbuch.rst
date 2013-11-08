@@ -157,3 +157,23 @@ vertretbar.
     * ``__main__.py`` schreiben.
     * moosecat auspacken, an mpd 0.18 anpassen und daten mal in libmunin
       reinschauffeln.
+
+
+    .. code-block:: python
+
+        def refine(song, max_depth=5, coming_from=None):
+            if max_depth is 0:
+                return
+
+            dfn = Song.distance_compute
+            add = Song.distance_add
+            for ind_ngb in song.indirect_neighbors(0.1, 0.2):
+                # Note: This does not prevent loops.
+                #       It just makes them occur less likely.
+                if ind_ngb is coming_from:
+                    continue
+ 
+                distance = dfn(song, ind_ngb)
+                add(song, distance)
+                if distance.distance < CONTINUE_DIFF:
+                    refine(ind_ngb, max_depth=max_depth - 1)
