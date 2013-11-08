@@ -68,50 +68,46 @@ class Database:
         self._graph.add_vertices(len(self._song_list))
         # self.find_common_attributes()
 
-        def base():
-            # Base Iteration:
-            slider = sliding_window(self._song_list, window_size, step_size)
-            center = centering_window(self._song_list, window_size // 2)
+        mean = igraph.statistics.RunningMean()
+        # Base Iteration:
+        slider = sliding_window(self._song_list, window_size, step_size)
+        center = centering_window(self._song_list, window_size // 2)
 
-            # Base Iteration:
-            for idx, iterator in enumerate((slider, center)):
-                print('Applying iteration #{}'.format(idx + 1))
-                for window in iterator:
-                    for song_a, song_b in combinations(window, 2):
-                        distance = Song.distance_compute(song_a, song_b)
-                        Song.distance_add(song_a, song_b, distance)
-                        # print(distance)
+        # Base Iteration:
+        for idx, iterator in enumerate((slider, center)):
+            print('Applying iteration #{}'.format(idx + 1))
+            for window in iterator:
+                for song_a, song_b in combinations(window, 2):
+                    distance = Song.distance_compute(song_a, song_b)
+                    Song.distance_add(song_a, song_b, distance)
+                    mean.add(distance.distance)
 
-        def refine():
-            # Refinement step:
-            # TODO: 0.1 as max dist - how to select that?
-            print('Applying refinement:')
-            refined = 0
-            tried_to_refine = 0
+        print('mean', mean.sd, mean.mean)
 
-            for song in self._song_list:
-                for ind_song in song.distance_indirect_iter(0.01):
-                    # print('.', end='')
-                    distance = Song.distance_compute(song, ind_song)
-                    refined += Song.distance_add(song, ind_song, distance)
-                    tried_to_refine += 1
-                # print()
-            print('Refined', refined, tried_to_refine)
+        # Refinement step:
+        # TODO: 0.1 as max dist - how to select that?
+        print('Applying refinement:')
+        refined = 0
+        tried_to_refine = 0
 
-        def build_graph():
-            # Build the graph out of all those distances:
-            print('Building Graph:')
-            for song in self._song_list:
-                for other_song, distance in song.distance_iter():
-                    # self._graph.add_edge(other_song.uid, song.uid, dist=distance, weight=distance.distance)
-                    # print('.', end='')
-                    pass
-                # print()
-            # self.plot()
+        for song in self._song_list:
+            for ind_song in song.distance_indirect_iter(0.01):
+                # print('.', end='')
+                distance = Song.distance_compute(song, ind_song)
+                refined += Song.distance_add(song, ind_song, distance)
+                tried_to_refine += 1
+            # print()
+        print('Refined', refined, tried_to_refine)
 
-        base()
-        refine()
-        build_graph()
+        # Build the graph out of all those distances:
+        print('Building Graph:')
+        for song in self._song_list:
+            for other_song, distance in song.distance_iter():
+                # self._graph.add_edge(other_song.uid, song.uid, dist=distance, weight=distance.distance)
+                # print('.', end='')
+                pass
+            # print()
+        # self.plot()
 
     def add_song(self, song):
         '''Add a single song to the database.
@@ -210,7 +206,7 @@ if __name__ == '__main__':
         }, path='/tmp')
 
         with session.database.transaction():
-            N = 32000
+            N = 1000
             for i in range(int(N / 2) + 1):
                 session.database.add_values({
                     'genre': i / N,
