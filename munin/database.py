@@ -8,9 +8,11 @@ from collections import Counter
 
 # Internal:
 from munin.song import Song
+from munin.utils import sliding_window, centering_window
 
 # External:
 import igraph
+
 
 
 class Database:
@@ -43,14 +45,13 @@ class Database:
 
     def plot(self):
         visual_style = {}
-        visual_style["vertex_size"] = 20
-        visual_style["vertex_label"] = self._graph.vs["name"]
-        visual_style["bbox"] = (300, 300)
-        visual_style["margin"] = 20
+        # visual_style["vertex_size"] = 20
+        # visual_style["vertex_label"] = self._graph.vs["name"]
+        # visual_style["bbox"] = (300, 300)
+        # visual_style["margin"] = 20
         # visual_style["edge_width"] = [1 + 2 * int(is_formal) for is_formal in g.es["is_formal"]]
-        # visual_style["layout"] = self._graph.layout('kk'),
         # visual_style["vertex_color"] = [color_dict[gender] for gender in g.vs["gender"]]
-        igraph.plot(self._graph, **visual_style)
+        igraph.plot(self._graph, layout=self._graph.layout('kk'))
 
     def find_common_attributes(self):
         counter = Counter()
@@ -58,13 +59,59 @@ class Database:
             counter.update(song.keys())
         print(counter.most_common())
 
-    def rebuild(self):
+    def rebuild(self, window_size=50, step_size=25):
         '''Rebuild all distances and the associated graph.
 
         This will be triggered for you automatically after a transaction.
         '''
         self._graph = igraph.Graph()
-        self.find_common_attributes()
+        self._graph.add_vertices(len(self._song_list))
+        # self.find_common_attributes()
+
+        def base():
+            # Base Iteration:
+            slider = sliding_window(self._song_list, window_size, step_size)
+            center = centering_window(self._song_list, window_size // 2)
+
+            # Base Iteration:
+            for idx, iterator in enumerate((slider, center)):
+                print('Applying iteration #{}'.format(idx + 1))
+                for window in iterator:
+                    for song_a, song_b in combinations(window, 2):
+                        distance = Song.distance_compute(song_a, song_b)
+                        Song.distance_add(song_a, song_b, distance)
+                        # print(distance)
+
+        def refine():
+            # Refinement step:
+            # TODO: 0.1 as max dist - how to select that?
+            print('Applying refinement:')
+            refined = 0
+            tried_to_refine = 0
+
+            for song in self._song_list:
+                for ind_song in song.distance_indirect_iter(0.01):
+                    # print('.', end='')
+                    distance = Song.distance_compute(song, ind_song)
+                    refined += Song.distance_add(song, ind_song, distance)
+                    tried_to_refine += 1
+                # print()
+            print('Refined', refined, tried_to_refine)
+
+        def build_graph():
+            # Build the graph out of all those distances:
+            print('Building Graph:')
+            for song in self._song_list:
+                for other_song, distance in song.distance_iter():
+                    # self._graph.add_edge(other_song.uid, song.uid, dist=distance, weight=distance.distance)
+                    # print('.', end='')
+                    pass
+                # print()
+            # self.plot()
+
+        base()
+        refine()
+        build_graph()
 
     def add_song(self, song):
         '''Add a single song to the database.
@@ -152,8 +199,8 @@ if __name__ == '__main__':
         from munin.distance import DistanceFunction
 
         class _DummyDistance(DistanceFunction):
-            def compute_confidence(self, value_list):
-                return value_list[0]
+            def compute(self, list_a, list_b):
+                return abs(list_a[0] - list_b[0])
 
         dprov = _DummyProvider()
         dfunc = _DummyDistance(dprov)
@@ -163,7 +210,7 @@ if __name__ == '__main__':
         }, path='/tmp')
 
         with session.database.transaction():
-            N = 500
+            N = 32000
             for i in range(int(N / 2) + 1):
                 session.database.add_values({
                     'genre': i / N,

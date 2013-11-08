@@ -101,7 +101,7 @@ class Song(SessionMapping, Hashable):
             )
         return Distance(self._session, distance_dict)
 
-    def distance_add(self, other_song, distance, _bidir=True):
+    def distance_add(self, other_song, distance, bidir=True):
         '''Add a relation to ``other_song`` with a certain distance.
 
         .. warning::
@@ -114,23 +114,35 @@ class Song(SessionMapping, Hashable):
         :type other_song: :class:`munin.song.Song`
         :param distance: The Distance to add to the "edge".
         :type distance: :class:`munin.distance.Distance`
+        :param bidir: If *True* also add the relation to *other_song*.
+        :type bidir: bool
+        :returns: *True* if the song was added to the distance list
+                  *False* if threshold was too low,
+                  or worse then what we have already.
         '''
-        # Make sure that same songs always get 0.0 as distance.
+        added = False
+
         if distance.distance <= self._max_distance:
             # Check if we still have room left
             if self._max_neighbors < len(self._distances):
                 # Find the worst song in the dictionary
-                worst_song, _ = max(self._distances.items(), key=lambda x: x[1])
+                worst_song, worst_dist = max(self._distances.items(), key=lambda x: x[1])
 
-                # delete the worst one to make place:
-                self._distances.pop(worst_song)
-
-            # Add the relation:
-            self._distances[other_song] = distance
+                if distance < worst_dist:
+                    # delete the worst one to make place:
+                    self._distances.pop(worst_song)
+                    self._distances[other_song] = distance
+                    added = True
+            else:
+                # There's still place left.
+                self._distances[other_song] = distance
+                added = True
 
         # Repeat procedure for the other song:
-        if _bidir is True:
-            other_song.distance_add(self, distance, _bidir=False)
+        if bidir is True:
+            other_song.distance_add(self, distance, bidir=False)
+
+        return added
 
     def distance_del(self, other_song):
         '''Delete the relation to ``other_song``
@@ -159,6 +171,17 @@ class Song(SessionMapping, Hashable):
         :rtype: generator
         '''
         return self._distances.items()
+
+    def distance_indirect_iter(self, dist_threshold):
+        '''Iterate over the indirect neighbors of this song.
+
+        :returns: an generator that yields one song at a time.
+        '''
+        for song, dist in self.distance_iter():
+            if dist.distance < dist_threshold:
+                for ind_song, ind_dist in song.distance_iter():
+                    if ind_dist.distance < dist_threshold:
+                        yield song
 
     #################################
     #  Additional helper functions  #
