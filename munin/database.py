@@ -79,7 +79,7 @@ class Database:
         dfn = Song.distance_compute
 
         # TODO: Thresholds sollten durch SD und mean abgeleitet werden.
-        for ind_ngb in song.distance_indirect_iter(0.01):
+        for ind_ngb in song.distance_indirect_iter(1.0):
             distance = dfn(song, ind_ngb)
             mean_counter.add(distance.distance)
             result_set.add((song, ind_ngb, distance))
@@ -253,7 +253,7 @@ if __name__ == '__main__':
         from random import random
 
         with session.database.transaction():
-            N = 32000
+            N = 100
             for i in range(int(N / 2) + 1):
                 session.database.add_values({
                     'genre': random(),
@@ -263,4 +263,4 @@ if __name__ == '__main__':
                 #     'genre': 1.0 - i / N,
                 #     'artist': i / N
                 # })
-    main()
+    unittest.main()
