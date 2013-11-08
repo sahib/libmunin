@@ -158,22 +158,108 @@ vertretbar.
     * moosecat auspacken, an mpd 0.18 anpassen und daten mal in libmunin
       reinschauffeln.
 
+5. November 2013
+----------------
 
-    .. code-block:: python
+Liebes Logbuch,
 
-        def refine(song, max_depth=5, coming_from=None):
-            if max_depth is 0:
-                return
+heute hab ich das Problem Dieter getroffen. Dieter ist recht träge und langsam...  
+Ich muss alle 32k songs miteineander vergleichen. Nach einer ersten Hochrechnung
+dauert das in einem günstig geschätzten Fall doch seine 13 Stunden.. was etwas
+viel ist. 
 
-            dfn = Song.distance_compute
-            add = Song.distance_add
-            for ind_ngb in song.indirect_neighbors(0.1, 0.2):
-                # Note: This does not prevent loops.
-                #       It just makes them occur less likely.
-                if ind_ngb is coming_from:
-                    continue
+Eigentlich sollte das ja innerhalb von 5 Minuten geschehen sein (praktisch wie
+ein mpd datenbank update - zmd. erwartet das der user (der depp.))
+
+Mögliche Ideen:
+
+1) Rating pro Song einführen (basierend auf Attribut Güte), for loop vergleicht
+   nur songs bei denen die heuristic True liefert.
+   Nachteil: Alles hängt von Güte der Heuristik ab.
+   Vorteil: Ein ganzer Graph wird generiert. Die Heuristik könnte lernfähig
+   sein.
+2) Aufteilung der Songs in Grüppchen, nur Vergleich innerhalb.
+   Nachteil: Kein allgemeiner Graph, viele Untergraphen, Problem der verbinung 
+   dieser. Und was wäre überhaupt das Splitkriterium für die Gruppen?
+
+**Nachtrag:**
+
+   https://gist.github.com/sahib/7327137
+
+6. November 2013
+----------------
+
+Liebes Logbuch,
+
+Heute ging der Tag allein für Heuristiken drauf. Auf folgendes Vorgehen wurde
+sich nun geeinigt (ich mit mit meinem zweiten ich und christoph):
+
+    - Wähle eine Gruppe von Attributen:
+
+      - Dies erfolgt automatisch (beste N attribute die in 90% aller Songs vorkommen): ::
+
+          counter = Counter()
+          for song in self._song_list:
+              counter.update(song.keys())
+          print(counter.most_common())
+
+      - Alternativ kann der user diese selbst setzen. 
+
+    - Berechne die confidence von 1% der möglichen kombinationen. Stelle
+      maximale Streuung (http://de.wikipedia.org/wiki/Korrigierte_Stichprobenvarianz)
+      und average fest.
+
+      *Iterationstrategie:* :: 
+      
+        >>> song_list[::step=int(len(song_list) / 100)]  # für große song_list
+        >>> song_list[::step=int(len(song_list) / 10)]   # len(song_list) < 1000
+        >>> song_list                                    # len(song_list) < 100
+
+      
+    - Wähle ein MAX_CONFIDENCE die diese Werte wiederspiegelt. (TODO: Gauss?)
+    - Die Heuristik wird dann diese MAX_CONFIDENCE als Maß für die
+      Vergleichbarkeit zweier Songs nehmen.
+
+
+7. November 2013
+----------------
+
+Heuristik wurde verworfen.
+
+Neuer Ansatz inspiriert von zuviel Kaffee, Seb und bestätigt durch dieses Paper:
+
+* http://machinelearning.wustl.edu/mlpapers/paper_files/jmlr10_chen09b.pdf
+* http://wwwconference.org/proceedings/www2011/proceedings/p577.pdf
+
+
+Demnach hätte man folgende Schritte als Algorithmus:
+
+1) *Basis-Distanzen:* Sliding window über Songlist, evtl. auch andere Methoden.
+2) *Refinement-Step:* Schaue die indirekten Nachbarn jedes Songs an und vergleiche.
+3) *DistanceToGraph:* Aus einzelnen Distanzen Graph bilden.
+
+Schritt **2)** benötigt die Standardabweichung und Average von **1)** um
+nur relevante Songs zu vergleichen. 
+
+**Pseudo-code für refinement step:**
+
+.. code-block:: python
+
+    def refine(song, max_depth=5, coming_from=None):
+        if max_depth is 0:
+            return
+
+        dfn = Song.distance_compute
+        add = Song.distance_add
+
+        # Thresholds sollten durch SD und mean abgeleitet werden.
+        for ind_ngb in song.indirect_neighbors(0.1, 0.2):
+            # Note: This does not prevent loops.
+            #       It just makes them occur less likely.
+            if ind_ngb is coming_from:
+                continue
  
-                distance = dfn(song, ind_ngb)
-                add(song, distance)
-                if distance.distance < CONTINUE_DIFF:
-                    refine(ind_ngb, max_depth=max_depth - 1)
+            distance = dfn(song, ind_ngb)
+            add(song, distance)
+            if distance.distance < CONTINUE_DIFF:
+                refine(ind_ngb, max_depth=max_depth - 1)

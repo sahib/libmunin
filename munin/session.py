@@ -64,7 +64,7 @@ def get_cache_path(extra_name=None):
 
 
 DEFAULT_CONFIG = {
-    'max_neighbors': 100,
+    'max_neighbors': 5,
     'max_distance': 0.999
 }
 
@@ -117,6 +117,7 @@ class Session:
             nvlfn = lambda x, d: x if x is not None else d
             return {key: nvlfn(descr[idx], default_func(key)) for key, descr in items}
 
+        # Import this locally, since we might get circular import otherway:
         from munin.distance import DistanceFunction
         from munin.provider import DirectProvider
 

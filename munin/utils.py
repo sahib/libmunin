@@ -6,11 +6,29 @@ Commonly utility functions used througout.
 '''
 
 from collections import Mapping, Hashable
+from itertools import chain, islice
 import sys
 
 
 # There does not seem to be a built-in for this.
 float_cmp = lambda a, b: abs(a - b) < sys.float_info.epsilon
+
+
+def sliding_window(iterable, n=2, step=1):
+    n2 = n // 2
+    for idx in range(0, len(iterable), step):
+        fst, snd = idx - n2, idx + n2
+        if fst < 0:
+            yield chain(iterable[fst:], iterable[:snd])
+        else:
+            yield islice(iterable, fst, snd)
+
+
+def centering_window(iterable, n=1):
+    ln = len(iterable)
+    for idx in range(0, ln // 2, n):
+        fst, snd = idx + n, ln - idx - n
+        yield chain(iterable[idx:fst], iterable[snd:snd + n])
 
 
 class SessionMapping(Mapping):
@@ -60,3 +78,18 @@ class SessionMapping(Mapping):
 
     def items(self):
         return iter(self)
+
+
+if __name__ == '__main__':
+    import unittest
+
+    class TestUtils(unittest.TestCase):
+        def test_sliding_window(self):
+            for window in sliding_window([1, 2, 3, 4], 2, 2):
+                print('//', list(window))
+
+        def test_centering_window(self):
+            for window in centering_window(range(16), 2):
+                print('==', list(window))
+
+    unittest.main()
