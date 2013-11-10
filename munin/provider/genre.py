@@ -513,7 +513,7 @@ if __name__ == '__main__':
         root.print_tree()
 
         # Split the genre description and normalize each before finding the path:
-        for sub_genre in prepare_genre_list(sys.argv[1]):
+        for sub_genre in prepare_genre_list(sys.argv[2]):
             words = prepare_single_genre(sub_genre)
 
             print()

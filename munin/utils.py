@@ -24,11 +24,17 @@ def sliding_window(iterable, n=2, step=1):
             yield islice(iterable, fst, snd)
 
 
-def centering_window(iterable, n=1):
-    ln = len(iterable)
-    for idx in range(0, ln // 2, n):
-        fst, snd = idx + n, ln - idx - n
-        yield chain(iterable[idx:fst], iterable[snd:snd + n])
+def centering_window(iterable, n=4, parallel=True):
+    l2 = len(iterable) // 2
+    n2 = n // 2
+
+    # Make indexing easier by cutting it in half:
+    lean = iterable[:l2]
+    mean = iterable[l2:] if parallel else iterable[:l2 - 1:-1]
+    area = range(0, l2, n2)
+
+    # Return an according iterator
+    return (chain(lean[idx:idx + n2], mean[idx:idx + n2]) for idx in area)
 
 
 class SessionMapping(Mapping):
@@ -85,11 +91,13 @@ if __name__ == '__main__':
 
     class TestUtils(unittest.TestCase):
         def test_sliding_window(self):
+            print('sliding')
             for window in sliding_window([1, 2, 3, 4], 2, 2):
                 print('//', list(window))
 
         def test_centering_window(self):
-            for window in centering_window(range(16), 2):
+            print('center')
+            for window in centering_window(range(20), 4, parallel=False):
                 print('==', list(window))
 
     unittest.main()

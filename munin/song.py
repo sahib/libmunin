@@ -116,11 +116,12 @@ class Song(SessionMapping, Hashable):
         :type distance: :class:`munin.distance.Distance`
         :param bidir: If *True* also add the relation to *other_song*.
         :type bidir: bool
-        :returns: *True* if the song was added to the distance list
-                  *False* if threshold was too low,
-                  or worse then what we have already.
+        :returns: *False* if the song was not added because of a bad distance.
+                  *True* in any other case.
         '''
         added = False
+        if other_song is self:
+            return True
 
         if distance.distance <= self._max_distance:
             # Check if we still have room left

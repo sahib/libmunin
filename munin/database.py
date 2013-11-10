@@ -4,7 +4,8 @@
 # Stdlib:
 from contextlib import contextmanager
 from itertools import combinations
-from collections import Counter
+from collections import Counter, deque
+from sys import stdout
 
 # Internal:
 from munin.song import Song
@@ -12,6 +13,13 @@ from munin.utils import sliding_window, centering_window
 
 # External:
 import igraph
+
+
+def _threshold_from_mean(mean_counter):
+    mean, sd = mean_counter.mean, mean_counter.sd
+    v = (mean + sd / 2) * (3 / 4)
+    # print('|-- guessing threshold', v, ' ' * 20, mean, sd)
+    return v
 
 
 class Database:
@@ -44,13 +52,11 @@ class Database:
 
     def plot(self):
         visual_style = {}
-        # visual_style["vertex_size"] = 20
-        # visual_style["vertex_label"] = self._graph.vs["name"]
-        # visual_style["bbox"] = (300, 300)
-        # visual_style["margin"] = 20
-        # visual_style["edge_width"] = [1 + 2 * int(is_formal) for is_formal in g.es["is_formal"]]
-        # visual_style["vertex_color"] = [color_dict[gender] for gender in g.vs["gender"]]
-        igraph.plot(self._graph, layout=self._graph.layout('kk'))
+        visual_style['vertex_label'] = [str(vx.index) for vx in self._graph.vs]
+        visual_style['vertex_color'] = ['#0000AA'] * len(self._graph.vs)
+        visual_style['vertex_label_color'] = ['#FFFFFF'] * len(self._graph.vs)
+        visual_style['layout'] = self._graph.layout('kk')
+        igraph.plot(self._graph, **visual_style)
 
     def find_common_attributes(self):
         counter = Counter()
@@ -62,65 +68,63 @@ class Database:
         # Base Iteration:
         slider = sliding_window(self._song_list, window_size, step_size)
         center = centering_window(self._song_list, window_size // 2)
+        anticn = centering_window(self._song_list, window_size // 2, parallel=False)
 
         compute = Song.distance_compute
         add = Song.distance_add
 
         # Base Iteration:
-        for idx, iterator in enumerate((slider, center)):
-            print('|-- Applying iteration #{}'.format(idx + 1))
+        for idx, iterator in enumerate((slider, center, anticn)):
+            print('|-- Applying iteration #{}: {}'.format(idx + 1, iterator))
             for window in iterator:
                 for song_a, song_b in combinations(window, 2):
                     distance = compute(song_a, song_b)
                     add(song_a, song_b, distance)
                     mean_counter.add(distance.distance)
 
-    def _rebuild_step_refine_single(self, song, result_set, mean_counter):
+    def _rebuild_step_refine(self, mean_counter, num_passes=10):
+        add = Song.distance_add
         dfn = Song.distance_compute
 
-        # TODO: Thresholds sollten durch SD und mean abgeleitet werden.
-        for ind_ngb in song.distance_indirect_iter(1.0):
-            distance = dfn(song, ind_ngb)
-            mean_counter.add(distance.distance)
-            result_set.add((song, ind_ngb, distance))
-
-    def _rebuild_step_refine(self, mean_counter, num_passes=100):
-        add = Song.distance_add
-        refined, tried_to_refine = 0, 0
-
         for n_iteration in range(num_passes):
-            to_add = set()
+            print('.', end='')
+            stdout.flush()
             for idx, song in enumerate(self._song_list):
-                print('|-- Iteration #{}: {:2.3f}%'.format(
-                        n_iteration,
-                        100 * idx / len(self._song_list),
-                    ).strip(),
-                    ' ' * 100, end='\r'
-                )
-                self._rebuild_step_refine_single(song, to_add, mean_counter)
+                result_set = deque()
+                threshold = _threshold_from_mean(mean_counter)
+                for ind_ngb in song.distance_indirect_iter(threshold):
+                    distance = dfn(song, ind_ngb)
+                    result_set.append((ind_ngb, distance))
+                    mean_counter.add(distance.distance)
 
-            refined, tried_to_refine = 0, 0
-            for song_a, song_b, distance  in to_add:
-                refined += add(song_a, song_b, distance)
-                tried_to_refine += 1
+                # Add the new distances, but only until a "worst" one was reached.
+                left_enough, right_enough = False, False
+                for ind_ngb, dist in sorted(result_set, key=lambda x: x[1]):
+                    if all((left_enough, right_enough)):
+                        break
 
-        print('|-- Refined {:d}/{:d} ({:f})'.format(
-            refined, tried_to_refine, tried_to_refine / refined),
-            ' ' * 100
-        )
+                    if not left_enough and add(song, ind_ngb, dist, bidir=False) is False:
+                        left_enough = True
+
+                    if not right_enough and add(ind_ngb, song, dist, bidir=False) is False:
+                        right_enough = True
+        print()
 
     def _rebuild_step_build_graph(self):
         self._graph = igraph.Graph()
-        self._graph.add_vertices(len(self._song_list))
 
+        for song in self._song_list:
+            self._graph.add_vertex(name=str(song.uid))
+        # self._graph.add_vertices(len(self._song_list))
+
+        edge_set = deque()
         for song_a in self._song_list:
             for song_b, distance in song_a.distance_iter():
-                self._graph.add_edge(
-                        song_a.uid, song_b.uid,
-                        dist=distance, weight=distance.distance
-                )
+                edge_set.append((song_a.uid, song_b.uid))
 
-    def rebuild(self, window_size=50, step_size=25, refine_passes=100):
+        self._graph.add_edges(edge_set)
+
+    def rebuild(self, window_size=50, step_size=25, refine_passes=10):
         '''Rebuild all distances and the associated graph.
 
         This will be triggered for you automatically after a transaction.
@@ -134,20 +138,14 @@ class Database:
                 window_size=window_size,
                 step_size=step_size
         )
-        print('|-- Mean Distane: {:f} (sd: {:f})'.format(
-            mean_counter.mean, mean_counter.sd
-        ))
-
-        print('+ Step #2: Applying refinement:')
+        print('|-- Mean Distane: {:f} (sd: {:f})'.format(mean_counter.mean, mean_counter.sd))
+        print('+ Step #2: Applying refinement:', end='')
         self._rebuild_step_refine(
             mean_counter,
             num_passes=refine_passes
         )
 
-        print('|-- Mean Distane: {:f} (sd: {:f})'.format(
-            mean_counter.mean, mean_counter.sd
-        ))
-
+        print('|-- Mean Distane: {:f} (sd: {:f})'.format(mean_counter.mean, mean_counter.sd))
         print('+ Step #3: Building Graph')
         self._rebuild_step_build_graph()
 
@@ -253,14 +251,14 @@ if __name__ == '__main__':
         from random import random
 
         with session.database.transaction():
-            N = 100
+            N = 40
             for i in range(int(N / 2) + 1):
-                session.database.add_values({
-                    'genre': random(),
-                    'artist': 1.0 - random()
-                })
                 # session.database.add_values({
-                #     'genre': 1.0 - i / N,
-                #     'artist': i / N
+                #     'genre': random(),
+                #     'artist': 1.0 - random()
                 # })
-    unittest.main()
+                session.database.add_values({
+                    'genre': 1.0 - i / N,
+                    'artist': i / N
+                })
+    main()
