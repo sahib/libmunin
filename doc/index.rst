@@ -44,8 +44,9 @@ I love early examples, so here's one:
    from munin.distance import GenreTreeDistance, WordlistDistance
 
    # Perhaps we already had an prior session?
-   session = Session.from_name(__name__)
-   if session is None:
+   try:
+      session = Session.from_name(__name__)
+   except FileNotFoundError:
        # Looks like it didn't exist yet.
        # Well, go and create it! (You gonna have to adapt your data)
        session = Session.create_default(__name__)
@@ -62,13 +63,14 @@ I love early examples, so here's one:
 
     # In any case: We have a running session now.
     # We can now use to do useful stuff like recomnendations:
+    # In this case, give me 10 songs similar to some_song
     ten_recomnendations = session.recomned(some_song, 10)
 
     # You can feed also your lately listened songs:
     # libmunin will try to base newer recomnendations on this.
     session.feed_history(some_munin_song)
 
-    # Rules can be created to add certain 
+    # Rules can be created to add certain relations we don't know about.
     session.add_rule_from_string('genre', 'metal <=> rock = 0.0')
 
 
