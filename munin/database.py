@@ -100,8 +100,8 @@ class Database:
                 # Add the new distances, but only until a "worst" one was reached.
                 left_enough, right_enough = False, False
                 for ind_ngb, dist in sorted(result_set, key=lambda x: x[1]):
-                    if all((left_enough, right_enough)):
-                        break
+                    # if all((left_enough, right_enough)):
+                    #    break
 
                     if not left_enough and add(song, ind_ngb, dist, bidir=False) is False:
                         left_enough = True
@@ -109,11 +109,6 @@ class Database:
                     if not right_enough and add(ind_ngb, song, dist, bidir=False) is False:
                         right_enough = True
         print()
-
-        # for song in self._song_list:
-        #     print(song.uid, len(song._distances))
-        #     for song in song.distance_indirect_iter(1.0):
-        #         print('   ', song.uid)
 
     def _rebuild_step_build_graph(self):
         self._graph = igraph.Graph()
@@ -125,9 +120,10 @@ class Database:
         edge_set = deque()
         for song_a in self._song_list:
             for song_b, distance in song_a.distance_iter():
-                edge_set.append((song_a.uid, song_b.uid))
+                fst, snd = min(song_a.uid, song_b.uid), max(song_a.uid, song_b.uid)
+                edge_set.append((fst, snd))
 
-        self._graph.add_edges(edge_set)
+        self._graph.add_edges(set(edge_set))
 
     def rebuild(self, window_size=50, step_size=25, refine_passes=10):
         '''Rebuild all distances and the associated graph.
@@ -255,24 +251,24 @@ if __name__ == '__main__':
         import math
 
         with session.database.transaction():
-            N = 40
+            N = 200
             for i in range(int(N / 2) + 1):
                 # session.database.add_values({
                 #     'genre': random(),
                 #     'artist': 1.0 - random()
                 # })
-                # session.database.add_values({
-                #     'genre': 1.0 - i / N,
-                #     'artist': i / N
+                session.database.add_values({
+                    'genre': 1.0 - i / N,
+                    'artist': 1.0 - i / N
 
-                #     })
+                })
 
                 # Pseudo-Random, but deterministic:
-                euler = lambda x: math.fmod(math.e ** x, 1.0)
-                session.database.add_values({
-                    'genre': euler((i + 1) % 30),
-                    'artist': euler((N - i + 1) % 30)
-                })
+                # euler = lambda x: math.fmod(math.e ** x, 1.0)
+                # session.database.add_values({
+                #     'genre': euler((i + 1) % 30),
+                #     'artist': euler((N - i + 1) % 30)
+                # })
 
         print('+ Step #4: Layouting and Plotting')
         session.database.plot()
