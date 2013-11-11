@@ -149,9 +149,6 @@ class Database:
         print('+ Step #3: Building Graph')
         self._rebuild_step_build_graph()
 
-        print('+ Step #4: Layouting and Plotting')
-        self.plot()
-
     def add_song(self, song):
         '''Add a single song to the database.
 
@@ -194,6 +191,7 @@ class Database:
 
 if __name__ == '__main__':
     import unittest
+    import sys
     from munin.session import Session
     from munin.provider import DirectProvider
 
@@ -260,5 +258,13 @@ if __name__ == '__main__':
                 session.database.add_values({
                     'genre': 1.0 - i / N,
                     'artist': i / N
-                })
-    main()
+
+                    })
+
+        print('+ Step #4: Layouting and Plotting')
+        session.database.plot()
+
+    if '--cli' in sys.argv:
+        main()
+    else:
+        unittest.main()
