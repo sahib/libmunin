@@ -119,19 +119,20 @@ class Song(SessionMapping, Hashable):
         :returns: *False* if the song was not added because of a bad distance.
                   *True* in any other case.
         '''
-        added = False
         if other_song is self:
             return True
 
+        added = False
+
         if distance.distance <= self._max_distance:
             # Check if we still have room left
-            if self._max_neighbors < len(self._distances):
+            if len(self._distances) >= self._max_neighbors:
                 # Find the worst song in the dictionary
                 worst_song, worst_dist = max(self._distances.items(), key=lambda x: x[1])
 
                 if distance < worst_dist:
                     # delete the worst one to make place:
-                    self._distances.pop(worst_song)
+                    del self._distances[worst_song]
                     self._distances[other_song] = distance
                     added = True
             else:
@@ -213,6 +214,20 @@ if __name__ == '__main__':
     import unittest
     from munin.session import Session
 
+    # Mock the distance class
+    class DistanceDummy:
+        def __init__(self, d):
+            self.distance = d
+
+        def __eq__(self, other):
+            return self.distance == other.distance
+
+        def __lt__(self, other):
+            return self.distance > other.distance
+
+        def __repr__(self):
+            return str(self.distance)
+
     class SongTests(unittest.TestCase):
         def setUp(self):
             self._session = Session('test', {
@@ -261,29 +276,49 @@ if __name__ == '__main__':
                 set(['alpine brutal death metal', 'Herbert'])
             )
 
+        def test_song_distance_indirect_iter(self):
+            with self._session.database.transaction():
+                # Pseudo-Random, but deterministic:
+                import math
+                euler = lambda x: math.fmod(math.e ** x, 1.0)
+                N = 40
+                for i in range(N):
+                    self._session.database.add_values({
+                        'genre': euler(i + 1),
+                        'artist': euler(N - i + 1)
+                    })
+
+            # for song in self._session.database:
+            #     print(song.uid)
+            #     for ind_ngb in set(song.distance_indirect_iter(1.0)):
+            #         print('    ', ind_ngb.uid)
+
+        def test_song_add(self):
+            song_one = Song(self._session, {
+                'genre': 'alpine brutal death metal',
+                'artist': 'herbert'
+            }, max_neighbors=5)
+
+            N = 100
+
+            for off in (0, 1.0):
+                for i in range(N):
+                    song_one.distance_add(Song(self._session, {
+                        'genre': str(i),
+                        'artist': str(i)
+                    }, max_neighbors=5), DistanceDummy(off - i / N))
+
+                self.assertEqual(len(song_one.distance_iter()), 5)
+
         def test_distances(self):
             song_one = Song(self._session, {
                 'genre': 'alpine brutal death metal',
-                'artist': 'Herbert'
+                'artist': 'herbert'
             })
             song_two = Song(self._session, {
                 'genre': 'tirolian brutal death metal',
                 'artist': 'Gustl'
             })
-
-            # Mock the distance class (so we need no session)
-            class DistanceDummy:
-                def __init__(self, d):
-                    self.distance = d
-
-                def __eq__(self, other):
-                    return self.distance == other.distance
-
-                def __lt__(self, other):
-                    return self.distance > other.distance
-
-                def __repr__(self):
-                    return str(self.distance)
 
             song_one.distance_add(song_two, DistanceDummy(0.7))
             song_one.distance_add(song_one, DistanceDummy(421))  # this should be clamped to 1
@@ -311,6 +346,6 @@ if __name__ == '__main__':
 
             values = sorted(song_base._distances.items(), key=lambda x: x[1])
             self.assertEqual(values[+0][1].distance, (N - 1) / N)
-            self.assertEqual(values[-1][1].distance, (N - 100 - 1) / N)
+            self.assertEqual(values[-1][1].distance, (N - 100) / N)
 
     unittest.main()

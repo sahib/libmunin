@@ -55,7 +55,7 @@ class Database:
         visual_style['vertex_label'] = [str(vx.index) for vx in self._graph.vs]
         visual_style['vertex_color'] = ['#0000AA'] * len(self._graph.vs)
         visual_style['vertex_label_color'] = ['#FFFFFF'] * len(self._graph.vs)
-        visual_style['layout'] = self._graph.layout('kk')
+        visual_style['layout'] = self._graph.layout('fr')
         igraph.plot(self._graph, **visual_style)
 
     def find_common_attributes(self):
@@ -82,7 +82,7 @@ class Database:
                     add(song_a, song_b, distance)
                     mean_counter.add(distance.distance)
 
-    def _rebuild_step_refine(self, mean_counter, num_passes=10):
+    def _rebuild_step_refine(self, mean_counter, num_passes=100):
         add = Song.distance_add
         dfn = Song.distance_compute
 
@@ -92,7 +92,7 @@ class Database:
             for idx, song in enumerate(self._song_list):
                 result_set = deque()
                 threshold = _threshold_from_mean(mean_counter)
-                for ind_ngb in song.distance_indirect_iter(threshold):
+                for ind_ngb in set(song.distance_indirect_iter(threshold)):
                     distance = dfn(song, ind_ngb)
                     result_set.append((ind_ngb, distance))
                     mean_counter.add(distance.distance)
@@ -109,6 +109,11 @@ class Database:
                     if not right_enough and add(ind_ngb, song, dist, bidir=False) is False:
                         right_enough = True
         print()
+
+        # for song in self._song_list:
+        #     print(song.uid, len(song._distances))
+        #     for song in song.distance_indirect_iter(1.0):
+        #         print('   ', song.uid)
 
     def _rebuild_step_build_graph(self):
         self._graph = igraph.Graph()
@@ -247,6 +252,7 @@ if __name__ == '__main__':
         }, path='/tmp')
 
         from random import random
+        import math
 
         with session.database.transaction():
             N = 40
@@ -255,11 +261,18 @@ if __name__ == '__main__':
                 #     'genre': random(),
                 #     'artist': 1.0 - random()
                 # })
-                session.database.add_values({
-                    'genre': 1.0 - i / N,
-                    'artist': i / N
+                # session.database.add_values({
+                #     'genre': 1.0 - i / N,
+                #     'artist': i / N
 
-                    })
+                #     })
+
+                # Pseudo-Random, but deterministic:
+                euler = lambda x: math.fmod(math.e ** x, 1.0)
+                session.database.add_values({
+                    'genre': euler((i + 1) % 30),
+                    'artist': euler((N - i + 1) % 30)
+                })
 
         print('+ Step #4: Layouting and Plotting')
         session.database.plot()
