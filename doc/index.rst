@@ -43,32 +43,34 @@ I love early examples, so here's one:
    from munin.provider import AtticProvider, GenreTreeProvider, StemProvider
    from munin.distance import GenreTreeDistance, WordlistDistance
 
-       
    # Perhaps we already had an prior session?
    session = Session.from_name(__name__)
    if session is None:
        # Looks like it didn't exist yet.
-       # Well, go and create it!
-       session = Session(
-            name='MyNameIsSession',
-            attribute_mask={
-                # Each line goes like this:
-                # 'the-key-you-want-have-in-your-song': (Provider, DistanceFunction, Weighting)
-                'genre': (GenreTreeProvider, GenreTreeDistance, 0.5),
-                'title': (StemProvider, WordlistDistance, 0.1),
-                'artist': (AtticProvider, None, 0.1)
-
-            }
-       )
-
-       # TODO: Make this somewhat clearer.
+       # Well, go and create it! (You gonna have to adapt your data)
+       session = Session.create_default(__name__)
        with session.transaction():
-           for song in your_database:
-                session.add(song)
+           for your_song in your_database:
+                session.database.add_values({
+                    'artist': your_song.artist,
+                    'album': your_song.album,
+                    'title': your_song.title,
+                    'genre': your_song.genre,
+                    'mood': file_to_song(your_song)
+                    # ...
+                })
 
     # In any case: We have a running session now.
     # We can now use to do useful stuff like recomnendations:
-    pass
+    ten_recomnendations = session.recomned(some_song, 10)
+
+    # You can feed also your lately listened songs:
+    # libmunin will try to base newer recomnendations on this.
+    session.feed_history(some_munin_song)
+
+    # Rules can be created to add certain 
+    session.add_rule_from_string('genre', 'metal <=> rock = 0.0')
+
 
 That was quite a lot to grok for a *small* example. 
 Don't worry we discuss every bit of this in the documentation.
