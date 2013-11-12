@@ -180,9 +180,10 @@ class Song(SessionMapping, Hashable):
         :returns: an generator that yields one song at a time.
         '''
         for song, dist in self.distance_iter():
-            if dist.distance < dist_threshold:
+            curr_dist = dist.distance
+            if curr_dist < dist_threshold:
                 for ind_song, ind_dist in song.distance_iter():
-                    if ind_dist.distance < dist_threshold:
+                    if (ind_dist.distance + curr_dist) / 2 < dist_threshold:
                         yield song
 
     #################################

@@ -50,6 +50,11 @@ class Database:
         '''
         visual_style = {}
         visual_style['vertex_label'] = [str(vx.index) for vx in self._graph.vs]
+
+        def color_from_distance(distance):
+            return '#' + 'FEDCBA9876543210'[int(distance * 16)] * 2  +'0000'
+
+        visual_style['edge_color'] = [color_from_distance(e['dist'].distance) for e in self._graph.es]
         visual_style['vertex_color'] = ['#0000AA'] * len(self._graph.vs)
         visual_style['vertex_label_color'] = ['#FFFFFF'] * len(self._graph.vs)
         visual_style['layout'] = self._graph.layout('fr')
@@ -102,7 +107,7 @@ class Database:
                     # Sample the newly calculated distance.
                     mean_counter.add(distance.distance)
 
-    def _rebuild_step_refine(self, mean_counter, num_passes=100, mean_scale=2):
+    def _rebuild_step_refine(self, mean_counter, num_passes=10, mean_scale=2):
         '''Do the refinement step.
 
         .. seealso:: :func:`rebuild`
@@ -160,7 +165,9 @@ class Database:
         '''
         # Create the actual graph:
         self._graph = igraph.Graph(directed=False)
-        self._graph.add_vertices(len(self._song_list))
+        # self._graph.add_vertices(len(self._song_list))
+        for song in self._song_list:
+            self._graph.add_vertex(song=song)
 
         # Gather all edges in one container
         # (this speeds up adding edges)
@@ -169,14 +176,15 @@ class Database:
             for song_b, distance in song_a.distance_iter():
                 # Make Edge Deduplication work:
                 if song_a.uid < song_b.uid:
-                    edge_set.append((song_b.uid, song_a.uid))
+                    edge_set.append((song_b.uid, song_a.uid, distance))
                 else:
-                    edge_set.append((song_a.uid, song_b.uid))
+                    edge_set.append((song_a.uid, song_b.uid, distance))
 
         # Filter duplicate edge pairs.
-        self._graph.add_edges(set(edge_set))
+        for  a, b, dist in set(edge_set):
+            self._graph.add_edge(a, b, dist=dist)
 
-    def rebuild(self, window_size=50, step_size=25, refine_passes=100):
+    def rebuild(self, window_size=60, step_size=20, refine_passes=10):
         '''Rebuild all distances and the associated graph.
 
         This will be triggered for you automatically after a transaction.
@@ -298,21 +306,15 @@ if __name__ == '__main__':
             'artist': (dprov, dfunc, 0.3)
         }, path='/tmp')
 
-        from random import random
         import math
 
         with session.database.transaction():
-            N = 200
+            N = 50
             for i in range(int(N / 2) + 1):
-                # session.database.add_values({
-                #     'genre': random(),
-                #     'artist': 1.0 - random()
-                # })
-                # session.database.add_values({
-                #     'genre': 1.0 - i / N,
-                #     'artist': 1.0 - i / N
-                # })
-
+                session.database.add_values({
+                    'genre': 1.0 - i / N,
+                    'artist': 1.0 - i / N
+                })
                 # Pseudo-Random, but deterministic:
                 euler = lambda x: math.fmod(math.e ** x, 1.0)
                 session.database.add_values({

@@ -107,17 +107,14 @@ if __name__ == '__main__':
 
     class TestUtils(unittest.TestCase):
         def test_sliding_window(self):
-            print('sliding')
             wnds = list(sliding_window([1, 2, 3, 4], 2, 2))
             a, b = wnds
             self.assertEqual(list(a), [4, 1])
             self.assertEqual(list(b), [2, 3])
 
         def test_centering_window(self):
-            print('center')
             wnds = list(centering_window(range(10), 4, parallel=False))
             wnds = [list(w) for w in wnds]
-
             ex = [[0, 1, 9, 8], [2, 3, 7, 6], [4, 5]]
             self.assertEqual(ex, wnds)
 
