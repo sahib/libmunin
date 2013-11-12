@@ -15,6 +15,15 @@ float_cmp = lambda a, b: abs(a - b) < sys.float_info.epsilon
 
 
 def sliding_window(iterable, n=2, step=1):
+    '''Iterate over an iterable with a sliding window of size `n`.
+
+    This works best if len(iterable) can be cheaply calculated.
+
+    :param iterable: The iterable to provide an iterator for.
+    :param n: The size of the window (max size)
+    :param step: How much right shall the window be tranformed with each iteration?
+    :returns: a generator that yields slices as windows.
+    '''
     n2 = n // 2
     for idx in range(0, len(iterable), step):
         fst, snd = idx - n2, idx + n2
@@ -25,12 +34,19 @@ def sliding_window(iterable, n=2, step=1):
 
 
 def centering_window(iterable, n=4, parallel=True):
+    '''Provide an iterator that moves windows slowly towards center of the iterable.
+
+    :param iterable: The iterable to provide an iterator for.
+    :param parallel: If False the window move together, if True they move parallel to each other.
+    :param n: The size of the window.
+    :returns: a generator that yields slices as windows.
+    '''
     l2 = len(iterable) // 2
     n2 = n // 2
 
     # Make indexing easier by cutting it in half:
     lean = iterable[:l2]
-    mean = iterable[l2:] if parallel else iterable[:l2 - 1:-1]
+    mean = iterable[l2:] if parallel else iterable[:(l2 - 1):-1]
     area = range(0, l2, n2)
 
     # Return an according iterator
@@ -92,12 +108,17 @@ if __name__ == '__main__':
     class TestUtils(unittest.TestCase):
         def test_sliding_window(self):
             print('sliding')
-            for window in sliding_window([1, 2, 3, 4], 2, 2):
-                print('//', list(window))
+            wnds = list(sliding_window([1, 2, 3, 4], 2, 2))
+            a, b = wnds
+            self.assertEqual(list(a), [4, 1])
+            self.assertEqual(list(b), [2, 3])
 
         def test_centering_window(self):
             print('center')
-            for window in centering_window(range(20), 4, parallel=False):
-                print('==', list(window))
+            wnds = list(centering_window(range(10), 4, parallel=False))
+            wnds = [list(w) for w in wnds]
+
+            ex = [[0, 1, 9, 8], [2, 3, 7, 6], [4, 5]]
+            self.assertEqual(ex, wnds)
 
     unittest.main()

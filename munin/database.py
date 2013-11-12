@@ -15,13 +15,6 @@ from munin.utils import sliding_window, centering_window
 import igraph
 
 
-def _threshold_from_mean(mean_counter):
-    mean, sd = mean_counter.mean, mean_counter.sd
-    v = (mean + sd / 2) * (3 / 4)
-    # print('|-- guessing threshold', v, ' ' * 20, mean, sd)
-    return v
-
-
 class Database:
     'Class managing Database concerns.'
     def __init__(self, session):
@@ -51,6 +44,10 @@ class Database:
         return self._song_list[idx]
 
     def plot(self):
+        '''Plot the current graph for debugging purpose.
+
+        Will try to open an installed image viewer.
+        '''
         visual_style = {}
         visual_style['vertex_label'] = [str(vx.index) for vx in self._graph.vs]
         visual_style['vertex_color'] = ['#0000AA'] * len(self._graph.vs)
@@ -59,73 +56,127 @@ class Database:
         igraph.plot(self._graph, **visual_style)
 
     def find_common_attributes(self):
+        '''Will try to find the most common attributes for debugging purpose.
+
+        :returns: a dictionary with the attribute as key and count as value.
+        '''
         counter = Counter()
         for song in self._song_list:
             counter.update(song.keys())
-        print(counter.most_common())
+        return counter
 
     def _rebuild_step_base(self, mean_counter, window_size=50, step_size=25):
+        '''Do the Base Iterations.
+
+        This involves three iterations:
+
+            * :func:`munin.utils.sliding_window`
+              Window over the List (overlapping with * window_size/step_size).
+            * :func:`munin.utils.centering_window` with `parallel=True`.
+            * :func:`munin.utils.centering_window` with `parallel=True`.
+
+        :param mean_counter: A RunningMean counter to sample the initial mean/sd
+        :param window_size: The max. size of the window in which combinations are taken.
+        :param step_size: The movement of the window per iteration.
+        '''
         # Base Iteration:
         slider = sliding_window(self._song_list, window_size, step_size)
         center = centering_window(self._song_list, window_size // 2)
         anticn = centering_window(self._song_list, window_size // 2, parallel=False)
 
+        # Prebind the functions for performance reasons.
         compute = Song.distance_compute
         add = Song.distance_add
 
-        # Base Iteration:
+        # Select the iterator:
         for idx, iterator in enumerate((slider, center, anticn)):
             print('|-- Applying iteration #{}: {}'.format(idx + 1, iterator))
+
+            # Iterate over the list:
             for window in iterator:
+                # Calculate the combination set:
                 for song_a, song_b in combinations(window, 2):
                     distance = compute(song_a, song_b)
                     add(song_a, song_b, distance)
+
+                    # Sample the newly calculated distance.
                     mean_counter.add(distance.distance)
 
-    def _rebuild_step_refine(self, mean_counter, num_passes=100):
+    def _rebuild_step_refine(self, mean_counter, num_passes=100, mean_scale=2):
+        '''Do the refinement step.
+
+        .. seealso:: :func:`rebuild`
+
+        :param mean_counter: RunningMean Counter
+        :param num_passes: How many times the song list shall be iterated.
+        '''
+        # Prebind the functions for performance reasons:
         add = Song.distance_add
         dfn = Song.distance_compute
 
+        # Do the whole thing `num_passes` times...
         for n_iteration in range(num_passes):
             print('.', end='')
             stdout.flush()
+
+            threshold = (mean_counter.mean * mean_scale - mean_counter.sd) / mean_scale
+            newly_found = 0
+
+            # Go through the song_list...
             for idx, song in enumerate(self._song_list):
+                # ..and remember each calculated distance
+                # we got from compare the song with its indirect neighbors.
                 result_set = deque()
-                threshold = _threshold_from_mean(mean_counter)
+
+                # Iterate over the indirect neighbors (those having a certain
+                # distance lower than threshold):
                 for ind_ngb in set(song.distance_indirect_iter(threshold)):
                     distance = dfn(song, ind_ngb)
                     result_set.append((ind_ngb, distance))
                     mean_counter.add(distance.distance)
 
-                # Add the new distances, but only until a "worst" one was reached.
-                left_enough, right_enough = False, False
+                # Add the distances (we should not do this during # iteration)
+                # Also count which of these actually
                 for ind_ngb, dist in sorted(result_set, key=lambda x: x[1]):
-                    # if all((left_enough, right_enough)):
-                    #    break
+                    if ind_ngb is not song:
+                        newly_found += add(song, ind_ngb, dist)
 
-                    if not left_enough and add(song, ind_ngb, dist, bidir=False) is False:
-                        left_enough = True
-
-                    if not right_enough and add(ind_ngb, song, dist, bidir=False) is False:
-                        right_enough = True
+            # Stop iteration when not enough new distances were gathered
+            # (at least one new addition per song)
+            # This usually only triggers for high num_passes
+            if newly_found <= len(self._song_list):
+                print('o [not enough additions, breaking]', end='')
+                break
         print()
 
     def _rebuild_step_build_graph(self):
-        self._graph = igraph.Graph()
+        '''Built an actual igraph.Graph from the songlist.
 
-        for song in self._song_list:
-            self._graph.add_vertex(name=str(song.uid))
-        # self._graph.add_vertices(len(self._song_list))
+        This is done by iteration over the songlist and gathering all
+        deduplicated edges.
 
+        The resulting graph will be stored in self._graph and will have
+        len(self._song_list) vertices.
+        '''
+        # Create the actual graph:
+        self._graph = igraph.Graph(directed=False)
+        self._graph.add_vertices(len(self._song_list))
+
+        # Gather all edges in one container
+        # (this speeds up adding edges)
         edge_set = deque()
         for song_a in self._song_list:
             for song_b, distance in song_a.distance_iter():
-                fst, snd = min(song_a.uid, song_b.uid), max(song_a.uid, song_b.uid)
-                edge_set.append((fst, snd))
+                # Make Edge Deduplication work:
+                if song_a.uid < song_b.uid:
+                    edge_set.append((song_b.uid, song_a.uid))
+                else:
+                    edge_set.append((song_a.uid, song_b.uid))
 
+        # Filter duplicate edge pairs.
         self._graph.add_edges(set(edge_set))
 
-    def rebuild(self, window_size=50, step_size=25, refine_passes=10):
+    def rebuild(self, window_size=50, step_size=25, refine_passes=100):
         '''Rebuild all distances and the associated graph.
 
         This will be triggered for you automatically after a transaction.
@@ -257,18 +308,17 @@ if __name__ == '__main__':
                 #     'genre': random(),
                 #     'artist': 1.0 - random()
                 # })
-                session.database.add_values({
-                    'genre': 1.0 - i / N,
-                    'artist': 1.0 - i / N
-
-                })
+                # session.database.add_values({
+                #     'genre': 1.0 - i / N,
+                #     'artist': 1.0 - i / N
+                # })
 
                 # Pseudo-Random, but deterministic:
-                # euler = lambda x: math.fmod(math.e ** x, 1.0)
-                # session.database.add_values({
-                #     'genre': euler((i + 1) % 30),
-                #     'artist': euler((N - i + 1) % 30)
-                # })
+                euler = lambda x: math.fmod(math.e ** x, 1.0)
+                session.database.add_values({
+                    'genre': euler((i + 1) % 30),
+                    'artist': euler((N - i + 1) % 30)
+                })
 
         print('+ Step #4: Layouting and Plotting')
         session.database.plot()
