@@ -312,7 +312,7 @@ class Distance(SessionMapping):
         # Use only a list internally to save the values.
         # Keys are stored shared in the Session objective.
         SessionMapping.__init__(self, session, dist_dict, default_value=None)
-        self._distance = self.weight()
+        self._distance = session._weight(dist_dict)
 
     def __eq__(self, other):
         return float_cmp(self.distance, other.distance)
@@ -330,22 +330,6 @@ class Distance(SessionMapping):
     def distance(self):
         'Return the condensed and weighted distance'
         return self._distance
-
-    def weight(self):
-        '''Compute the weighted distance from all seperate sources.
-
-        This is public for testing and validation.
-        '''
-        dist_sum = 0.0
-
-        # Collect a list of (weight, dists) and the max weight.
-        for key, dist in self.items():
-            # Do not insert not calculated distances.
-            weight = self._session.weight_for_key(key)
-            dist_sum += (dist if dist is not None else 1.0) * weight
-
-        # Return the average distance with weight applied.
-        return dist_sum / self._session.weight_sum
 
 ###########################################################################
 #                             Import Aliases                              #
@@ -422,10 +406,18 @@ if __name__ == '__main__':
 
         def test_weight(self):
             dist = Distance(self._session, {'genre': 1.0})
-            self.assertTrue(float_cmp(dist.weight(), 1.0))
+            self.assertAlmostEqual(dist.distance, 1.0)
+            dist = Distance(self._session, {'random': 1.0})
+            self.assertAlmostEqual(dist.distance, 1.0)
+            dist = Distance(self._session, {'genre': 1.0, 'random': 1.0})
+            self.assertAlmostEqual(dist.distance, 1.0)
+            dist = Distance(self._session, {'genre': 1.0, 'random': 0.0})
+            self.assertAlmostEqual(dist.distance, 5 / 6)
+            dist = Distance(self._session, {'genre': 0.0, 'random': 0.0})
+            self.assertAlmostEqual(dist.distance, 0.0)
 
             # Compute it manually:
             dist = Distance(self._session, {'genre': 0.5, 'random': 0.1})
-            self.assertTrue(float_cmp(dist.weight(), (0.5 * 0.5 + 0.1 * 0.1) / 0.6))
+            self.assertTrue(float_cmp(dist.distance, (0.5 * 0.5 + 0.1 * 0.1) / 0.6))
 
     unittest.main()

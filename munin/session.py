@@ -133,7 +133,7 @@ class Session:
         )
 
         # Sum of the individual weights, pre-calculated once.
-        self.weight_sum = sum((descr[2] for descr in attribute_mask.values()))
+        self._weight_sum = sum((descr[2] for descr in attribute_mask.values()))
 
         # Needed for later saving
         self._create_file_structure(self._path)
@@ -201,6 +201,18 @@ class Session:
     def weight_for_key(self, key):
         'Get the weighting (*float*) for ``key``'
         return self._key_to_weighting[key]
+
+    def _weight(self, dist_dict):
+        'This is in Session for performance reasons'
+        dist_sum = 0.0
+
+        for key, (_, _, weight) in self._attribute_mask.items():
+            try:
+                dist_sum += dist_dict[key] * weight
+            except KeyError:
+                dist_sum += weight
+
+        return dist_sum / self._weight_sum
 
     ############################
     #  Caching Implementation  #
