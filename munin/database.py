@@ -161,9 +161,8 @@ class Database:
 
                 # Add the distances (we should not do this during # iteration)
                 # Also count which of these actually
-                for ind_ngb, dist in sorted(result_set, key=lambda x: x[1]):
-                    if ind_ngb is not song:
-                        newly_found += add(song, ind_ngb, dist)
+                for ind_ngb, dist in result_set:
+                    newly_found += add(song, ind_ngb, dist)
 
             # Stop iteration when not enough new distances were gathered
             # (at least one new addition per song)
@@ -250,7 +249,10 @@ class Database:
         for key, value in value_dict.items():
             try:
                 provider = self._session.provider_for_key(key)
-                value_dict[key] = provider.process(value)
+                if value is None:
+                    value_dict[key] = None
+                else:
+                    value_dict[key] = provider.process(value)
             except KeyError:
                 raise KeyError('key "{k}" is not in attribute mask'.format(k=key))
 
@@ -327,7 +329,7 @@ if __name__ == '__main__':
         import math
 
         with session.database.transaction():
-            N = 50
+            N = 5000
             for i in range(int(N / 2) + 1):
                 session.database.add_values({
                     'genre': 1.0 - i / N,
@@ -341,7 +343,7 @@ if __name__ == '__main__':
                 })
 
         print('+ Step #4: Layouting and Plotting')
-        session.database.plot()
+        # session.database.plot()
 
     if '--cli' in sys.argv:
         main()

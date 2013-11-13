@@ -92,13 +92,16 @@ class Song(SessionMapping, Hashable):
         :returns: A :class:`munin.distance.Distance` with according weighting.
         '''
         distance_dict = {}
-        common_keys = set(self.keys()) & set(other_song.keys())
+        common_keys = set(self.keys()).intersection(other_song.keys())
+
         for key in common_keys:
             distance_func = self._session.distance_function_for_key(key)
-            distance_dict[key] = distance_func(
-                    self[key],
-                    other_song[key]
-            )
+            value_a, value_b = self[key], other_song[key]
+            if value_a is None or value_b is None:
+                distance_dict[key] = 1.0
+            else:
+                distance_dict[key] = distance_func(value_a, value_b)
+
         return Distance(self._session, distance_dict)
 
     def distance_add(self, other_song, distance, bidir=True):
@@ -114,15 +117,13 @@ class Song(SessionMapping, Hashable):
         :type other_song: :class:`munin.song.Song`
         :param distance: The Distance to add to the "edge".
         :type distance: :class:`munin.distance.Distance`
-        :param bidir: If *True* also add the relation to *other_song*.
+         :param bidir: If *True* also add the relation to *other_song*.
         :type bidir: bool
         :returns: *False* if the song was not added because of a bad distance.
                   *True* in any other case.
         '''
         if other_song is self:
-            return True
-
-        added = False
+            return False
 
         if distance.distance <= self._max_distance:
             # Check if we still have room left
@@ -133,21 +134,20 @@ class Song(SessionMapping, Hashable):
                 if distance < worst_dist:
                     # delete the worst one to make place:
                     del self._distances[worst_song]
-                    del worst_song._distances[self]
+
+                    # TODO: There's something pretty wrong here.
+                    if self in worst_song._distances:
+                        del worst_song._distances[self]
                     self._distances[other_song] = distance
                     other_song._distances[self] = distance
-                    added = True
+                    return True
             else:
                 # There's still place left.
                 self._distances[other_song] = distance
                 other_song._distances[self] = distance
-                added = True
+                return True
 
-        # Repeat procedure for the other song:
-        # if bidir is True:
-        # other_song.distance_add(self, distance, bidir=False)
-
-        return added
+        return False
 
     def distance_del(self, other_song):
         '''Delete the relation to ``other_song``
