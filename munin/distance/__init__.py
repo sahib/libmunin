@@ -336,23 +336,16 @@ class Distance(SessionMapping):
 
         This is public for testing and validation.
         '''
-        weight_sum = 0.0
-        distwg_sum = 0.0
+        dist_sum = 0.0
 
         # Collect a list of (weight, dists) and the max weight.
         for key, dist in self.items():
             # Do not insert not calculated distances.
-            if dist is not None:
-                weight = self._session.weight_for_key(key)
-                weight_sum += weight
-                distwg_sum += dist * weight
-
-        # Check for potential ZeroDivisionErrors
-        if float_cmp(weight_sum, 0.0):
-            return 1.0
+            weight = self._session.weight_for_key(key)
+            dist_sum += (dist if dist is not None else 1.0) * weight
 
         # Return the average distance with weight applied.
-        return distwg_sum / weight_sum
+        return dist_sum / self._session.weight_sum
 
 ###########################################################################
 #                             Import Aliases                              #

@@ -309,7 +309,7 @@ if __name__ == '__main__':
         import math
 
         with session.database.transaction():
-            N = 50
+            N = 32000
             for i in range(int(N / 2) + 1):
                 session.database.add_values({
                     'genre': 1.0 - i / N,
@@ -323,7 +323,7 @@ if __name__ == '__main__':
                 })
 
         print('+ Step #4: Layouting and Plotting')
-        session.database.plot()
+        #session.database.plot()
 
     if '--cli' in sys.argv:
         main()

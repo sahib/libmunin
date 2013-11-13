@@ -132,6 +132,9 @@ class Session:
                 lambda key: 1.0
         )
 
+        # Sum of the individual weights, pre-calculated once.
+        self.weight_sum = sum((descr[2] for descr in attribute_mask.values()))
+
         # Needed for later saving
         self._create_file_structure(self._path)
 
