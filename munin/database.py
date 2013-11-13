@@ -15,6 +15,10 @@ from munin.utils import sliding_window, centering_window
 import igraph
 
 
+def color_from_distance(distance):
+    return '#' + '01234567890ABCDEF'[int(distance * 32)] * 6
+
+
 class Database:
     'Class managing Database concerns.'
     def __init__(self, session):
@@ -49,12 +53,27 @@ class Database:
         Will try to open an installed image viewer.
         '''
         visual_style = {}
-        visual_style['vertex_label'] = [str(vx.index) for vx in self._graph.vs]
+        visual_style['vertex_label'] = [str(vx['song'].uid) for vx in self._graph.vs]
 
-        def color_from_distance(distance):
-            return '#' + 'FEDCBA9876543210'[int(distance * 16)] * 2  +'0000'
+        def edge_color_list():
+            vs = self._graph.vs
+            edge_colors, edge_widths = deque(), deque()
 
-        visual_style['edge_color'] = [color_from_distance(e['dist'].distance) for e in self._graph.es]
+            for edge in self._graph.es:
+                a, b = vs[edge.source]['song'], vs[edge.target]['song']
+                distance = a.distance_get(b)
+                if distance is not None:
+                    edge_colors.append(color_from_distance(distance.distance))
+                    edge_widths.append((1 - distance.distance + 0.1) * 3)
+                else:
+                    edge_colors.append('#999999')
+                    edge_widths.append(1)
+
+            return list(edge_colors), list(edge_widths)
+
+        visual_style['edge_color'], visual_style['edge_width'] = edge_color_list()
+
+        # visual_style['edge_color'] = [color_from_distance(e['dist'].distance) for e in self._graph.es]
         visual_style['vertex_color'] = ['#0000AA'] * len(self._graph.vs)
         visual_style['vertex_label_color'] = ['#FFFFFF'] * len(self._graph.vs)
         visual_style['layout'] = self._graph.layout('fr')
@@ -70,7 +89,7 @@ class Database:
             counter.update(song.keys())
         return counter
 
-    def _rebuild_step_base(self, mean_counter, window_size=50, step_size=25):
+    def _rebuild_step_base(self, mean_counter, window_size=60, step_size=20):
         '''Do the Base Iterations.
 
         This involves three iterations:
@@ -165,7 +184,7 @@ class Database:
         '''
         # Create the actual graph:
         self._graph = igraph.Graph(directed=False)
-        # self._graph.add_vertices(len(self._song_list))
+
         for song in self._song_list:
             self._graph.add_vertex(song=song)
 
@@ -173,18 +192,17 @@ class Database:
         # (this speeds up adding edges)
         edge_set = deque()
         for song_a in self._song_list:
-            for song_b, distance in song_a.distance_iter():
+            for song_b, _ in song_a.distance_iter():
                 # Make Edge Deduplication work:
                 if song_a.uid < song_b.uid:
-                    edge_set.append((song_b.uid, song_a.uid, distance))
+                    edge_set.append((song_b.uid, song_a.uid))
                 else:
-                    edge_set.append((song_a.uid, song_b.uid, distance))
+                    edge_set.append((song_a.uid, song_b.uid))
 
         # Filter duplicate edge pairs.
-        for  a, b, dist in set(edge_set):
-            self._graph.add_edge(a, b, dist=dist)
+        self._graph.add_edges(set(edge_set))
 
-    def rebuild(self, window_size=60, step_size=20, refine_passes=10):
+    def rebuild(self, window_size=60, step_size=20, refine_passes=20):
         '''Rebuild all distances and the associated graph.
 
         This will be triggered for you automatically after a transaction.
@@ -309,7 +327,7 @@ if __name__ == '__main__':
         import math
 
         with session.database.transaction():
-            N = 32000
+            N = 50
             for i in range(int(N / 2) + 1):
                 session.database.add_values({
                     'genre': 1.0 - i / N,
@@ -323,7 +341,7 @@ if __name__ == '__main__':
                 })
 
         print('+ Step #4: Layouting and Plotting')
-        #session.database.plot()
+        session.database.plot()
 
     if '--cli' in sys.argv:
         main()

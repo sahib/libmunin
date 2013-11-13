@@ -75,7 +75,7 @@ class Song(SessionMapping, Hashable):
     def __repr__(self):
         return '<Song(values={val}, distances={dst})>'.format(
                 val=self._store,
-                dst={hash(song): val for song, val in self._distances.items()}
+                dst={song.uid: val for song, val in self._distances.items()}
         )
 
     ############################
@@ -133,16 +133,19 @@ class Song(SessionMapping, Hashable):
                 if distance < worst_dist:
                     # delete the worst one to make place:
                     del self._distances[worst_song]
+                    del worst_song._distances[self]
                     self._distances[other_song] = distance
+                    other_song._distances[self] = distance
                     added = True
             else:
                 # There's still place left.
                 self._distances[other_song] = distance
+                other_song._distances[self] = distance
                 added = True
 
         # Repeat procedure for the other song:
-        if bidir is True:
-            other_song.distance_add(self, distance, bidir=False)
+        # if bidir is True:
+        # other_song.distance_add(self, distance, bidir=False)
 
         return added
 

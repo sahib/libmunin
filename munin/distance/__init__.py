@@ -321,7 +321,7 @@ class Distance(SessionMapping):
         return self.distance < other.distance
 
     def __repr__(self):
-        return '<Distance {d:f}>to_add()'.format(d=self.distance)
+        return '~{d:f}'.format(d=self.distance)
 
     def __hash__(self):
         return hash(self._distance)
