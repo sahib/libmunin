@@ -193,6 +193,8 @@ class Song(SessionMapping, Hashable):
     def distance_iter(self):
         '''Iterate over all distances stored in this song.
 
+        Will yield songs with smallest distance first.
+
         :returns: iterable that yields (song, distance) tuples.
         :rtype: generator
         '''
@@ -204,12 +206,18 @@ class Song(SessionMapping, Hashable):
 
         :returns: an generator that yields one song at a time.
         '''
-        for song, dist in self.distance_iter():
-            curr_dist = dist.distance
+        # Iterate over the *sorted* set.
+        for song in self._dist_pool:
+            curr_dist = self._dist_dict[song].distance
             if curr_dist < dist_threshold:
-                for ind_song, ind_dist in song.distance_iter():
-                    if (ind_dist.distance + curr_dist) / 2 < dist_threshold:
+                for ind_song in song._dist_pool:
+                    if (song._dist_dict[ind_song].distance + curr_dist) / 2 < dist_threshold:
                         yield song
+                    else:
+                        break
+            else:
+                break
+
 
     #################################
     #  Additional helper functions  #

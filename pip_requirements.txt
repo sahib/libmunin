@@ -11,3 +11,5 @@ PyStemmer
 bidict
 #: igraph
 python-igraph
+#: blist
+blist

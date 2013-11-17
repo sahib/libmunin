@@ -163,13 +163,13 @@ class Database:
                 # Also count which of these actually
                 for ind_ngb, dist in result_set:
                     newly_found += add(song, ind_ngb, dist)
+                    print('ind')
 
             # Stop iteration when not enough new distances were gathered
             # (at least one new addition per song)
             # This usually only triggers for high num_passes
-            if newly_found <= len(self._song_list):
+            if newly_found < len(self._song_list) // 2:
                 print('o [not enough additions, breaking]', end='')
-                break
         print()
 
     def _rebuild_step_build_graph(self):
@@ -332,7 +332,7 @@ if __name__ == '__main__':
         import math
 
         with session.database.transaction():
-            N = 100
+            N = 1000
             for i in range(int(N / 2) + 1):
                 session.database.add_values({
                     'genre': 1.0 - i / N,
@@ -346,7 +346,7 @@ if __name__ == '__main__':
                 # })
 
         print('+ Step #4: Layouting and Plotting')
-        session.database.plot()
+        # session.database.plot()
 
     if '--cli' in sys.argv:
         main()
