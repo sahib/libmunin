@@ -16,7 +16,7 @@ import igraph
 
 
 def color_from_distance(distance):
-    return '#' + '01234567890ABCDEF'[int(distance * 32)] * 6
+    return '#' + '01234567890ABCDEF'[int(distance * 16)] * 6
 
 
 class Database:
@@ -191,7 +191,9 @@ class Database:
         # (this speeds up adding edges)
         edge_set = deque()
         for song_a in self._song_list:
+            # print(len(song_a._dist_pool))
             for song_b, _ in song_a.distance_iter():
+                #print(song_a, '->', song_b)
                 # Make Edge Deduplication work:
                 if song_a.uid < song_b.uid:
                     edge_set.append((song_b.uid, song_a.uid))
@@ -201,7 +203,7 @@ class Database:
         # Filter duplicate edge pairs.
         self._graph.add_edges(set(edge_set))
 
-    def rebuild(self, window_size=60, step_size=20, refine_passes=20):
+    def rebuild(self, window_size=60, step_size=20, refine_passes=10):
         '''Rebuild all distances and the associated graph.
 
         This will be triggered for you automatically after a transaction.
@@ -215,6 +217,7 @@ class Database:
                 window_size=window_size,
                 step_size=step_size
         )
+
         print('|-- Mean Distane: {:f} (sd: {:f})'.format(mean_counter.mean, mean_counter.sd))
         print('+ Step #2: Applying refinement:', end='')
         self._rebuild_step_refine(
@@ -329,21 +332,21 @@ if __name__ == '__main__':
         import math
 
         with session.database.transaction():
-            N = 5000
+            N = 100
             for i in range(int(N / 2) + 1):
                 session.database.add_values({
                     'genre': 1.0 - i / N,
                     'artist': 1.0 - i / N
                 })
                 # Pseudo-Random, but deterministic:
-                euler = lambda x: math.fmod(math.e ** x, 1.0)
-                session.database.add_values({
-                    'genre': euler((i + 1) % 30),
-                    'artist': euler((N - i + 1) % 30)
-                })
+                # euler = lambda x: math.fmod(math.e ** x, 1.0)
+                # session.database.add_values({
+                #     'genre': euler((i + 1) % 30),
+                #     'artist': euler((N - i + 1) % 30)
+                # })
 
         print('+ Step #4: Layouting and Plotting')
-        # session.database.plot()
+        session.database.plot()
 
     if '--cli' in sys.argv:
         main()

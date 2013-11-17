@@ -64,7 +64,7 @@ def get_cache_path(extra_name=None):
 
 
 DEFAULT_CONFIG = {
-    'max_neighbors': 10,
+    'max_neighbors': 5,
     'max_distance': 0.999
 }
 
