@@ -16,7 +16,7 @@ import igraph
 
 
 def color_from_distance(distance):
-    return '#' + '01234567890ABCDEF'[int(distance * 16)] * 6
+    return '#' + '01234567890ABCDEF'[int(distance * 16)] * 2 + '0000'
 
 
 class Database:
@@ -64,10 +64,7 @@ class Database:
                 distance = a.distance_get(b)
                 if distance is not None:
                     edge_colors.append(color_from_distance(distance.distance))
-                    edge_widths.append((1 - distance.distance + 0.1) * 3)
-                else:
-                    edge_colors.append('#999999')
-                    edge_widths.append(1)
+                    edge_widths.append((distance.distance + 0.1) * 3)
 
             return list(edge_colors), list(edge_widths)
 
@@ -163,7 +160,6 @@ class Database:
                 # Also count which of these actually
                 for ind_ngb, dist in result_set:
                     newly_found += add(song, ind_ngb, dist)
-                    print('ind')
 
             # Stop iteration when not enough new distances were gathered
             # (at least one new addition per song)
@@ -225,9 +221,22 @@ class Database:
             num_passes=refine_passes
         )
 
+
         print('|-- Mean Distane: {:f} (sd: {:f})'.format(mean_counter.mean, mean_counter.sd))
         print('+ Step #3: Building Graph')
         self._rebuild_step_build_graph()
+        print(self._song_list[50].distance_get(self._song_list[20]))
+        print(self._song_list[20].distance_get(self._song_list[50]))
+        #for song in self._song_list:
+        #    song.distance_cut()
+        print(self._song_list[50].distance_get(self._song_list[20]))
+        print(self._song_list[20].distance_get(self._song_list[50]))
+
+        song_20 = self._song_list[20]
+        song_50 = self._song_list[50]
+        print(song_20)
+        print(song_50)
+        print(song_20._dist_dict)
 
     def add_song(self, song):
         '''Add a single song to the database.
@@ -300,14 +309,6 @@ if __name__ == '__main__':
                         'genre': i / N,
                         'artist': i / N
                     })
-                    # self._session.database.add_values({
-                    #     'genre': 'alfonso',
-                    #     'artist': ''
-                    # })
-
-            # song_a, song_b = self._session.database
-            # self.assertAlmostEqual(song_a.distance_get(song_b).distance, 0.0)
-            # self.assertAlmostEqual(song_b.distance_get(song_b).distance, 0.0)
 
         def test_no_match(self):
             with self.assertRaisesRegex(KeyError, '.*attribute mask.*'):
@@ -332,7 +333,7 @@ if __name__ == '__main__':
         import math
 
         with session.database.transaction():
-            N = 1000
+            N = 100
             for i in range(int(N / 2) + 1):
                 session.database.add_values({
                     'genre': 1.0 - i / N,
@@ -346,7 +347,9 @@ if __name__ == '__main__':
                 # })
 
         print('+ Step #4: Layouting and Plotting')
-        # session.database.plot()
+        session.database.plot()
+        # for song in session.database:
+            # print(len(song._dist_pool))
 
     if '--cli' in sys.argv:
         main()

@@ -3,7 +3,7 @@
 
 # Stdlib:
 from bisect import bisect, insort
-from collections import Hashable
+from collections import Hashable, deque
 from logging import getLogger
 LOGGER = getLogger(__name__)
 
@@ -80,7 +80,7 @@ class Song(SessionMapping, Hashable):
         return '<Song(uid={uid} values={val}, distances={dst})>'.format(
                 val=self._store,
                 uid=self.uid,
-                dst={song: self._dist_dict[song] for song, dist in self._dist_pool}
+                dst={song.uid: self._dist_dict[song] for song in self._dist_pool}
         )
 
     ############################
@@ -174,6 +174,21 @@ class Song(SessionMapping, Hashable):
         sdp.add(other)
         odp.add(self)
         return True
+
+    def distance_cut(self):
+        '''Remove dead entries from _dist_dict.
+
+        Cut any unused ressources. This gets called automatically after
+        a database update.
+        '''
+        to_delete = deque()
+        for song in self._dist_dict:
+            if not song in self._dist_pool:
+                to_delete.append(song)
+
+        for song in to_delete:
+            del self._dist_dict[song]
+
 
     def distance_get(self, other_song, default_value=None):
         '''Return the distance to the song ``other_song``
