@@ -1,14 +1,31 @@
-from blist import sortedset
+from blist import sortedlist
 
 
 float_cmp = lambda a, b: abs(a - b) < sys.float_info.epsilon
+
+
+def _remove_link(song, worst):
+    print('deleting song', song, id(song), 'from', worst._dist_pool, worst)
+    for a in worst._dist_pool:
+        print('SONG ID', a.uid, id(a))
+        if song is a:
+            print('yep found')
+        print(a in worst._dist_pool)
+        print(worst._dist_pool)
+        print(' bisect', worst._dist_pool.bisect(a), len(worst._dist_pool))
+    # worst._dist_pool.remove(song)
+    del worst._dist_pool[worst._dist_pool.bisect(song)]
+    print('deelte done')
+
+    del song._dist_dict[worst]
+    del worst._dist_dict[song]
 
 
 class Song:
     def __init__(self):
         self._max_neighbors = 5
         self._dist_dict = {}
-        self._dist_pool = sortedset(key=lambda e: self._dist_dict[e])
+        self._dist_pool = sortedlist(key=lambda e: self._dist_dict[e])
 
     def distance_add(self, other, distance):
         if self is other:
@@ -35,24 +52,18 @@ class Song:
                 return False
             pop_self = True
 
+        print(self, other, distance)
+        print(sdp, odp)
+
         if pop_other is True:
             worst = odp.pop()
-            # if worst is not self:
-                # print('worst dist other', worst._dist_dict.get(other))
-            try:
-                del worst._dist_dict[other]
-                worst._dist_pool.remove(other)
-            except KeyError:
-                pass
+            print('worst odp', worst)
+            _remove_link(other, worst)
 
         if pop_self is True:
             worst = sdp.pop()
-            # if worst is not other:
-            try:
-                del worst._dist_dict[self]
-                worst._dist_pool.remove(self)
-            except KeyError:
-                pass
+            print('worst sdp', worst, worst._dist_pool)
+            _remove_link(self, worst)
 
         print(len(sdd), len(odd))
 

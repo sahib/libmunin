@@ -166,6 +166,7 @@ class Database:
             # This usually only triggers for high num_passes
             if newly_found < len(self._song_list) // 2:
                 print('o [not enough additions, breaking]', end='')
+                break
         print()
 
     def _rebuild_step_build_graph(self):
@@ -221,22 +222,9 @@ class Database:
             num_passes=refine_passes
         )
 
-
         print('|-- Mean Distane: {:f} (sd: {:f})'.format(mean_counter.mean, mean_counter.sd))
         print('+ Step #3: Building Graph')
         self._rebuild_step_build_graph()
-        print(self._song_list[50].distance_get(self._song_list[20]))
-        print(self._song_list[20].distance_get(self._song_list[50]))
-        #for song in self._song_list:
-        #    song.distance_cut()
-        print(self._song_list[50].distance_get(self._song_list[20]))
-        print(self._song_list[20].distance_get(self._song_list[50]))
-
-        song_20 = self._song_list[20]
-        song_50 = self._song_list[50]
-        print(song_20)
-        print(song_50)
-        print(song_20._dist_dict)
 
     def add_song(self, song):
         '''Add a single song to the database.
