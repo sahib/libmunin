@@ -1,69 +1,68 @@
-from blist import sortedset
-
-
-float_cmp = lambda a, b: abs(a - b) < sys.float_info.epsilon
+from blist import sorteddict
 
 
 class Song:
     def __init__(self):
-        self._max_neighbors = 5
-        self._dist_dict = {}
-        self._dist_pool = sortedset(key=lambda e: self._dist_dict[e])
+        d = sorteddict(lambda e: d.get(e, self._last_dist))
+        self._dist_dict = d
 
     def distance_add(self, other, distance):
         if self is other:
             return False
 
-        sdd, odd = self._dist_dict, other._dist_dict
-        old_dist = sdd.get(other)
-        if old_dist is not None and old_dist < distance:
-            return False
+        self_pool, other_pool = self._dist_dict, other._dist_dict
+        if other in self_pool:
+            if self_pool[other] < distance:
+                return False  # Reject
 
-        sdd[other] = odd[self] = distance
-        if old_dist is not None:
+            # The key was already in.. so we need to delete it to get the
+            # sorting thing right.
+            del self_pool[other]
+            del other_pool[self]
+
+            # Now insert it again.
+            self._last_dist = other._last_dist = distance
+            self_pool[other] = other_pool[self] = distance
             return True
 
-        n, pop_self, pop_other = self._max_neighbors, False, False
-        sdp, odp = self._dist_pool, other._dist_pool
-        if len(odp) is n:
-            if odd[odp[-1]] < distance:
-                return False
-            pop_other = True
-
-        if len(sdp) is n:
-            if sdd[sdp[-1]] < distance:
+        pop_self, pop_other = False, False
+        if len(self_pool) is 5:
+            if self_pool[self_pool.keys()[-1]] < distance:
                 return False
             pop_self = True
 
-        if pop_other is True:
-            worst = odp.pop()
-            # if worst is not self:
-                # print('worst dist other', worst._dist_dict.get(other))
-            try:
-                del worst._dist_dict[other]
-                worst._dist_pool.remove(other)
-            except KeyError:
-                pass
+        if len(other_pool) is 5:
+            if other_pool[other_pool.keys()[-1]] < distance:
+                return False
+            pop_other = True
 
-        if pop_self is True:
-            worst = sdp.pop()
-            # if worst is not other:
-            try:
-                del worst._dist_dict[self]
-                worst._dist_pool.remove(self)
-            except KeyError:
-                pass
+        if pop_self:
+            worst, _ = self_pool.popitem()
+            del worst._dist_dict[self]
 
-        print(len(sdd), len(odd))
+            # TODO: overtthink this portion
+            if len(worst._dist_dict) is 0:
+                other._last_dist = worst._last_dist = distance
+                other_pool[worst] = worst._dist_dict[other] = distance
 
-        sdp.add(other)
-        odp.add(self)
+        if pop_other:
+            worst, _ = other_pool.popitem()
+            del worst._dist_dict[other]
+
+            # TODO: overtthink this portion
+            if len(worst._dist_dict) is 0:
+                self._last_dist = worst._last_dist = distance
+                self_pool[worst] = worst._dist_dict[self] = distance
+
+        # add a new entry:
+        self._last_dist = other._last_dist = distance
+        self_pool[other] = other_pool[self] = distance
         return True
 
     def __repr__(self):
         return '<#{} {}>'.format(
             self.uid,
-            [song.uid for song in self._dist_pool]
+            [song.uid for song in self._dist_dict.keys()]
         )
 
     def distance_iter(self):
@@ -73,7 +72,7 @@ class Song:
 
 if __name__ == '__main__':
     songs = []
-    for uid in range(100):
+    for uid in range(20):
         song = Song()
         song.uid = uid
         songs.append(song)
@@ -92,9 +91,13 @@ if __name__ == '__main__':
 
     euler = lambda x: math.fmod(math.e ** x, 1.0)
     for iteration in range(10):
+        idx = 0
         for i, window in enumerate(sliding_window(songs, 10, 5)):
             for j, (song_a, song_b) in enumerate(combinations(window, 2)):
-                Song.distance_add(song_a, song_b, euler(i * j % 30))
+                dist = euler(i * j % 30)
+                if song_a.uid is 0 or song_b is 0:
+                    print('0', song_a, song_b, dist)
+                Song.distance_add(song_a, song_b, dist)
 
-    # for song in songs:
-    #    print(song)
+    for song in songs:
+        print(song)

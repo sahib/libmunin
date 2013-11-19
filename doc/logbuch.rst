@@ -263,3 +263,45 @@ nur relevante Songs zu vergleichen.
             add(song, distance)
             if distance.distance < CONTINUE_DIFF:
                 refine(ind_ngb, max_depth=max_depth - 1)
+
+
+18. November 2013
+-----------------
+
+Hat geklappt mit dem neuen Ansatz oben. Weiter Performance Optimierung machen
+bei 32k Songs ein `rebuild` in ~2 Minuten.
+Zur vollständigkeit halber der Ablauf von `distance_add`:
+
+.. code-block:: python
+
+    def distance_add(self, other, distance):
+        if self is other:
+            return False
+
+        if other in self._dist_dict:
+            if self._dist_dict[other] < distance:
+                return False  # Reject
+
+            del self._dist_dict[other]
+            del other._dist_dict[self]
+            self._dist_dict[other] = other._dist_dict[self] = distance
+            return True
+
+        pop_self, pop_other = False, False
+        if len(self._dist_dict) is n:
+            if self._dist_dict.keys()[-1] < distance:
+                return False
+            pop_self = True
+
+        if len(other._dist_dict) is n:
+            if other._dist_dict.keys()[-1] < distance:
+                return False
+            pop_other = True
+
+        if pop_self:
+            del worst._dist_dict[self._dist_dict.popitem()[0]]
+
+        if pop_other:
+            del worst._dist_dict[other._dist_dict.popitem()[0]]
+
+        self[other] = other[self] = distance
