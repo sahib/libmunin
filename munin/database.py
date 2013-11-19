@@ -222,7 +222,6 @@ class Database:
             num_passes=refine_passes
         )
 
-
         print('|-- Mean Distane: {:f} (sd: {:f})'.format(mean_counter.mean, mean_counter.sd))
         print('+ Step #3: Building Graph')
         self._rebuild_step_build_graph()
