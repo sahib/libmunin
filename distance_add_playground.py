@@ -1,63 +1,92 @@
-from blist import sorteddict
+import igraph
+from collections import deque, OrderedDict
+from operator import itemgetter
+
+import sys
+float_cmp = lambda a, b: abs(a - b) < sys.float_info.epsilon
+
+
+uids = 0
+
+def cs():
+    global uids
+    s = Song()
+    s._max_neighbors = 3
+    s.uid = uids
+    uids += 1
+    return s
+
+
+
 
 
 class Song:
     def __init__(self):
-        d = sorteddict(lambda e: d.get(e, self._last_dist))
-        self._dist_dict = d
+        # d = sorteddict(lambda song: (d.get(song, self._last_dist), id(song)))
+        # self._dist_dict = ValueSortedDict()
+        self._dist_dict = {}
+        self._max_neighbors = 10
+        self._max_distance = 0.999
 
     def distance_add(self, other, distance):
-        if self is other:
+        if other is self:
             return False
 
-        self_pool, other_pool = self._dist_dict, other._dist_dict
-        if other in self_pool:
-            if self_pool[other] < distance:
+        sdd, odd = self._dist_dict, other._dist_dict
+        if other in sdd:
+            if sdd[other] < distance:
                 return False  # Reject
 
-            # The key was already in.. so we need to delete it to get the
-            # sorting thing right.
-            del self_pool[other]
-            del other_pool[self]
+            # The key was already in..
+            # so we need to delete it to get the sorting right:
+            # the key function must return the same key for each item always.
+            # So the only way to get out of this is to remove the old item
+            # and add a new one.
+            del sdd[other]
 
-            # Now insert it again.
-            self._last_dist = other._last_dist = distance
-            self_pool[other] = other_pool[self] = distance
-            return True
+            # Since we delete the worst song always only in one direction,
+            # we gonna need to pay attention here.
+            # (we didn't need to secure the top one, since we checked
+            # already with the in operator)
+            try:
+                del odd[self]
+            except KeyError:
+                pass
 
-        pop_self, pop_other = False, False
-        if len(self_pool) is 5:
-            if self_pool[self_pool.keys()[-1]] < distance:
-                return False
-            pop_self = True
+        elif distance <= self._max_distance:
+            # Check if we still have room left
+            if len(sdd) >= self._max_neighbors:
+                # Find the worst song in the dictionary
+                worst_song, worst_dist = max(sdd.items(), key=itemgetter(1))
+                if distance >= worst_dist:
+                    return False
+                # delete the worst one to make place,
+                # BUT: do not delete the connection from worst to self
+                # we create unidir edges here on purpose.
+                del sdd[worst_song]
+        else:
+            return False
 
-        if len(other_pool) is 5:
-            if other_pool[other_pool.keys()[-1]] < distance:
-                return False
-            pop_other = True
-
-        if pop_self:
-            worst, _ = self_pool.popitem()
-            del worst._dist_dict[self]
-
-            # TODO: overtthink this portion
-            if len(worst._dist_dict) is 0:
-                other._last_dist = worst._last_dist = distance
-                other_pool[worst] = worst._dist_dict[other] = distance
-
-        if pop_other:
-            worst, _ = other_pool.popitem()
-            del worst._dist_dict[other]
-
-            # TODO: overtthink this portion
-            if len(worst._dist_dict) is 0:
-                self._last_dist = worst._last_dist = distance
-                self_pool[worst] = worst._dist_dict[self] = distance
-
-        # add a new entry:
-        self._last_dist = other._last_dist = distance
-        self_pool[other] = other_pool[self] = distance
+        # Add the new element:
+        sdd[other] = odd[self] = distance
         return True
+
+    def distance_finalize(self):
+        to_delete = deque()
+        for other in self._dist_dict:
+            dist_a, dist_b = self.distance_get(other), other.distance_get(self)
+            if dist_a is None:
+                to_delete.append((other, self))
+            if dist_b is None:
+                to_delete.append((self, other))
+
+        for source, target in to_delete:
+            del source._dist_dict[target]
+
+        self._dist_dict = OrderedDict(sorted(self._dist_dict.items(), key=itemgetter(1)))
+
+    def distance_get(self, other):
+        return self._dist_dict.get(other)
 
     def __repr__(self):
         return '<#{} {}>'.format(
@@ -65,14 +94,17 @@ class Song:
             [song.uid for song in self._dist_dict.keys()]
         )
 
+    def __lt__(self, other):
+        return id(self) < id(other)
+
     def distance_iter(self):
-        for entry in self._dist_pool:
-            yield entry.song, entry.distance
+        return self._dist_dict.items()
 
 
 if __name__ == '__main__':
     songs = []
-    for uid in range(20):
+    N = 1000
+    for uid in range(N):
         song = Song()
         song.uid = uid
         songs.append(song)
@@ -90,14 +122,42 @@ if __name__ == '__main__':
                 yield islice(iterable, fst, snd)
 
     euler = lambda x: math.fmod(math.e ** x, 1.0)
-    for iteration in range(10):
-        idx = 0
-        for i, window in enumerate(sliding_window(songs, 10, 5)):
+    for i in range(3):
+        for i, window in enumerate(sliding_window(songs, 50,  25)):
             for j, (song_a, song_b) in enumerate(combinations(window, 2)):
-                dist = euler(i * j % 30)
-                if song_a.uid is 0 or song_b is 0:
-                    print('0', song_a, song_b, dist)
-                Song.distance_add(song_a, song_b, dist)
+                a, b = 1.0 - song_a.uid / N, 1.0 - song_b.uid / N
+                dist = abs(a - b)
+                # dist = euler (i * j % 30)
+                done = Song.distance_add(song_a, song_b, dist)
 
     for song in songs:
-        print(song)
+        song.distance_finalize()
+
+    for song in songs:
+        last = None
+        for other, dist in song.distance_iter():
+            if last is not None and last > dist:
+                print('!!! unsorted', last, dist)
+            last = dist
+
+    g = igraph.Graph(directed=False)
+    g.add_vertices(len(songs))
+
+    edge_set = deque()
+    for song_a in songs:
+        # print(len(song_a._dist_pool))
+        for song_b, _ in song_a.distance_iter():
+            #print(song_a, '->', song_b)
+            # Make Edge Deduplication work:
+            if song_a.uid < song_b.uid:
+                edge_set.append((song_b.uid, song_a.uid))
+            else:
+                edge_set.append((song_a.uid, song_b.uid))
+
+    # Filter duplicate edge pairs.
+    g.add_edges(set(edge_set))
+
+    # visual_style = {}
+    # visual_style['layout'] = g.layout('fr')
+    # visual_style['vertex_label'] = [str(vx.index) for vx in g.vs]
+    # igraph.plot(g, **visual_style)

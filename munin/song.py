@@ -2,7 +2,8 @@
 # encoding: utf-8
 
 # Stdlib:
-from collections import Hashable, deque
+from collections import Hashable, OrderedDict, deque
+from operator import itemgetter
 from logging import getLogger
 LOGGER = getLogger(__name__)
 
@@ -10,13 +11,10 @@ LOGGER = getLogger(__name__)
 from munin.distance import Distance
 from munin.utils import SessionMapping, float_cmp
 
-# External:
-from blist import sorteddict
-
 
 class Song(SessionMapping, Hashable):
     # Note: Use __slots__ (sys.getsizeof will report even more memory, but pympler less)
-    __slots__ = ('_dist_dict', '_last_dist', '_max_distance', '_max_neighbors', '_hash', '_confidence', 'uid')
+    __slots__ = ('_dist_dict', '_max_distance', '_max_neighbors', '_hash', '_confidence', 'uid')
     '''
     **Overview**
 
@@ -56,30 +54,28 @@ class Song(SessionMapping, Hashable):
                 input_dict=value_dict,
                 default_value=default_value
         )
-        d = sorteddict(lambda e: d.get(e, self._last_dist))
-        self._dist_dict = d
+        self._dist_dict = OrderedDict()
 
         # Settings:
         self._max_neighbors = max_neighbors
         self._max_distance = max_distance
-
-        # Update hash on creation
-        self._update_hash()
-
         self.uid = None
 
     #######################
     #  Other convinience  #
     #######################
 
+    def __lt__(self, other):
+        return id(self) < id(other)
+
     def __hash__(self):
-        return self._hash
+        return id(self)
 
     def __repr__(self):
         return '<Song(uid={uid} values={val}, distances={dst})>'.format(
                 val=self._store,
                 uid=self.uid,
-                dst={song.uid: dist for song, dist in self._dist_dict.items()}
+                dst=['{}: {}'.format(song.uid, dist) for song, dist in self._dist_dict.items()]
         )
 
     ############################
@@ -108,7 +104,7 @@ class Song(SessionMapping, Hashable):
 
         return Distance(self._session, distance_dict)
 
-    def distance_add(self, other, distance, _bidir=True):
+    def distance_add(self, other, distance):
         '''Add a relation to ``other_song`` with a certain distance.
 
         .. warning::
@@ -124,47 +120,61 @@ class Song(SessionMapping, Hashable):
         :returns: *False* if the song was not added because of a bad distance.
                   *True* in any other case.
         '''
-        if self is other:
+        if other is self:
             return False
 
-        self_pool, other_pool = self._dist_dict, other._dist_dict
-        if other in self_pool:
-            if self_pool[other] < distance:
-                return False
+        sdd, odd = self._dist_dict, other._dist_dict
+        if other in sdd:
+            if sdd[other] < distance:
+                return False  # Reject
 
-            # The key was already in.. so we need to delete it to get the
-            # sorting thing right.
-            del self_pool[other]
-            del other_pool[self]
+            # The key was already in..
+            # so we need to delete it to get the sorting right:
+            # the key function must return the same key for each item always.
+            # So the only way to get out of this is to remove the old item
+            # and add a new one.
+            del sdd[other]
 
-            # Now insert it again.
-            self._last_dist = other._last_dist = distance
-            self_pool[other] = other_pool[self] = distance
-            return True
+            # Since we delete the worst song always only in one direction,
+            # we gonna need to pay attention here.
+            # (we didn't need to secure the top one, since we checked
+            # already with the in operator)
+            try:
+                del odd[self]
+            except KeyError:
+                pass
 
-        pop_self, pop_other = False, False
-        if len(self_pool) is 5:
-            if self_pool[self_pool.keys()[-1]] < distance:
-                return False
-            pop_self = True
+        elif distance.distance <= self._max_distance:
+            # Check if we still have room left
+            if len(sdd) >= self._max_neighbors:
+                # Find the worst song in the dictionary
+                worst_song, worst_dist = max(sdd.items(), key=itemgetter(1))
+                if worst_dist < distance:
+                    return False
+                # delete the worst one to make place,
+                # BUT: do not delete the connection from worst to self
+                # we create unidir edges here on purpose.
+                del sdd[worst_song]
+        else:
+            return False
 
-        if len(other_pool) is 5:
-            if other_pool[other_pool.keys()[-1]] < distance:
-                return False
-            pop_other = True
-
-        if pop_self:
-            worst, _ = self_pool.popitem()
-            del worst._dist_dict[self]
-
-        if pop_other:
-            worst, _ = other_pool.popitem()
-            del worst._dist_dict[other]
-
-        # add a new entry:
-        self._last_dist = other._last_dist = distance
-        self_pool[other] = other_pool[self] = distance
+        # Add the new element:
+        sdd[other] = odd[self] = distance
         return True
+
+    def distance_finalize(self):
+        to_delete = deque()
+        for other in self._dist_dict:
+            dist_a, dist_b = self.distance_get(other), other.distance_get(self)
+            if dist_a is None:
+                to_delete.append((other, self))
+            if dist_b is None:
+                to_delete.append((self, other))
+
+        for source, target in to_delete:
+            del source._dist_dict[target]
+
+        self._dist_dict = OrderedDict(sorted(self._dist_dict.items(), key=itemgetter(1)))
 
     def distance_get(self, other_song, default_value=None):
         '''Return the distance to the song ``other_song``
@@ -189,8 +199,7 @@ class Song(SessionMapping, Hashable):
         :returns: iterable that yields (song, distance) tuples.
         :rtype: generator
         '''
-        for song, distance in self._dist_dict.items():
-            yield song, distance
+        return self._dist_dict.items()
 
     def distance_indirect_iter(self, dist_threshold):
         '''Iterate over the indirect neighbors of this song.
@@ -215,13 +224,6 @@ class Song(SessionMapping, Hashable):
     def to_dict(self):
         'Shortcut for ``dict(iter(song))``'
         return dict(iter(song))
-
-    #############
-    #  Private  #
-    #############
-
-    def _update_hash(self):
-        self._hash = hash(tuple(self._store)) + id(self)
 
 
 ###########################################################################

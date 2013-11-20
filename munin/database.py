@@ -123,7 +123,7 @@ class Database:
                     # Sample the newly calculated distance.
                     mean_counter.add(distance.distance)
 
-    def _rebuild_step_refine(self, mean_counter, num_passes=10, mean_scale=2):
+    def _rebuild_step_refine(self, mean_counter, num_passes, mean_scale=2):
         '''Do the refinement step.
 
         .. seealso:: :func:`rebuild`
@@ -225,6 +225,14 @@ class Database:
         print('|-- Mean Distane: {:f} (sd: {:f})'.format(mean_counter.mean, mean_counter.sd))
         print('+ Step #3: Building Graph')
         self._rebuild_step_build_graph()
+
+        for song in self._song_list:
+            song.distance_finalize()
+            last = None
+            for other, dist in song.distance_iter():
+                if last is not None and last > dist:
+                    print('!! oh')
+                last = dist
 
     def add_song(self, song):
         '''Add a single song to the database.

@@ -81,7 +81,7 @@ class SessionMapping(Mapping):
         return _iterator()
 
     def __len__(self):
-        return len(self._session.mask_length)
+        return self._session.mask_length
 
     def __contains__(self, key):
         return key in self.keys()

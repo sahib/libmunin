@@ -326,6 +326,9 @@ class Distance(SessionMapping):
     def __hash__(self):
         return hash(self._distance)
 
+    def __invert__(self):
+        return 1.0 - self.distance
+
     @property
     def distance(self):
         'Return the condensed and weighted distance'
