@@ -11,10 +11,13 @@ LOGGER = getLogger(__name__)
 from munin.distance import Distance
 from munin.utils import SessionMapping, float_cmp
 
+# External:
+from blist import sortedlist
+
 
 class Song(SessionMapping, Hashable):
     # Note: Use __slots__ (sys.getsizeof will report even more memory, but pympler less)
-    __slots__ = ('_dist_dict', '_max_distance', '_max_neighbors', '_hash', '_confidence', 'uid')
+    __slots__ = ('_dist_dict', '_pop_list', '_max_distance', '_max_neighbors', '_hash', '_confidence', 'uid')
     '''
     **Overview**
 
@@ -55,6 +58,10 @@ class Song(SessionMapping, Hashable):
                 default_value=default_value
         )
         self._dist_dict = OrderedDict()
+
+        # make lookup local:
+        d = self._dist_dict
+        self._pop_list = sortedlist(key=lambda x: d.get(x, 1.0))
 
         # Settings:
         self._max_neighbors = max_neighbors
@@ -128,38 +135,41 @@ class Song(SessionMapping, Hashable):
             if sdd[other] < distance:
                 return False  # Reject
 
-            # The key was already in..
-            # so we need to delete it to get the sorting right:
-            # the key function must return the same key for each item always.
-            # So the only way to get out of this is to remove the old item
-            # and add a new one.
-            del sdd[other]
-
-            # Since we delete the worst song always only in one direction,
-            # we gonna need to pay attention here.
-            # (we didn't need to secure the top one, since we checked
-            # already with the in operator)
-            try:
-                del odd[self]
-            except KeyError:
-                pass
+            # Explain why this could damage worst song detection.
+            # and why we do not care.
+            sdd[other] = odd[self] = distance
+            return True
 
         elif distance.distance <= self._max_distance:
             # Check if we still have room left
             if len(sdd) >= self._max_neighbors:
                 # Find the worst song in the dictionary
-                worst_song, worst_dist = max(sdd.items(), key=itemgetter(1))
-                if worst_dist < distance:
+                idx = 1
+                pop_list = self._pop_list
+                rev_list = reversed(pop_list)
+                while 1:
+                    worst_song = next(rev_list)
+                    if worst_song in sdd:
+                        break
+                    idx += 1
+
+                if sdd[worst_song] < distance:
+                    # we could prune pop_list here too,
+                    # but it showed that one operation only is more effective.
                     return False
+
                 # delete the worst one to make place,
                 # BUT: do not delete the connection from worst to self
                 # we create unidir edges here on purpose.
                 del sdd[worst_song]
+                del pop_list[-idx:]
         else:
             return False
 
         # Add the new element:
         sdd[other] = odd[self] = distance
+        self._pop_list.add(other)
+        other._pop_list.add(self)
         return True
 
     def distance_finalize(self):

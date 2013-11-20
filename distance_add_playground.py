@@ -1,6 +1,6 @@
 import igraph
 from collections import deque, OrderedDict
-from operator import itemgetter
+from operator import itemgetter, getitem
 
 import sys
 float_cmp = lambda a, b: abs(a - b) < sys.float_info.epsilon
@@ -17,6 +17,7 @@ def cs():
     return s
 
 
+from blist import sortedlist
 
 
 
@@ -24,9 +25,11 @@ class Song:
     def __init__(self):
         # d = sorteddict(lambda song: (d.get(song, self._last_dist), id(song)))
         # self._dist_dict = ValueSortedDict()
-        self._dist_dict = {}
-        self._max_neighbors = 10
+        d = {}
+        self._dist_dict = d
+        self._max_neighbors = 50
         self._max_distance = 0.999
+        self._pop_list = sortedlist(key=lambda x: d.get(x, 1.0))
 
     def distance_add(self, other, distance):
         if other is self:
@@ -37,38 +40,41 @@ class Song:
             if sdd[other] < distance:
                 return False  # Reject
 
-            # The key was already in..
-            # so we need to delete it to get the sorting right:
-            # the key function must return the same key for each item always.
-            # So the only way to get out of this is to remove the old item
-            # and add a new one.
-            del sdd[other]
-
-            # Since we delete the worst song always only in one direction,
-            # we gonna need to pay attention here.
-            # (we didn't need to secure the top one, since we checked
-            # already with the in operator)
-            try:
-                del odd[self]
-            except KeyError:
-                pass
+            # Explain why this could damage worst song detection.
+            # and why we do not care.
+            sdd[other] = odd[self] = distance
+            return True
 
         elif distance <= self._max_distance:
             # Check if we still have room left
             if len(sdd) >= self._max_neighbors:
                 # Find the worst song in the dictionary
-                worst_song, worst_dist = max(sdd.items(), key=itemgetter(1))
-                if distance >= worst_dist:
+                idx = 1
+                pop_list = self._pop_list
+                rev_list = reversed(pop_list)
+                while 1:
+                    worst_song = next(rev_list)
+                    if worst_song in sdd:
+                        break
+                    idx += 1
+
+                if distance >= sdd[worst_song]:
+                    # we could prune pop_list here too,
+                    # but it showed that one operation only is more effective.
                     return False
+
                 # delete the worst one to make place,
                 # BUT: do not delete the connection from worst to self
                 # we create unidir edges here on purpose.
                 del sdd[worst_song]
+                del pop_list[-idx:]
         else:
             return False
 
         # Add the new element:
         sdd[other] = odd[self] = distance
+        self._pop_list.add(other)
+        other._pop_list.add(self)
         return True
 
     def distance_finalize(self):
@@ -103,7 +109,7 @@ class Song:
 
 if __name__ == '__main__':
     songs = []
-    N = 1000
+    N = 5000
     for uid in range(N):
         song = Song()
         song.uid = uid
@@ -126,8 +132,8 @@ if __name__ == '__main__':
         for i, window in enumerate(sliding_window(songs, 50,  25)):
             for j, (song_a, song_b) in enumerate(combinations(window, 2)):
                 a, b = 1.0 - song_a.uid / N, 1.0 - song_b.uid / N
-                dist = abs(a - b)
-                # dist = euler (i * j % 30)
+                # dist = abs(a - b)
+                dist = euler (i * j % 30)
                 done = Song.distance_add(song_a, song_b, dist)
 
     for song in songs:

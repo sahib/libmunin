@@ -336,11 +336,11 @@ if __name__ == '__main__':
                     'artist': 1.0 - i / N
                 })
                 # Pseudo-Random, but deterministic:
-                # euler = lambda x: math.fmod(math.e ** x, 1.0)
-                # session.database.add_values({
-                #     'genre': euler((i + 1) % 30),
-                #     'artist': euler((N - i + 1) % 30)
-                # })
+                euler = lambda x: math.fmod(math.e ** x, 1.0)
+                session.database.add_values({
+                    'genre': euler((i + 1) % 30),
+                    'artist': euler((N - i + 1) % 30)
+                })
 
         print('+ Step #4: Layouting and Plotting')
         session.database.plot()
