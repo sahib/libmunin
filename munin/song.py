@@ -119,9 +119,9 @@ class Song(SessionMapping, Hashable):
             This function has linear complexity since it needs to find the
             worst element in case of a deletion.
 
-        :param next: The song to add a relation to. Will also add a
+        :param other: The song to add a relation to. Will also add a
                      relation in other_song to self with same Distance.
-        :type next: :class:`munin.song.Song`
+        :type other: :class:`munin.song.Song`
         :param distance: The Distance to add to the "edge".
         :type distance: :class:`munin.distance.Distance`
         :returns: *False* if the song was not added because of a bad distance.
