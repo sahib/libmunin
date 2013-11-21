@@ -15,8 +15,6 @@ from munin.utils import sliding_window, centering_window
 import igraph
 
 
-def color_from_distance(distance):
-    return '#' + '01234567890ABCDEF'[int(distance * 16)] * 2 + '0000'
 
 
 class Database:
@@ -55,6 +53,9 @@ class Database:
         visual_style = {}
         visual_style['vertex_label'] = [str(vx['song'].uid) for vx in self._graph.vs]
 
+        def color_from_distance(distance):
+            return '#' + '01234567890ABCDEF'[int(distance * 16)] * 2 + '0000'
+
         def edge_color_list():
             vs = self._graph.vs
             edge_colors, edge_widths = deque(), deque()
@@ -69,11 +70,10 @@ class Database:
             return list(edge_colors), list(edge_widths)
 
         visual_style['edge_color'], visual_style['edge_width'] = edge_color_list()
-
-        # visual_style['edge_color'] = [color_from_distance(e['dist'].distance) for e in self._graph.es]
         visual_style['vertex_color'] = ['#0000AA'] * len(self._graph.vs)
         visual_style['vertex_label_color'] = ['#FFFFFF'] * len(self._graph.vs)
         visual_style['layout'] = self._graph.layout('fr')
+        visual_style['bbox'] = (2000, 2000)
         igraph.plot(self._graph, **visual_style)
 
     def find_common_attributes(self):
@@ -231,19 +231,8 @@ class Database:
             last = None
             for other, dist in song.distance_iter():
                 if last is not None and last > dist:
-                    print('!! oh')
+                    print('!! warning: unsorted elements: !({} < {})'.format(dist, last))
                 last = dist
-
-    def add_song(self, song):
-        '''Add a single song to the database.
-
-        :returns: the added song for convinience.
-        '''
-        if song is not None:
-            song.uid = len(self._song_list)
-            self._song_list.append(song)
-
-        return song
 
     def add_values(self, value_dict):
         '''Creates a song from value dict and add it to the database.
@@ -264,11 +253,15 @@ class Database:
             except KeyError:
                 raise KeyError('key "{k}" is not in attribute mask'.format(k=key))
 
-        return self.add_song(Song(
+        new_song = Song(
             self._session, value_dict,
             max_neighbors=self._session.config['max_neighbors'],
             max_distance=self._session.config['max_distance']
-        ))
+        )
+
+        # Our UID giving method is pretty simple:
+        new_song.uid = len(self._song_list)
+        self._song_list.append(new_song)
 
     @contextmanager
     def transaction(self):
@@ -329,7 +322,7 @@ if __name__ == '__main__':
         import math
 
         with session.database.transaction():
-            N = 100
+            N = 500
             for i in range(int(N / 2) + 1):
                 session.database.add_values({
                     'genre': 1.0 - i / N,
