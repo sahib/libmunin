@@ -268,40 +268,57 @@ nur relevante Songs zu vergleichen.
 18. November 2013
 -----------------
 
-Hat geklappt mit dem neuen Ansatz oben. Weiter Performance Optimierung machen
-bei 32k Songs ein `rebuild` in ~2 Minuten.
-Zur vollständigkeit halber der Ablauf von `distance_add`:
+Obiger Ansatz hat prinzipiell gut geklappt.
+
+Allerdings einige Zeit mit opimieren der `distance_add` Funktion verbracht.
+Diese wird *sehr* oft aufgerufen (genauso oft wie `distance_compute`), sollte
+daher möglichst schnell laufen. (bis zu 30% werden in dieser Funktion
+zugebrachgt momentan). Die erste *primitive* Version hatte noch eine lineare 
+Komplexität. Nach einigen Versuchen konnte die Komplexität auf O(2 * log n).
+Dies ist zwar in den meisten Fällen nicht übermäßig schneller als der einfache
+aber lineare Algorithmus, skaliert aber *deutlich* besser wenn man die Anzahl
+der Nachbarn pro Song erhöht.
+
+Man sollte hier vlt. mal ne Tabelle mit Messwerten anzeigen.
+
+Der Ablauf beider Varianten ist derselbe, hier in Pseudo-Python dargestellt:
 
 .. code-block:: python
 
     def distance_add(self, other, distance):
+        # Erlaube keine Selbstreferenzen:
         if self is other:
             return False
 
-        if other in self._dist_dict:
-            if self._dist_dict[other] < distance:
-                return False  # Reject
+        if self.bereits_bekannt(other):
+            if self.distance_get(other) < distance:
+                return False:
+            else:
+                self.update_with(other)
+                return True
 
-            del self._dist_dict[other]
-            del other._dist_dict[self]
-            self._dist_dict[other] = other._dist_dict[self] = distance
-            return True
-
-        pop_self, pop_other = False, False
-        if len(self._dist_dict) is n:
-            if self._dist_dict.keys()[-1] < distance:
+        if self.is_full():
+            worst_song, worst_distance = self.finde_schlechtesten()
+            if worst_distance < distance:
                 return False
-            pop_self = True
 
-        if len(other._dist_dict) is n:
-            if other._dist_dict.keys()[-1] < distance:
-                return False
-            pop_other = True
+            # Achtung: Nur in eine Richtung!
+            # worst kennt immer noch self.
+            self.delete_oneway_link(worst)
 
-        if pop_self:
-            del worst._dist_dict[self._dist_dict.popitem()[0]]
+        self.update_with(other)
+        return True
 
-        if pop_other:
-            del worst._dist_dict[other._dist_dict.popitem()[0]]
 
-        self[other] = other[self] = distance
+   def distance_finalize(self):
+       for neighbor, dist in self.distance_iter():
+           # Prüfe ob "Einbahnstrasse"
+           if neighbor.distance_get(self) is None:
+               neighbor.delete_oneway_link(self)
+
+
+
+21. November 2013
+-----------------
+
+
