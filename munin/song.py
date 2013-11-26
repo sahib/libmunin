@@ -61,6 +61,8 @@ class Song(SessionMapping, Hashable):
 
         # make lookup local:
         d = self._dist_dict
+
+        # Make sure bad and nonexisting songs goes to the end:
         self._pop_list = sortedlist(key=lambda x: d.get(x, 1.0))
 
         # Settings:

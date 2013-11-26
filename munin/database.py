@@ -76,16 +76,6 @@ class Database:
         visual_style['bbox'] = (2000, 2000)
         igraph.plot(self._graph, **visual_style)
 
-    def find_common_attributes(self):
-        '''Will try to find the most common attributes for debugging purpose.
-
-        :returns: a dictionary with the attribute as key and count as value.
-        '''
-        counter = Counter()
-        for song in self._song_list:
-            counter.update(song.keys())
-        return counter
-
     def _rebuild_step_base(self, mean_counter, window_size=60, step_size=20):
         '''Do the Base Iterations.
 
@@ -322,7 +312,7 @@ if __name__ == '__main__':
         import math
 
         with session.database.transaction():
-            N = 500
+            N = 200
             for i in range(int(N / 2) + 1):
                 session.database.add_values({
                     'genre': 1.0 - i / N,
@@ -337,8 +327,6 @@ if __name__ == '__main__':
 
         print('+ Step #4: Layouting and Plotting')
         session.database.plot()
-        # for song in session.database:
-            # print(len(song._dist_pool))
 
     if '--cli' in sys.argv:
         main()
