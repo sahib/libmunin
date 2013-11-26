@@ -94,9 +94,8 @@ class SessionMapping(Mapping):
         return iter(self._store)
 
     def keys(self):
-        # I've had a little too much haskell in my life:
         at = self._session.key_at_index
-        return filter(None, (at(idx) for idx in range(len(self._store))))
+        return (at(idx) for idx, v in enumerate(self._store) if v is not None)
 
     def items(self):
         return iter(self)
