@@ -15,8 +15,6 @@ from munin.utils import sliding_window, centering_window
 import igraph
 
 
-
-
 class Database:
     'Class managing Database concerns.'
     def __init__(self, session):
@@ -39,11 +37,19 @@ class Database:
         self._song_list = []
         self._graph = igraph.Graph()
 
+        self._revoked_uids = set()
+        self._dirtyness_count = 0
+
     def __iter__(self):
         return iter(self._song_list)
 
     def __getitem__(self, idx):
         return self._song_list[idx]
+
+    def _current_uid(self):
+        if len(self._revoked_uids) > 0:
+            return self._revoked_uids.pop()
+        return len(self._song_list)
 
     def plot(self):
         '''Plot the current graph for debugging purpose.
@@ -226,13 +232,6 @@ class Database:
         print('+ Step #3: Building Graph')
         self._rebuild_step_build_graph()
 
-        for song in self._song_list:
-            song.distance_finalize()
-            last = None
-            for other, dist in song.distance_iter():
-                if last is not None and last > dist:
-                    print('!! warning: unsorted elements: !({} < {})'.format(dist, last))
-                last = dist
 
     def add_values(self, value_dict):
         '''Creates a song from value dict and add it to the database.
@@ -259,16 +258,50 @@ class Database:
             max_distance=self._session.config['max_distance']
         )
 
-        # Our UID giving method is pretty simple:
-        new_song.uid = len(self._song_list)
+        new_song.uid = self._current_uid()
         self._song_list.append(new_song)
+        return new_song.uid
 
     @contextmanager
     def transaction(self):
         'Convienience method: Excecute block and call :func:`rebuild` afterwards.'
-        yield
-        self.rebuild()
+        with self.fixing():
+            yield
+            self.rebuild()
 
+    @contextmanager
+    def fixing(self):
+        for song in self._song_list:
+            song.distance_finalize()
+
+            # This is just some sort of assert and has no functionality:
+            last = None
+            for other, dist in song.distance_iter():
+                if last is not None and last > dist:
+                    print('!! warning: unsorted elements: !({} < {})'.format(dist, last))
+                last = dist
+
+    def insert_song(self, value_dict):
+        '''Insert a song to the database without doing a rebuild.
+        '''
+        new_song = self._song_list[self.add_values(value_dict)]
+        num_tries = max(2 * math.sqrt(len(self._song_list)), 20)
+
+    def remove_song(self, uid):
+        if len(self._song_list) <= uid:
+            raise ValueError('Invalid UID #{}'.format(uid))
+
+        song = self._song_list.pop(uid)
+        self._revoked_uids.add(uid)
+
+        # Patch the hole:
+        song.disconnect()
+
+
+
+###########################################################################
+#                               Test Stuff                                #
+###########################################################################
 
 if __name__ == '__main__':
     import unittest

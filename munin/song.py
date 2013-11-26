@@ -227,6 +227,32 @@ class Song(SessionMapping, Hashable):
             else:
                 break
 
+    def disconnect(self):
+        '''Deletes all edges to other songs and tries to fill the resulting hole.
+
+        Filling the hole that may be created is by comparing it's neighbors
+        with each other and adding new distances.
+        '''
+        # Step 1: Find new distances:
+        neighbors = list(self._dist_dict.keys())
+        for neighbor in neighbors:
+            neighbor._max_distance += 1
+
+        for neigh_a, neigh_b in combination(neighbors):
+            distance = Song.distance_compute(neigh_a, neigh_b)
+            Song.distance_add(neigh_a, neigh_b, distance)
+
+        for neighbor in neighbors:
+            neighbor._max_distance -= 1
+
+        # Step 2: Delete the connection to the self:
+        for neigbor in neighbors:
+            del self._dist_dict[neighbor]
+            del neigbor._dist_dict[self]
+
+        # Clear the old sortedlist, while we're on it..
+        del self._pop_list[:]
+
     #################################
     #  Additional helper functions  #
     #################################
