@@ -356,3 +356,10 @@ Wirre Gedanken in keiner direkten Reihenfolge:
    Gedanke nach einigen remove/insert Operationen einen rebuild anzustoßen.
    Apropos rebuild: Eine AsyncSession wäre fur die Moosecat Integration recht
    wichtig.
+
+**Randnotizen:**
+
+    * Große Graphen mit neuer Visualisierung: http://i.imgur.com/9Sxob0W.jpg
+    * Das Database Objekt sollte auch die Anzahl der Listens abspeichern.
+    * Für das Hinzufügen/Löschen einzelner Songs sowie für Breadth First Search
+      sind Visualisierungen beim Erklären sehr hilfreich.
