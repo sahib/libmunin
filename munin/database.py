@@ -5,6 +5,7 @@
 from contextlib import contextmanager
 from itertools import combinations
 from collections import Counter, deque
+from colorsys import hsv_to_rgb
 from sys import stdout
 
 # Internal:
@@ -76,10 +77,15 @@ class Database:
             return list(edge_colors), list(edge_widths)
 
         visual_style['edge_color'], visual_style['edge_width'] = edge_color_list()
-        visual_style['vertex_color'] = ['#0000AA'] * len(self._graph.vs)
-        visual_style['vertex_label_color'] = ['#FFFFFF'] * len(self._graph.vs)
+        #betweenness = self._graph.betweenness()
+        #max_betweenness = max(betweenness)
+        #colors = [b / max_betweenness for b in betweenness]
+        colors = self._graph.eigenvector_centrality(directed=False)
+        visual_style['vertex_color'] = [hsv_to_rgb(v, 1.0, 1.0) for v in colors]
+        visual_style['vertex_label_color'] = [hsv_to_rgb(1 - v, 0.5, 1.0) for v in colors]
+        visual_style['vertex_size'] = [42] * len(self._graph.vs)
         visual_style['layout'] = self._graph.layout('fr')
-        visual_style['bbox'] = (2000, 2000)
+        visual_style['bbox'] = (800, 800)
         igraph.plot(self._graph, **visual_style)
 
     def _rebuild_step_base(self, mean_counter, window_size=60, step_size=20):
@@ -186,7 +192,9 @@ class Database:
         for song_a in self._song_list:
             # print(len(song_a._dist_pool))
             for song_b, _ in song_a.distance_iter():
-                #print(song_a, '->', song_b)
+                if song_a.distance_get(song_b) is None or song_b.distance_get(song_a) is None:
+                    continue
+
                 # Make Edge Deduplication work:
                 if song_a.uid < song_b.uid:
                     edge_set.append((song_b.uid, song_a.uid))
@@ -221,7 +229,6 @@ class Database:
         print('|-- Mean Distane: {:f} (sd: {:f})'.format(mean_counter.mean, mean_counter.sd))
         print('+ Step #3: Building Graph')
         self._rebuild_step_build_graph()
-
 
     def add_values(self, value_dict):
         '''Creates a song from value dict and add it to the database.
@@ -261,6 +268,8 @@ class Database:
 
     @contextmanager
     def fixing(self):
+        yield
+
         for song in self._song_list:
             song.distance_finalize()
 
@@ -286,8 +295,6 @@ class Database:
 
         # Patch the hole:
         song.disconnect()
-
-
 
 ###########################################################################
 #                               Test Stuff                                #
@@ -345,7 +352,7 @@ if __name__ == '__main__':
         import math
 
         with session.database.transaction():
-            N = 200
+            N = 50
             for i in range(int(N / 2) + 1):
                 session.database.add_values({
                     'genre': 1.0 - i / N,
@@ -357,6 +364,10 @@ if __name__ == '__main__':
                     'genre': euler((i + 1) % 30),
                     'artist': euler((N - i + 1) % 30)
                 })
+
+        from munin.graph import recomnendations_from_song_sorted
+        base = session.database._song_list[10]
+        print([(song.uid, depth, base.distance_get(song, 1.0)) for song, depth in recomnendations_from_song_sorted(session.database._graph, base, n=20)])
 
         print('+ Step #4: Layouting and Plotting')
         session.database.plot()

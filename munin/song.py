@@ -63,7 +63,7 @@ class Song(SessionMapping, Hashable):
         d = self._dist_dict
 
         # Make sure bad and nonexisting songs goes to the end:
-        self._pop_list = sortedlist(key=lambda x: d.get(x, 1.0))
+        self._pop_list = sortedlist(key=lambda x: d[x])
 
         # Settings:
         self._max_neighbors = max_neighbors
@@ -90,6 +90,10 @@ class Song(SessionMapping, Hashable):
     ############################
     #  Distance Relations API  #
     ############################
+
+    def neighbors(self):
+        '''Like :func:`distance_iter`, but only return the neighbor song, not the distance'''
+        return self._dist_dist.keys()
 
     def distance_compute(self, other_song):
         '''Compute the distance to another song.
@@ -213,7 +217,7 @@ class Song(SessionMapping, Hashable):
         '''
         return self._dist_dict.items()
 
-    def distance_indirect_iter(self, dist_threshold):
+    def distance_indirect_iter(self, dist_threshold=1.1):
         '''Iterate over the indirect neighbors of this song.
 
         :returns: an generator that yields one song at a time.

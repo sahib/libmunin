@@ -318,7 +318,41 @@ Der Ablauf beider Varianten ist derselbe, hier in Pseudo-Python dargestellt:
 
 
 
-21. November 2013
+27. November 2013
 -----------------
 
+Ein etwas längerer Eintrag heute hoffentlich.
 
+Wirre Gedanken in keiner direkten Reihenfolge:
+
+1) Eine interessante Datenbank wurde von Facebook released, die unter Umständen 
+   nützlich sein könnte: http://rocksdb.org/ (ein embedded KeyValue Store).
+
+2) Momentanes Arbeitsgebiet #1: Traversierung des Graphen.
+3) Momentanes Arbeitsgebiet #2: Implementierung der Listen History
+   (Grouping/Rules).
+
+   Allgemein ist eine Re-Evaluierung von Regeln sinnvoll:
+   
+   a) Ist es möglich dass es solche Regeln gibt wie ``artist:X --> genre:y = 1.0``? 
+      Sprich dass Regeln auch von einem attrbut zum anderen gehen können.
+   b) Was ist mit Regeln die ineinander im Konflikt stehen? ::
+       
+         ``artist:X --> artist:Y = 0.0``
+         ``artist:Y <-> artist:X = 0.5``
+   c) Wann sollten Regeln gelöscht werden? Ist die Herangehensweise eines
+      Timestamps wirklich sinnvoll?
+
+   d) Wie sollen allgemein Regeln gefunden werden? Apriori oder FP-Growth?
+      Basierend auf welchen *Warenkörben*? 
+
+3) Momentanes Arbeitsgebiet #3: Moosecat in akzeptablen Zustand bringen.
+   Vlt. momentan eine simpleren Client entwickeln basierend auf libmoosecat?
+4) Momentanes Arbeitsgebiet #4: Weiter Testen und Dokumentation nach vorne
+   bringen. TravisCI bildet momentan auch grade nicht aus nicht definierten
+   Gründen. Besonders das Testen des Graphen könnte schwierig werden.
+5) Momentanes Arbeitsgebiet #5: Hinzufügen und Löschen von einzelnen Songs.
+   Diese können den Graphen unter Umständen "unsauber" machen, deshalb wäre eine
+   Gedanke nach einigen remove/insert Operationen einen rebuild anzustoßen.
+   Apropos rebuild: Eine AsyncSession wäre fur die Moosecat Integration recht
+   wichtig.
