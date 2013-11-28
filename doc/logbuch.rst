@@ -363,3 +363,12 @@ Wirre Gedanken in keiner direkten Reihenfolge:
     * Das Database Objekt sollte auch die Anzahl der Listens abspeichern.
     * Für das Hinzufügen/Löschen einzelner Songs sowie für Breadth First Search
       sind Visualisierungen beim Erklären sehr hilfreich.
+
+
+28. November 2013
+-----------------
+
+**Randnotizen:**
+
+    * Hab heute den mit Abstand schreckclichsten Python Code gelesen:
+      http://www.borgelt.net/python/pyfim.py

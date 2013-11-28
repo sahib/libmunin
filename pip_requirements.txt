@@ -13,3 +13,5 @@ bidict
 python-igraph
 #: blist
 blist
+#: pymining
+pymining
