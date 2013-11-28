@@ -93,7 +93,7 @@ def draw_moodbar(ctx, rgb, w, h):
 
     # Pain the black border down there:
     ctx.set_source_rgb(0, 0, 0)
-    ctx.rectangle(0, h - h / 6, w, h / 6)
+    ctx.rectangle(0, h - h / 6, w, h / 6 + 1)
     ctx.fill()
 
     draw_histogram(0, 760, 40, 80, (1.00, 0.75, 0.50))
