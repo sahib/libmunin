@@ -71,6 +71,9 @@ def association_rules(data, min_confidence=0.5, min_support=2, min_kulc=0.66, ma
 
     :param data: Mapping between itemsets and support counts
     :type data: dict(set=int)
+
+    Fine grained finetuning is possible with the following parameters:
+
     :param min_confidence: Minimal confidence a rule must have (from 0 to 1, higher is better)
     :type min_confidence: float
     :param min_support: Minimal support an itemset must have.
@@ -159,6 +162,7 @@ class History:
 
         :param song: The song to add to the listen history.
         :type song: A :class:`munin.song.Song`
+        :returns: True if a new group was started.
         '''
         # Check if we need to clear the current group:
         exceeds_size = len(self._current_group) >= self._max_group_size
@@ -171,6 +175,7 @@ class History:
 
         # Append a tuple of song and the current time:
         self._current_group.append((song, time()))
+        return exceeds_size or exceeds_time
 
     def clear(self):
         '''Clear the history fully.
@@ -231,8 +236,31 @@ class ListenHistory(History):
         History.__init__(self, maxlen=10000, max_group_size=5)
 
     def frequent_itemsets(self, min_support=2):
+        '''Mine frequent item sets (FIM) using the RELIM algorithm.
+
+        :param min_support: Minimum count of occurences an itemset must have to be returned.
+        :returns: A mapping of itemsets to their supportcount.
+        :rtype: dict(set=int)
+        '''
         relim_input = itemmining.get_relim_input(list(self.groups()))
         return itemmining.relim(relim_input, min_support=min_support)
+
+    def find_rules(self, itemsets=None, min_support=2, **kwargs):
+        '''Find frequent itemsets and try to find association rules in them.
+
+        :param itemsets: A itemset-mapping, as returned by :func:`frequent_itemsets`.
+                         If None, the current history will be mined.
+
+        This function takes the same finetuning parameters as :func`association_rules`.
+
+        :returns: An iterable of rules, each rule being a tuple.
+        :rtype: [(left, right, support, confidence, kulc, ir), ...]
+        '''
+        if itemsets is None:
+            itemsets = self.frequent_itemsets(min_support=min_support)
+
+        rules = association_rules(itemsets, min_support=min_support, **kwargs)
+        return sorted(rules, key=lambda x: x[4], reverse=True)
 
 
 class RecomnendationHistory(History):
@@ -314,9 +342,8 @@ if __name__ == '__main__':
             print('==================')
             print()
 
-            rules = association_rules(itemsets, min_support=2, min_confidence=0.3)
-            sorted_rules = sorted(rules, key=lambda x: x[4], reverse=True)
-            for left, right, support, confidence, kulc, irat in sorted_rules:
+            rules = history.find_rules(itemsets)
+            for left, right, support, confidence, kulc, irat in rules:
                 print('{:>15s} <-> {:<15s} [supp={:> 5d}, conf={:.3f}, kulc={:.5f} irat={:.5f}]'.format(
                     str([song.uid for song in left]),
                     str([song.uid for song in right]),
