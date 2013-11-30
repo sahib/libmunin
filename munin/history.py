@@ -7,7 +7,8 @@
 
 # Stdlib:
 from itertools import chain
-from collections import deque, Counter
+from collections import deque, Counter, OrderedDict
+from contextlib import contextmanager
 from time import time
 
 # External:
@@ -272,6 +273,98 @@ class RecomnendationHistory(History):
 
 
 ###########################################################################
+#                             Rule Management                             #
+###########################################################################
+
+class RuleIndex:
+    '''A Manager for all known and usable rules.
+
+    This class offers an Index for all rules, so one can ask
+    for all rules that affect a certain song. Additionally
+    the number of total rules are limited by specifying a maxlen.
+    If more rules are added they become invalid and get deleted on the
+    next add or once all adds were done (with :func:`begin_add_many`).
+
+    This class implements the contains operator to check if a rule tuple
+    is in the index.
+    '''
+    def __init__(self, maxlen=1000):
+        '''Create a new Index with a certain maximal length:
+
+        :param maxlen: Max. number of rules to save, or 0 for no limit.
+        '''
+        self._max_rules = maxlen or 2 ** 100
+        self._rule_list = OrderedDict()
+        self._rule_dict = defaultdict(set)
+        self._rule_pool = set()
+        self._rule_cuid = 0
+
+    def __contains__(self, rule_tuple):
+        'Check if a rule tuple is in the index.'
+        return rule_tuple in self._rule_pool
+
+    def add_new_rule(rule_tuple, drop_invalid=False):
+        '''Add a new rule to the index.
+
+        :param rule_tuple: The rule to add, coming from :func:`association_rules`.
+        :param drop_invalid: If True, delete the first element
+                             immediately if index is too large.
+        '''
+        # Step 0: Check if we already know that item.
+        if rule_tuple in self:
+            return
+
+        # Step 1: Add the affected songs to the index:
+        left, right, *_ = rule_tuple
+        for song in chain(left, right):
+            self._rule_dict[song].add(self._rule_cuid)
+
+        # Step 2: Remember this rule, so we can look it up later.
+        self._rule_list[self._rule_cuid] = rule_tuple
+        self._rule_pool.add(rule_tuple)
+        self._rule_cuid += 1
+
+        # Step 3: Prune the index, if too big.
+        if len(self._rule_list) >= self._max_rules:
+            fst_uid, fst_rule = self._rule_list.popitem(last=False)
+            self._rule_pool.discard(fst_rule)
+            if drop_invalid is True:
+                for uid_set in self._rule_dict.values():
+                    uid_set.discard(fst_uid)
+
+    def lookup(self, song):
+        '''Lookup all rules that would affect a certain song.
+
+        :param song: The song to lookup.
+        :type song: :class:`munin.song.Song`
+        :returns: An iterable with all rule_tuples affecting this song.
+        '''
+        for uid in self._rule_dict.get(song, ())):
+            yield self._rule_list[uid]
+
+    @contextmanager
+    def begin_add_many(self):
+        '''Contextmanager for adding many songs.
+
+        Often, a large number of rules is added at once.
+        For maintaining a valid index, rules that are no longer valid
+        need to be deleted from the cache, which takes linear time.
+
+        With this, the cache is checked for consistenct only once all rules
+        were added, which might be a lot faster for many rules.
+        '''
+        yield
+
+        # Prune invalid items (if any)
+        for uid_set in self._rule_dict.values():
+            for uid in list(uid_set):
+                if not uid in self._rule_list:
+                    uid_set.remove(uid)
+
+        # Make sure the pool reflects the current state:
+        self._rule_pool = set(self._rule_list.values())
+
+###########################################################################
 #                               Unit Tests                                #
 ###########################################################################
 
@@ -316,7 +409,7 @@ if __name__ == '__main__':
             for idx, song in enumerate(songs):
                 song.uid = idx
 
-            N = 10
+            N = 10000
             for _ in range(N):
                 for i, ilem in enumerate(songs):
                     history.feed(ilem)
