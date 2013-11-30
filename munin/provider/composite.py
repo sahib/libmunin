@@ -16,16 +16,16 @@
 '''
 
 
-from munin.provider import DirectProvider
+from munin.provider import Provider
 
 
-class CompositeProvider(DirectProvider):
+class CompositeProvider(Provider):
     '''A Provider that is able to chain several Provider into one.
 
     This is often useful when one has to do some normalization first,
     but afterwards the input must be cached or matched against a table index.
 
-    If no providers are given this acts like (a slower variant) of DirectProvider.
+    If no providers are given this acts like (a slower variant) of Provider.
     '''
     def __init__(self, provider_list):
         '''Creates a proivder that applies subproviders in a certain order to it's input.
@@ -33,7 +33,7 @@ class CompositeProvider(DirectProvider):
         :param provider_list: A ordered list of provider objects.
         '''
         self._provider_list = provider_list
-        DirectProvider.__init__(self, 'Composite({provs})'.format(
+        Provider.__init__(self, 'Composite({provs})'.format(
             provs=' | '.join(prov.name for prov in provider_list),
             is_reversible=True
         ))
@@ -52,7 +52,7 @@ class CompositeProvider(DirectProvider):
         This function will only work in a sensible way if :func:`is_reversible`
         yield `True`.
 
-        .. seealso:: :func:`munin.provider.DirectProvider.reverse`
+        .. seealso:: :func:`munin.provider.Provider.reverse`
         '''
         for provider in reversed(self._provider_list):
             if not provider.is_reversible:

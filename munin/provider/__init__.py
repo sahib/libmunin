@@ -6,38 +6,46 @@ import abc
 
 
 class Provider:
-    'A Provider transforms (i.e normalizes) a input value'
+    '''
+    A Provider transforms (i.e normalizes) a input value
 
-    def __init__(self, name, doc=None):
+    Provider Protocol:
+
+        A concrete Provider is required to have these functions:
+
+            ``process()``:
+
+                Takes input values and returns a list of output values
+                or None on failure.
+
+            ``is_reversible``:
+
+                This property should be True if the results returned by
+                ``process()`` can be transormed back to the input value.
+
+            ``reverse()``:
+
+                The method that is able to do the transformation.
+                It takes a list of output values and returns a list of
+                input values, or None on failure.
+
+                This method should also exist even if ``is_reversible``
+                is False. In this case the output_value list shall be
+                returned.
+
+            Additional each provider should have a settable ``name``
+            property for display purpose.
         '''
-        Provider Protocol:
+    __metaclass__ = abc.ABCMeta
 
-            A concrete Provider is required to have these functions:
+    def __init__(self, name='Default Provider', is_reversible=True):
+        '''Create a new Provider with the following attributes:
 
-                ``process()``:
-
-                    Takes input values and returns a list of output values
-                    or None on failure.
-
-                ``is_reversible``:
-
-                    This property should be True if the results returned by
-                    ``process()`` can be transormed back to the input value.
-
-                ``reverse()``:
-
-                    The method that is able to do the transformation.
-                    It takes a list of output values and returns a list of
-                    input values, or None on failure.
-
-                    This method should also exist even if ``is_reversible``
-                    is False. In this case the output_value list shall be
-                    returned.
-
-                Additionale each provider should have a settable ``name``
-                property for display purpose.
+        :param name: A display name for this Provider.
+        :param is_reversible: Can the output of ``process()`` reversed by ``reverse()``.
         '''
         self._name = name
+        self._is_reversible = is_reversible
 
     @property
     def name(self):
@@ -46,18 +54,6 @@ class Provider:
     @name.setter
     def name(self, value):
         self._name = value
-
-
-class DirectProvider(Provider):
-    '''Direct Providers usually get a single input value and process them
-    in some way (for example normalize them). Usually they have no sideeffects.
-    '''
-
-    __metaclass__ = abc.ABCMeta
-
-    def __init__(self, name='Direct', is_reversible=True):
-        Provider.__init__(self, name)
-        self._is_reversible = is_reversible
 
     @abc.abstractproperty
     def is_reversible(self):
@@ -74,7 +70,7 @@ class DirectProvider(Provider):
 
         This only works if the :func:`is_reversible` is set, otherwise
         the value will be simply returned. (Which is the default for
-        :class:`DirectProvider`).
+        :class:`Provider`).
 
         .. note::
 
@@ -95,22 +91,6 @@ class DirectProvider(Provider):
         :return: A value similar to the input value you gave into :func:`process`.
         '''
         return tuple(output_values)
-
-
-class IndirectProvider(Provider):
-    '''Indirect providers receive external data or configuration, for example
-    a path to a file, and create a value from these.
-    '''
-    def process(self, *args, **kwargs):
-        # Default Implementation does not know anything.
-        # Therefore None is the only valid value.
-        return None
-
-    @property
-    def is_reversible(self):
-        'For IndirectProvider always False is returned'
-        return False
-
 
 ###########################################################################
 #                             Import Aliases                              #

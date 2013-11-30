@@ -407,8 +407,7 @@ if __name__ == '__main__':
                 song_base.distance_add(song, DistanceDummy((idx - 1) / N))
 
             values = list(song_base.distance_iter())
-            for value in values:
-                print(value[1].distance)
+            # TODO
             # self.assertAlmostEqual(values[+0][1].distance, (N - 1) / N)
             # self.assertAlmostEqual(values[-1][1].distance, 0.5)
 

@@ -22,11 +22,11 @@ Reference
 ---------
 '''
 
-from munin.provider import DirectProvider
+from munin.provider import Provider
 from collections import Iterable
 
 
-class _BaseStemProvider(DirectProvider):
+class _BaseStemProvider(Provider):
     def process(self, input_value):
         if isinstance(input_value, str):
             return [self._stem(input_value)]
@@ -41,7 +41,7 @@ class LancasterStemProvider(_BaseStemProvider):
 
         .. note:: LancasterStemmer is known to be more aggressive than PorterStemmer.
         '''
-        DirectProvider.__init__(self, 'LancasterStemmer', is_reversible=False)
+        Provider.__init__(self, 'LancasterStemmer', is_reversible=False)
 
         from nltk.stem import LancasterStemmer
         self._stemmer = LancasterStemmer()
@@ -62,7 +62,7 @@ class SnowballStemProvider(_BaseStemProvider):
         :param language: the language for the algorithm to use.
         :type language: str
         '''
-        DirectProvider.__init__(self, 'SnowballStemmer', is_reversible=False)
+        Provider.__init__(self, 'SnowballStemmer', is_reversible=False)
 
         from nltk.stem import SnowballStemmer
         self._stemmer = SnowballStemmer(language)

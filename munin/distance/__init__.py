@@ -347,11 +347,11 @@ from munin.distance.genre import GenreTreeDistance
 if __name__ == '__main__':
     import unittest
     from munin.session import Session
-    from munin.provider import DirectProvider
+    from munin.provider import Provider
 
     class DistanceFunctionTest(unittest.TestCase):
         def test_simple(self):
-            dist = DistanceFunction(provider=DirectProvider(), name='test')
+            dist = DistanceFunction(provider=Provider(), name='test')
             dist.add_rule('rock', 'metal')
             self.assertTrue(len(dist.rule_items()) is 1)
 

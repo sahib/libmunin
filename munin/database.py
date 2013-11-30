@@ -304,11 +304,11 @@ if __name__ == '__main__':
     import unittest
     import sys
     from munin.session import Session
-    from munin.provider import DirectProvider
+    from munin.provider import Provider
 
-    class _DummyProvider(DirectProvider):
+    class _DummyProvider(Provider):
         def __init__(self):
-            DirectProvider.__init__(self, 'dummy', is_reversible=False)
+            Provider.__init__(self, 'dummy', is_reversible=False)
 
         def process(self, input_value):
             return (input_value, )

@@ -51,7 +51,7 @@ from Stemmer import Stemmer
 STEMMER = Stemmer('english')
 
 # Internal imports:
-from munin.provider import DirectProvider
+from munin.provider import Provider
 from munin.session import get_cache_path, check_or_mkdir
 
 
@@ -389,7 +389,7 @@ def load_genre_tree(pickle_path):
 ###########################################################################
 
 
-class GenreTreeProvider(DirectProvider):
+class GenreTreeProvider(Provider):
     'Normalize a genre by matching it agains precalculated Tree of sub genres'
     def __init__(self, quality='all'):
         '''Creates a GenreTreeProvider with a certain quality.
@@ -417,7 +417,7 @@ class GenreTreeProvider(DirectProvider):
         :param quality: One of ``all``, ``best_two``  ``single`` [*default:* ``all``]
         :type quality: String
         '''
-        DirectProvider.__init__(self, 'GenreTree', is_reversible=True)
+        Provider.__init__(self, 'GenreTree', is_reversible=True)
         self._root = load_genre_tree(get_cache_path('genre_tree.dump'))
         self._build_func = {
             'all': build_genre_path_all,

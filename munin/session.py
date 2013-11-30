@@ -119,11 +119,11 @@ class Session:
 
         # Import this locally, since we might get circular import otherway:
         from munin.distance import DistanceFunction
-        from munin.provider import DirectProvider
+        from munin.provider import Provider
 
         # Build indices and set default values:
         self._key_to_providers = make_index(0,
-                lambda key: DirectProvider()
+                lambda key: Provider()
         )
         self._key_to_dmeasures = make_index(1,
                 lambda key: DistanceFunction(self._key_to_providers[key])

@@ -33,16 +33,16 @@ Reference
 ---------
 '''
 
-from munin.provider import DirectProvider
+from munin.provider import Provider
 from bidict import bidict
 
 
-class AtticProvider(DirectProvider):
+class AtticProvider(Provider):
     "Provider that caches it's input arguments"
     def __init__(self):
         '''This provider is useful for data may suffer heavily from duplication.
 
-        Instead from passing it through like :class:`munin.provider.DirectProvider` we'll return
+        Instead from passing it through like :class:`munin.provider.Provider` we'll return
         an index that can be compared directly too for equality.
 
         If you want to transform the index back to the actual value you
@@ -52,7 +52,7 @@ class AtticProvider(DirectProvider):
 
             Input values must be hashable for this to work.
         '''
-        DirectProvider.__init__(self, 'Attic', is_reversible=True)
+        Provider.__init__(self, 'Attic', is_reversible=True)
         self._store = bidict()
         self._last_id = 0
 
