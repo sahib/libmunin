@@ -1,7 +1,6 @@
 language: python
 python:
   - "3.2"
-  - "3.3"
 
 before_install: 
     - yes | sudo add-apt-repository ppa:igraph/ppa
