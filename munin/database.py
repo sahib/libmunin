@@ -204,7 +204,7 @@ class Database:
         # Filter duplicate edge pairs.
         self._graph.add_edges(set(edge_set))
 
-    def rebuild(self, window_size=60, step_size=20, refine_passes=10):
+    def rebuild(self, window_size=60, step_size=20, refine_passes=25):
         '''Rebuild all distances and the associated graph.
 
         This will be triggered for you automatically after a transaction.
