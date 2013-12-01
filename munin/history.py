@@ -7,12 +7,13 @@
 
 # Stdlib:
 from itertools import chain
-from collections import deque, Counter, OrderedDict
+from collections import deque, Counter, OrderedDict, defaultdict
 from contextlib import contextmanager
 from time import time
 
 # External:
 from pymining import itemmining
+from blist import sortedset
 
 ###########################################################################
 #                         Association Rule Mining                         #
@@ -261,7 +262,7 @@ class ListenHistory(History):
             itemsets = self.frequent_itemsets(min_support=min_support)
 
         rules = association_rules(itemsets, min_support=min_support, **kwargs)
-        return sorted(rules, key=lambda x: x[4], reverse=True)
+        return sorted(rules, key=lambda x: x[-1] * (1 - x[-2]))
 
 
 class RecomnendationHistory(History):
@@ -286,7 +287,9 @@ class RuleIndex:
     next add or once all adds were done (with :func:`begin_add_many`).
 
     This class implements the contains operator to check if a rule tuple
-    is in the index.
+    is in the index. Also ``__iter__`` is supported, and will yield
+    the rules in the index sorted by their Kulczynski measure multiplied
+    by their imbalance ratio.
     '''
     def __init__(self, maxlen=1000):
         '''Create a new Index with a certain maximal length:
@@ -296,14 +299,17 @@ class RuleIndex:
         self._max_rules = maxlen or 2 ** 100
         self._rule_list = OrderedDict()
         self._rule_dict = defaultdict(set)
-        self._rule_pool = set()
+        self._rule_pool = sortedset(key=lambda e: (1.0 - e[-2]) * e[-1])
         self._rule_cuid = 0
 
     def __contains__(self, rule_tuple):
         'Check if a rule tuple is in the index.'
         return rule_tuple in self._rule_pool
 
-    def add_new_rule(rule_tuple, drop_invalid=False):
+    def __iter__(self):
+        return iter(self._rule_pool)
+
+    def insert_rule(self, rule_tuple, drop_invalid=False):
         '''Add a new rule to the index.
 
         :param rule_tuple: The rule to add, coming from :func:`association_rules`.
@@ -325,9 +331,9 @@ class RuleIndex:
         self._rule_cuid += 1
 
         # Step 3: Prune the index, if too big.
-        if len(self._rule_list) >= self._max_rules:
+        if len(self._rule_list) > self._max_rules:
             fst_uid, fst_rule = self._rule_list.popitem(last=False)
-            self._rule_pool.discard(fst_rule)
+            self._rule_pool.remove(fst_rule)
             if drop_invalid is True:
                 for uid_set in self._rule_dict.values():
                     uid_set.discard(fst_uid)
@@ -339,12 +345,22 @@ class RuleIndex:
         :type song: :class:`munin.song.Song`
         :returns: An iterable with all rule_tuples affecting this song.
         '''
-        for uid in self._rule_dict.get(song, ())):
-            yield self._rule_list[uid]
+        # print(self._rule_list)
+        for uid in self._rule_dict.get(song, ()):
+            if uid in self._rule_list:
+                yield self._rule_list[uid]
 
     @contextmanager
     def begin_add_many(self):
         '''Contextmanager for adding many songs.
+
+        Calls :func:`drop_invalid` after some time.
+        '''
+        yield
+        self.drop_invalid()
+
+    def drop_invalid(self):
+        '''Delete invalid rules from the cache.
 
         Often, a large number of rules is added at once.
         For maintaining a valid index, rules that are no longer valid
@@ -353,8 +369,6 @@ class RuleIndex:
         With this, the cache is checked for consistenct only once all rules
         were added, which might be a lot faster for many rules.
         '''
-        yield
-
         # Prune invalid items (if any)
         for uid_set in self._rule_dict.values():
             for uid in list(uid_set):
@@ -362,21 +376,69 @@ class RuleIndex:
                     uid_set.remove(uid)
 
         # Make sure the pool reflects the current state:
-        self._rule_pool = set(self._rule_list.values())
+        self._rule_pool.clear()
+        self._rule_pool.update(self._rule_list.values())
 
 ###########################################################################
 #                               Unit Tests                                #
 ###########################################################################
 
 if __name__ == '__main__':
-    from random import choice
-    from unittest import TestCase, main
-    from random import choice
+    import unittest
 
+    from random import choice, shuffle
     from munin.song import Song
     from munin.session import Session
 
-    class HistoryTest(TestCase):
+    class RuleIndexTest(unittest.TestCase):
+        def setUp(self):
+            self._idx = RuleIndex(maxlen=10)
+
+        def test_insert_normal(self):
+            N = 20
+
+            for setting in [False, True] * 10:
+                self._idx = RuleIndex(maxlen=10)
+                songs = ['one', 'two', 'three', 'four']
+
+                # Feed random input to the history:
+                for i in range(N, 0, -1):
+                    shuffle(songs)
+                    self._idx.insert_rule(
+                            (
+                                frozenset(songs[:2]),
+                                frozenset(songs[2:]),
+                                0.1, 1 - i / N, i / N * 0.5
+                            ),
+                            drop_invalid=setting
+                    )
+
+                # Check if we still cann access it:
+                for left, right, *_ in self._idx.lookup('one'):
+                    self.assertTrue('one' in left or 'one' in right)
+
+                # Check the number of items in the index:
+                self.assertEqual(len(self._idx._rule_pool), 10)
+                self.assertEqual(len(self._idx._rule_dict), 4)
+                for value in self._idx._rule_dict.values():
+                    if setting is False:
+                        self.assertEqual(len(value), N)
+                    else:
+                        self.assertEqual(len(value), 10)
+
+                # Invalidate the cache for this setting:
+                if setting is False:
+                    self._idx.drop_invalid()
+                    for value in self._idx._rule_dict.values():
+                        self.assertEqual(len(value), 10)
+
+                # Check if iteration works:
+                iterated = [(1.0 - kulc) * ir for *_, kulc, ir in self._idx]
+                resorted = sorted(iterated)
+                for l, r in zip(iterated, resorted):
+                    self.assertAlmostEqual(l - r, 0.0)
+
+    class HistoryTest(unittest.TestCase):
         def setUp(self):
             self._session = Session('test', {
                 'a': (None, None, 1.0),
@@ -400,9 +462,8 @@ if __name__ == '__main__':
             self.assertEqual(len(list(history.groups())), 20)
             for group in history.groups():
                 self.assertEqual(len(list(group)), 5)
-            # print(history.count_listens())
 
-        def test_fpgrowth(self):
+        def test_relim(self):
             history = ListenHistory()
 
             songs = [Song(self._session, {'abcdef'[idx]: 1.0}) for idx in range(6)]
@@ -424,8 +485,8 @@ if __name__ == '__main__':
             print('==================')
             print()
             for itemset, support in sorted(itemsets.items(), key=lambda x: x[1]):
-                print('{: 8d} ({:0.3f}%): {:>20s}'.format(
-                    support, support / N,
+                print('{: 8d} ({:3.3f}%): {:>20s}'.format(
+                    support, support / N * 10,
                     str([song.uid for song in itemset])
                 ))
 
@@ -437,10 +498,10 @@ if __name__ == '__main__':
 
             rules = history.find_rules(itemsets)
             for left, right, support, confidence, kulc, irat in rules:
-                print('{:>15s} <-> {:<15s} [supp={:> 5d}, conf={:.3f}, kulc={:.5f} irat={:.5f}]'.format(
+                print('{:>15s} <-> {:<15s} [supp={:> 5d}, conf={:.3f}, kulc={:.5f} irat={:.5f} rating={:.5f}]'.format(
                     str([song.uid for song in left]),
                     str([song.uid for song in right]),
-                    support, confidence, kulc, irat
+                    support, confidence, kulc, irat, (1 - kulc) * irat
                 ))
 
-    main()
+    unittest.main()
