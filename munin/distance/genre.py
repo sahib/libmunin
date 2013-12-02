@@ -39,10 +39,6 @@ class GenreTreeDistance(DistanceFunction):
 
         :returns: The ratio of matching numbers divided by max. length of both.
         '''
-        rule = self.lookup_rule(left, right)
-        if rule is not None:
-            return rule.distance
-
         n = 0.0
         for l, r in zip(left, right):
             if l != r:
@@ -117,11 +113,10 @@ if __name__ == '__main__':
 
         def test_rule(self):
             calc = GenreTreeDistance(GenreTreeProvider())
-            calc.add_rule((1, 0, 1), (0, 1, 0), distance=0.5)
-            self.assertTrue(float_cmp(calc.compute([(1, 0, 1)], [(0, 1, 0)]), 0.5))
-            self.assertTrue(float_cmp(calc.compute([(0, 1, 0)], [(1, 0, 1)]), 0.5))
+            self.assertAlmostEqual(calc.compute([(1, 0, 1)], [(0, 1, 0)]), 1.0)
+            self.assertAlmostEqual(calc.compute([(1, 0, 0)], [(1, 1, 1)]), 2 / 3)
 
-            self.assertTrue(float_cmp(calc.compute([(1, 1)], [(1, 1)]), 0.0))
-            self.assertTrue(float_cmp(calc.compute([(1, 1)], [(2, 0)]), 1.0))
+            self.assertAlmostEqual(calc.compute([(1, 1)], [(1, 1)]), 0.0)
+            self.assertAlmostEqual(calc.compute([(1, 1)], [(2, 0)]), 1.0)
 
     unittest.main()
