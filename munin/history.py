@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-'''
-.. todo:: Add a descriptive module text.
+'''This module implements the history mechanism of libmunin.
 '''
 
 # Stdlib:
@@ -58,7 +57,7 @@ def append_rule(
         return
 
     # Finally add the rule, after all those tests.
-    rules.append((left, right, support, confidence, kulc, ir))
+    rules.append((left, right, support, confidence, kulc, ir, (1.0 - ir) * kulc))
 
     # Lookup set, so we don't calculate the same rule more than once.
     known_rules.add((left, right))
@@ -70,6 +69,8 @@ def association_rules(data, min_confidence=0.5, min_support=2, min_kulc=0.66, ma
     Inspiration for some tricks in this function were take from:
 
         https://github.com/bartdag/pymining/blob/master/pymining/assocrules.py
+
+    The rating of a rule is defined as: (1 - imbalance_ratio) * kulczynski
 
     :param data: Mapping between itemsets and support counts
     :type data: dict(set=int)
@@ -86,7 +87,7 @@ def association_rules(data, min_confidence=0.5, min_support=2, min_kulc=0.66, ma
     :param max_ir: Maximum Imbalance Ratio (from 0 to 1, lower is better)
     :type max_ir: float
     :returns: An iterable with rules.
-    :rtype: [(left, right, support, confidence, kulc, ir), ...]
+    :rtype: [(left, right, support, confidence, kulc, ir, rating), ...]
     '''
     visited, rules, known_rules = set(), deque(), set()
 
@@ -262,7 +263,7 @@ class ListenHistory(History):
             itemsets = self.frequent_itemsets(min_support=min_support)
 
         rules = association_rules(itemsets, min_support=min_support, **kwargs)
-        return sorted(rules, key=lambda x: x[-1] * (1 - x[-2]))
+        return sorted(rules, key=lambda x: x[-1], reverse=True)
 
 
 class RecomnendationHistory(History):
@@ -299,7 +300,7 @@ class RuleIndex:
         self._max_rules = maxlen or 2 ** 100
         self._rule_list = OrderedDict()
         self._rule_dict = defaultdict(set)
-        self._rule_pool = sortedset(key=lambda e: (1.0 - e[-2]) * e[-1])
+        self._rule_pool = sortedset(key=lambda e: e[-1])
         self._rule_cuid = 0
 
     def __contains__(self, rule_tuple):
@@ -307,7 +308,7 @@ class RuleIndex:
         return rule_tuple in self._rule_pool
 
     def __iter__(self):
-        return iter(self._rule_pool)
+        return reversed(self._rule_pool)
 
     def insert_rule(self, rule_tuple, drop_invalid=False):
         '''Add a new rule to the index.
@@ -345,7 +346,6 @@ class RuleIndex:
         :type song: :class:`munin.song.Song`
         :returns: An iterable with all rule_tuples affecting this song.
         '''
-        # print(self._rule_list)
         for uid in self._rule_dict.get(song, ()):
             if uid in self._rule_list:
                 yield self._rule_list[uid]
@@ -433,8 +433,9 @@ if __name__ == '__main__':
                         self.assertEqual(len(value), 10)
 
                 # Check if iteration works:
-                iterated = [(1.0 - kulc) * ir for *_, kulc, ir in self._idx]
-                resorted = sorted(iterated)
+                iterated = [rating for *_, rating in self._idx]
+                resorted = sorted(iterated, reverse=True)
+
                 for l, r in zip(iterated, resorted):
                     self.assertAlmostEqual(l - r, 0.0)
 
@@ -497,11 +498,11 @@ if __name__ == '__main__':
             print()
 
             rules = history.find_rules(itemsets)
-            for left, right, support, confidence, kulc, irat in rules:
+            for left, right, support, confidence, kulc, irat, rating in rules:
                 print('{:>15s} <-> {:<15s} [supp={:> 5d}, conf={:.3f}, kulc={:.5f} irat={:.5f} rating={:.5f}]'.format(
                     str([song.uid for song in left]),
                     str([song.uid for song in right]),
-                    support, confidence, kulc, irat, (1 - kulc) * irat
+                    support, confidence, kulc, irat, rating
                 ))
 
     unittest.main()

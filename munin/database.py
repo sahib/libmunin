@@ -77,9 +77,6 @@ class Database:
             return list(edge_colors), list(edge_widths)
 
         visual_style['edge_color'], visual_style['edge_width'] = edge_color_list()
-        #betweenness = self._graph.betweenness()
-        #max_betweenness = max(betweenness)
-        #colors = [b / max_betweenness for b in betweenness]
         colors = self._graph.eigenvector_centrality(directed=False)
         visual_style['vertex_color'] = [hsv_to_rgb(v, 1.0, 1.0) for v in colors]
         visual_style['vertex_label_color'] = [hsv_to_rgb(1 - v, 0.5, 1.0) for v in colors]
