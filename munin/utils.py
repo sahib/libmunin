@@ -6,12 +6,21 @@ Commonly utility functions used througout.
 '''
 
 from collections import Mapping, Hashable
-from itertools import chain, islice, cycle
+from itertools import chain, islice, cycle, zip_longest
 import sys
+
+###########################################################################
+#                              Numeric Utils                              #
+###########################################################################
 
 
 # There does not seem to be a built-in for this.
 float_cmp = lambda a, b: abs(a - b) < sys.float_info.epsilon
+
+
+###########################################################################
+#                         Very special Iterators                          #
+###########################################################################
 
 
 def sliding_window(iterable, n=2, step=1):
@@ -53,6 +62,18 @@ def centering_window(iterable, n=4, parallel=True):
     return (chain(lean[idx:idx + n2], mean[idx:idx + n2]) for idx in area)
 
 
+###########################################################################
+#                           Itertools Recipes:                            #
+###########################################################################
+
+
+def grouper(iterable, n, fillvalue=None):
+    "Collect data into fixed-length chunks or blocks"
+    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
+    args = [iter(iterable)] * n
+    return zip_longest(*args, fillvalue=fillvalue)
+
+
 def roundrobin(*iterables):
     "roundrobin('ABC', 'D', 'EF') --> A D E B F C"
     # Recipe credited to George Sakkis
@@ -65,6 +86,10 @@ def roundrobin(*iterables):
         except StopIteration:
             pending -= 1
             nexts = cycle(islice(nexts, pending))
+
+###########################################################################
+#                             SessionMapping                              #
+###########################################################################
 
 
 class SessionMapping(Mapping):

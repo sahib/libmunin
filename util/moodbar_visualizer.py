@@ -1,6 +1,16 @@
 from cairo import PDFSurface, Context
 from gi.repository import Pango, PangoCairo
 from collections import deque
+from itertools import zip_longest
+from numpy import histogram
+
+
+def grouper(iterable, n, fillvalue=None):
+    "Collect data into fixed-length chunks or blocks"
+    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
+    args = [iter(iterable)] * n
+    return zip_longest(*args, fillvalue=fillvalue)
+
 
 
 def draw_moodbar(ctx, rgb, w, h):
@@ -47,31 +57,24 @@ def draw_moodbar(ctx, rgb, w, h):
         ctx.stroke()
 
     def draw_histogram(row, x, height, width, color):
-        block_size = 5
-        count = [0] * 256
-
         ctx.set_source_rgb(0.1, 0.1, 0.1)
         ctx.rectangle(x, 0, width + 1, height)
         ctx.fill()
 
-        for point in rgb:
-            count[int(point[row] * 255)] += 1
-
-        from math import log10
-        for idx in range(0, 255, block_size):
-            #count[idx] = sum(point[row] for point in rgb[idx:idx + block_size]) / block_size
-            count[idx] = sum(count[idx:idx + block_size]) / block_size
-            count[idx + 1:idx + block_size] = [0] * (block_size - 1)
-
-        max_count = max(count)
-        for idx in range(0, 255, block_size):
-            count[idx] = (height / max_count) * count[idx]
-
+        block_size = 15
         own_step = width / 255
+        hist, _ = histogram([int(point[row] * 255) for point in rgb], bins=(255 / block_size))
+
+        max_value = 255
+        # max_value = max(hist)
+
+        idx = 0
         ctx.set_source_rgb(*color)
-        for idx in range(0, 255, block_size):
-            ctx.rectangle(x + idx * own_step, height - count[idx], own_step * (block_size - 1), count[idx])
+        for value in hist:
+            value /= max_value
+            ctx.rectangle(x + idx * own_step, height, own_step * (block_size - 1), -value * height)
             ctx.fill()
+            idx += block_size
 
     draw_checker(40, 750)
     draw_graph(0, (1, 0, 0), height=40, width=750)
@@ -128,11 +131,10 @@ def draw_moodbar(ctx, rgb, w, h):
 def read_moodbar_values(path):
     rgb_values = deque()
     with open(path, 'rb') as handle:
-        while True:
-            rgb = handle.read(3)
-            if not rgb:
-                break
-            rgb_values.append(tuple(c / 0xff for c in rgb))
+        vector = handle.read()
+
+    for rgb in grouper(vector, n=3):
+        rgb_values.append(tuple(c / 0xff for c in rgb))
 
     return list(rgb_values)
 
