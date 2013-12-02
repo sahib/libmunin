@@ -286,7 +286,8 @@ class Database:
         over ``star_threshold``, also the neighbors of this song is
         investigated.
 
-        Songs inserted this way tend to have wider connections.
+        Songs inserted this way tend to have wider connections than normal
+        songs, which may enrich the graph.
 
         :param value_dict: Same as for :func:`add_values`.
         :param star_threshold: Also consider neighbors for songs with a

@@ -142,8 +142,8 @@ def recomnendations_from_song(graph, rule_index, song, n=20):
 
         # We take the songs in the opposite set of the rule:
         for song in (right if song in left else left):
-            breadth_first = islice(neighbors_from_song_sorted(graph, song)
-            breadth_first_iters.append(breadth_first, max_n))
+            breadth_first = islice(neighbors_from_song_sorted(graph, song))
+            breadth_first_iters.append(breadth_first, max_n)
 
     # The result set will be build by half
     base_half = islice(neighbors_from_song_sorted(graph, song), 1, n / 2 + 1)
@@ -161,6 +161,28 @@ def recomnendations_from_song(graph, rule_index, song, n=20):
 
         if len(songs_set) >= n:
             break
+
+
+def recomnendations_from_graph(graph, rule_index, n=20):
+    '''Find n recomnendations solely from the graph.
+
+    This will try to find a good rule, that indicates a user's
+    favourite song, and will call :func:`recomnendations_from_song` on it.
+    If no rules are known, a random song is chosen.
+
+    .. seealso: :func:`recomnendations_from_song`
+    '''
+    try:
+        # Get the best rule from the index
+        best_rule = next(iter(rule_index))
+
+        # First song of the rules' left side
+        chosen_song = best_rule[0][0]
+
+    except StopIteration:
+        chosen_song = random.choice(graph.vs)['song']
+
+    return recomnendations_from_song(graph, rule_index, chosen_song, n=n)
 
 
 if __name__ == '__main__':
