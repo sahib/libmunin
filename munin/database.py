@@ -7,6 +7,7 @@ from itertools import combinations
 from collections import Counter, deque
 from colorsys import hsv_to_rgb
 from sys import stdout
+import math
 
 # Internal:
 from munin.song import Song
@@ -277,13 +278,47 @@ class Database:
                     print('!! warning: unsorted elements: !({} < {})'.format(dist, last))
                 last = dist
 
-    def insert_song(self, value_dict):
+    def insert_song(self, value_dict, star_threshold=0.75):
         '''Insert a song to the database without doing a rebuild.
+
+        This works by iterating partially over the songlist, trying to find
+        a suitable point to insert it. If a distance to a random song is
+        over ``star_threshold``, also the neighbors of this song is
+        investigated.
+
+        Songs inserted this way tend to have wider connections.
+
+        :param value_dict: Same as for :func:`add_values`.
+        :param star_threshold: Also consider neighbors for songs with a
+                               distance higher than this.
+        :returns: The uid of this new song.
         '''
         new_song = self._song_list[self.add_values(value_dict)]
-        num_tries = max(2 * math.sqrt(len(self._song_list)), 20)
+        iterstep = max(1, math.log(len(self._song_list) or 1))
+
+        distances = deque()
+        for song in self._song_list[::iterstep]:
+            distance = Song.distance_compute(song, new_song)
+            distances.append((song, distance))
+            new_song.distance_add(song, distance)
+
+        for song, distance in distances:
+            if distance.distance > star_threshold:
+                for neighbor in song.neighbors():
+                    distance = new_song.distance_compute(neighbor)
+                    new_song.distance_add(neighbor, distance)
+
+        return new_song.uid
 
     def remove_song(self, uid):
+        '''Delete a single song from the graph without rebuilding it.
+
+        Holes that may be created will be tried to be patched by connecting
+        the neighbors to each other.
+
+        :param ui: The uid of the song to delete.
+        :returns: The uid you passed in for convienience.
+        '''
         if len(self._song_list) <= uid:
             raise ValueError('Invalid UID #{}'.format(uid))
 
@@ -292,6 +327,8 @@ class Database:
 
         # Patch the hole:
         song.disconnect()
+
+        return uid
 
 ###########################################################################
 #                               Test Stuff                                #
