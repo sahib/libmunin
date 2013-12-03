@@ -7,6 +7,7 @@ from operator import itemgetter
 
 # Internal:
 from munin.utils import grouper
+from munin.provider import Provider
 
 # External:
 from igraph.statistics import Histogram
@@ -48,7 +49,7 @@ def find_dominant_colors(vector, samples, roundoff=15):
     return result[:samples], int(round(blackness_count / 10))
 
 
-def process(vector, samples=20, print_to_sdout=False):
+def process_moodbar(vector, samples=20, print_to_sdout=False):
     chan_r, chan_g, chan_b = (extract(vector, chan) for chan in range(3))
     hist_r, mean_r, sd_r = histogram(chan_r)
     hist_g, mean_g, sd_g = histogram(chan_g)
@@ -83,24 +84,24 @@ def process(vector, samples=20, print_to_sdout=False):
 
     if print_to_sdout:
         def print_channel(hist, mean, sd, diff):
-            print('    Hist:', ', '.join(('{:d} ({:d}x)'.format(value, count) for value, count in hist)))
-            print('    Mean:', mean)
-            print('    Sdev:', sd)
-            print('    Diff:', diff)
+            print('    hist:', ', '.join(('{:d} ({:d}x)'.format(value, count) for value, count in hist)))
+            print('    mean:', mean)
+            print('    sdev:', sd)
+            print('    diff:', diff)
 
-        print('Channel Red:')
+        print('channel red:')
         print_channel(hist_r, mean_r, sd_r, diff_r)
-        print('Channel Green:')
+        print('channel green:')
         print_channel(hist_g, mean_g, sd_g, diff_g)
-        print('Channel Blue:')
+        print('channel blue:')
         print_channel(hist_b, mean_b, sd_b, diff_b)
         print()
-        print('Average maximum:')
+        print('average maximum:')
         print('    ', average_max)
-        print('Average minimum:')
+        print('average minimum:')
         print('    ', average_min)
         print()
-        print('Dominant colors ({:d}% black):'.format(blackness))
+        print('dominant colors ({:d}% black):'.format(blackness))
         for color, count in dominant_colors:
             color_string = '({:>3d}, {:>3d}, {:>3d})'.format(*color)
             print('    {: 4d}x: {}'.format(count, color_string))
@@ -113,6 +114,28 @@ def process(vector, samples=20, print_to_sdout=False):
            dominant_colors, blackness
 
 
+class MoodbarProvider(Provider):
+    def __init__(self):
+        Provider.__init__(self, 'Moodbar', is_reversible=False)
+
+    def process(self, input_value):
+        'Subclassed from Provider, will be called for you on the input.'
+        try:
+            vector = read_moodbar_values(input_value)
+            return tuple([process_moodbar(vector)])
+        except OSError:
+            return ()
+
+    def reverse(self, output_values):
+        raise NotImplemented('Moodbars are not reversible')
+
+
 if __name__ == '__main__':
-    vector = read_moodbar_values('mood.file')
-    stuff = process(vector, samples=10, print_to_sdout=True)
+    import sys
+    import unittest
+
+    if '--cli' in sys.argv:
+        vector = read_moodbar_values('mood.file')
+        process_moodbar(vector, samples=10, print_to_sdout=True)
+    else:
+        unittest.main()

@@ -407,7 +407,9 @@ Wirre Gedanken in keiner direkten Reihenfolge:
     * Dominante Farben: Die 10 häufigsten, gerundeten, nicht-schwarzen, Farbtripel.
 
         Alle Farbkanäle werden auf 17 mögliche Werte abgebildet und dann
-        gezählt. Sehr dunkle Farbtripel wer
+        gezählt. Sehr dunkle Farbtripel werden nicht gezählt. 
+        E-Gitarren sind beispielsweise türkis, bestimmte Farben, bzw.
+        Farbbereiche repräsentieren daher recht fein verschiedene Instrumente.
         
     * Blackness.
 
@@ -431,6 +433,29 @@ Wirre Gedanken in keiner direkten Reihenfolge:
     Wir profitieren davon dass sich alle Werte im Bereich von 0 bis 255
     befinden, so dass diese nicht allokiert werden müssen und allein durch 
     Referenzen (*8 Byte*) repräsentiert werden.
+
+*Vergleich der einzelnen Beschreibungen:*
+
+    
++----------------------+--------+---------------------------------------------------------------+
+|  Name                | Weight | Formula                                                       |
++======================+========+===============================================================+
+| *diffsum*            |   0.15 | ``min(((v1 + v2) / 2) / 50, 1.0)``                            |
++----------------------+--------+---------------------------------------------------------------+
+| *mean*               |   0.05 | ``((v1 + v2) / 2) / 255``                                     |
++----------------------+--------+---------------------------------------------------------------+
+| *histogram*          |   0.15 | ``sum(diff(common_v1, common_v2) / 255) / (5 - len(common))`` |
++----------------------+--------+---------------------------------------------------------------+
+| *standard deviation* |   0.05 |  ``abs(v1 - v2) / max(v1 - v2)``                              |
++----------------------+--------+---------------------------------------------------------------+
+| *dominant colors*    |   0.4  | ``number of common(weight=1)/similar(weight=0.5) colors / 5`` |
++----------------------+--------+---------------------------------------------------------------+
+| *blackness*          |   0.1  | ``abs(v1 - v2) / max(v1 - v2)``                               |
++----------------------+--------+---------------------------------------------------------------+
+| *average min/max*    |   0.1  | ``abs(v1 - v2) / max(v1 - v2)``                               |
++----------------------+--------+---------------------------------------------------------------+
+|                      | 1.0    |                                                               |
++----------------------+--------+---------------------------------------------------------------+
 
 *Beispielausführung:*
 
