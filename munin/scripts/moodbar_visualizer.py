@@ -1,16 +1,14 @@
-from cairo import PDFSurface, Context
-from gi.repository import Pango, PangoCairo
+#Stdlib:
 from collections import deque
 from itertools import zip_longest
+
+# Interal:
+from munin.utils import grouper
+
+# External:
+from cairo import PDFSurface, Context
+from gi.repository import Pango, PangoCairo
 from numpy import histogram
-
-
-def grouper(iterable, n, fillvalue=None):
-    "Collect data into fixed-length chunks or blocks"
-    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
-    args = [iter(iterable)] * n
-    return zip_longest(*args, fillvalue=fillvalue)
-
 
 
 def draw_moodbar(ctx, rgb, w, h):
