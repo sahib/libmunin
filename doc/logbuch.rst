@@ -372,3 +372,78 @@ Wirre Gedanken in keiner direkten Reihenfolge:
 
     * Hab heute den mit Abstand schreckclichsten Python Code gelesen:
       http://www.borgelt.net/python/pyfim.py
+
+
+3. Dezember 2013
+----------------
+
+**Heutige Aufgabe:**
+
+    Die 3000 Integer Werte starke Moodbar (die nach eingängier
+    Meinung eigentlich ``freqbar`` heißen sollte) möglichst akkurat 
+    in wenigen Werten zu beschreiben und vergleichbar zu machen.
+
+    Werte die aus einer einzelnen moodbar extrahiert werden:
+
+    * Pro Farbkanal:
+        
+        * Beschnittenes Histogramm mit 5 höchsten Werten (von 15)
+
+              Indikator für die dominierenden Frequenzen innerhalb dieses Bands.
+              (sehr grobe Abschätzung der Instrumente).
+
+        * Arithmethisches Mittel. *(0-255)*
+        
+              Durschnittliche "Frequenz" für das jeweilige Band.
+
+        * Standardabweichung. *(0-255)*
+
+            Streuung des arithmethischen Mittels.
+
+        * Diffsum: Die Summe der Differenzen von letzten Wert zum nächsten. *(0 - samples \* 255)*
+
+            Indikator für die Abwechslungsreichheit der Daten.
+         
+    * Dominante Farben: Die 10 häufigsten, gerundeten, nicht-schwarzen, Farbtripel.
+
+        Alle Farbkanäle werden auf 17 mögliche Werte abgebildet und dann
+        gezählt. Sehr dunkle Farbtripel wer
+        
+    * Blackness.
+
+        Der Schwarzanteil (bzw. Anteil sehr dunkler Farben) repräsentiert den
+        Anteil der stillen Abschnitte im Lied.
+
+    * Durschschnittliches Maximum und Minimum.
+
+        Weiche Ober- und Untergrenze der Werte in denen sich die RGB Werte für
+        gewöhnlich bewegen.
+
+*Speicherverbrauch:*
+
+    ``(10 * 4 + 2 + 3 * 8 + 1) * 8 = 536 Bytes``
+
+    Zwar gnädig gerechnet, aber braucht die ganze moodbar ja immerhin:
+
+    ``3000 * 8 = 24.000 Bytes``
+
+
+    Wir profitieren davon dass sich alle Werte im Bereich von 0 bis 255
+    befinden, so dass diese nicht allokiert werden müssen und allein durch 
+    Referenzen (*8 Byte*) repräsentiert werden.
+
+*Beispielausführung:*
+
+    http://i.imgur.com/p8ez6kk.png
+
+
+**Randnotizen:**
+
+    * Playlist Ersteller mit wunderbaren Namen (*gay-jay*): 
+      
+        http://gjay.sourceforge.net/how.html
+
+    * Sogar die sächsische Polizei kennt *Shazam*, hoffentlich kontaktieren die
+      mich nicht...:
+      
+        http://www.spiegel.de/international/germany/german-police-develop-app-to-curb-neonazi-music-a-936711.html

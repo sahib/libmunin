@@ -65,8 +65,8 @@ def draw_moodbar(ctx, rgb, w, h):
         own_step = width / 255
         hist, _ = histogram([int(point[row] * 255) for point in rgb], bins=(255 / block_size))
 
-        max_value = 255
-        # max_value = max(hist)
+        # max_value = 255
+        max_value = max(hist)
 
         idx = 0
         ctx.set_source_rgb(*color)
