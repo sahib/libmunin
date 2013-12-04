@@ -2,6 +2,8 @@
 # encoding: utf-8
 
 # Stdlib:
+import os
+
 from collections import deque, Counter, namedtuple
 from operator import itemgetter
 from subprocess import call, DEVNULL
@@ -28,10 +30,10 @@ MoodbarChannel = namedtuple('MoodbarChannel', [
 
 def compute_moodbar_for_file(audio_file, output_file, print_output=False):
     stdout, stderr = DEVNULL, DEVNULL
-    if print_to_sdout:
+    if print_output:
         stdout, stderr = None, None
 
-    return call(['moodbar', sys.argv[2], '-o', output_file], stdout=stdout, stderr=stderr)
+    return call(['moodbar', audio_file, '-o', output_file], stdout=stdout, stderr=stderr)
 
 
 def read_moodbar_values(path):
@@ -55,14 +57,14 @@ def extract(vector, chan):
     return [f(rgb) for rgb in vector]
 
 
-def find_dominant_colors(vector, samples, roundoff=15):
+def find_dominant_colors(vector, samples, roundoff=17):
     data = [tuple([int(v / roundoff) * roundoff for v in rgb]) for rgb in vector]
     counter = list(Counter(data).most_common(samples * 2))
 
     blackness_count, result = 0, []
     for color, count in counter:
         # Do not count very dark colors:
-        if all(map(lambda v: v < 20, color)):
+        if all(map(lambda v: v < roundoff, color)):
             blackness_count += count
         else:
             result.append((color, count))
@@ -70,7 +72,7 @@ def find_dominant_colors(vector, samples, roundoff=15):
     return result[:samples], int(round(blackness_count / 10))
 
 
-def process_moodbar(vector, samples=20, print_to_sdout=False):
+def process_moodbar(vector, samples=25, print_to_sdout=False):
     chan_r, chan_g, chan_b = (extract(vector, chan) for chan in range(3))
     hist_r, mean_r, sd_r = histogram(chan_r)
     hist_g, mean_g, sd_g = histogram(chan_g)
@@ -129,12 +131,12 @@ def process_moodbar(vector, samples=20, print_to_sdout=False):
 
     return MoodbarDescription(
             (
-                MoodbarChannel(hist_r, mean_r, sd_r, diff_r),
-                MoodbarChannel(hist_g, mean_g, sd_g, diff_g),
-                MoodbarChannel(hist_b, mean_b, sd_b, diff_b),
+                MoodbarChannel(dict(hist_r), mean_r, sd_r, diff_r),
+                MoodbarChannel(dict(hist_g), mean_g, sd_g, diff_g),
+                MoodbarChannel(dict(hist_b), mean_b, sd_b, diff_b),
             ),
             average_max, average_min,
-            dominant_colors, blackness
+            dict(dominant_colors), blackness
     )
 
 ###########################################################################
@@ -166,10 +168,10 @@ class MoodbarMoodFileProvider(MoodbarProvider):
 class MoodbarAudioFileProvider(MoodbarMoodFileProvider):
     def process(self, audio_file_path):
         mood_file_path = audio_file_path + '.mood'
-        if compute_moodbar_for_file(audio_file_path, mood_file_path) is 0:
-            return MoodbarMoodFileProvider.process(self, mood_file_path)
-        else:
-            return ()
+        if not os.path.exists(mood_file_path):
+            if compute_moodbar_for_file(audio_file_path, mood_file_path) is not 0:
+                return ()
+        return MoodbarMoodFileProvider.process(self, mood_file_path)
 
 
 if __name__ == '__main__':
