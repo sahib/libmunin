@@ -2,8 +2,9 @@
 # encoding: utf-8
 
 # Stdlib:
-from collections import deque, Counter
+from collections import deque, Counter, namedtuple
 from operator import itemgetter
+from subprocess import call, DEVNULL
 
 # Internal:
 from munin.utils import grouper
@@ -11,6 +12,26 @@ from munin.provider import Provider
 
 # External:
 from igraph.statistics import Histogram
+
+
+MoodbarDescription = namedtuple('MoodbarDescription', [
+        'channels',
+        'average_max', 'average_min',
+        'dominant_colors', 'blackness'
+])
+
+
+MoodbarChannel = namedtuple('MoodbarChannel', [
+    'histogram', 'mean', 'sd', 'diffsum'
+])
+
+
+def compute_moodbar_for_file(audio_file, output_file, print_output=False):
+    stdout, stderr = DEVNULL, DEVNULL
+    if print_to_sdout:
+        stdout, stderr = None, None
+
+    return call(['moodbar', sys.argv[2], '-o', output_file], stdout=stdout, stderr=stderr)
 
 
 def read_moodbar_values(path):
@@ -106,28 +127,49 @@ def process_moodbar(vector, samples=20, print_to_sdout=False):
             color_string = '({:>3d}, {:>3d}, {:>3d})'.format(*color)
             print('    {: 4d}x: {}'.format(count, color_string))
 
-    return hist_r, hist_g, hist_b, \
-           mean_r, mean_g, mean_b, \
-           sd_r, sd_g, sd_b, \
-           diff_r, diff_g, diff_b, \
-           average_max, average_min, \
-           dominant_colors, blackness
+    return MoodbarDescription(
+            (
+                MoodbarChannel(hist_r, mean_r, sd_r, diff_r),
+                MoodbarChannel(hist_g, mean_g, sd_g, diff_g),
+                MoodbarChannel(hist_b, mean_b, sd_b, diff_b),
+            ),
+            average_max, average_min,
+            dominant_colors, blackness
+    )
+
+###########################################################################
+#                            Actual Providers                             #
+###########################################################################
 
 
 class MoodbarProvider(Provider):
     def __init__(self):
         Provider.__init__(self, 'Moodbar', is_reversible=False)
 
-    def process(self, input_value):
+    def process(self, vector):
         'Subclassed from Provider, will be called for you on the input.'
+        return tuple([process_moodbar(vector)])
+
+    def reverse(self, output_values):
+        raise NotImplemented('moodbars are not reversible')
+
+
+class MoodbarMoodFileProvider(MoodbarProvider):
+    def process(self, mood_file_path):
         try:
-            vector = read_moodbar_values(input_value)
-            return tuple([process_moodbar(vector)])
+            vector = read_moodbar_values(mood_file_path)
+            return MoodbarProvider.process(self, vector)
         except OSError:
             return ()
 
-    def reverse(self, output_values):
-        raise NotImplemented('Moodbars are not reversible')
+
+class MoodbarAudioFileProvider(MoodbarMoodFileProvider):
+    def process(self, audio_file_path):
+        mood_file_path = audio_file_path + '.mood'
+        if compute_moodbar_for_file(audio_file_path, mood_file_path) is 0:
+            return MoodbarMoodFileProvider.process(self, mood_file_path)
+        else:
+            return ()
 
 
 if __name__ == '__main__':
@@ -136,6 +178,6 @@ if __name__ == '__main__':
 
     if '--cli' in sys.argv:
         vector = read_moodbar_values('mood.file')
-        process_moodbar(vector, samples=10, print_to_sdout=True)
+        print(process_moodbar(vector, samples=10, print_to_sdout=True))
     else:
         unittest.main()
