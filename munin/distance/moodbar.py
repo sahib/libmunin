@@ -1,15 +1,34 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+
 from munin.distance import DistanceFunction
 from math import sqrt
 
 
 class MoodbarDistance(DistanceFunction):
+    '''Distance Function that compares two MoodbarDescriptions.
+
+    This DistanceFunction works with the following providers:
+
+        * :class:`munin.provider.moodbar.MoodbarProvider`
+        * :class:`munin.provider.moodbar.MoodbarMoodFileProvider`
+        * :class:`munin.provider.moodbar.MoodbarAudioFileProvider`
+    '''
     def __init__(self, provider):
         DistanceFunction.__init__(self, provider, 'Moodbar')
 
     def compute(self, lefts, rights):
+        '''Compute the distance between two moodbar desc
+
+        Only the first element in the individual lists is used.
+
+        :param lefts: Packed left moodbar description.
+        :param rights: Packed right moodbar description.
+        '''
+        if not (lefts and rights):
+            return 1.0
+
         distance = 1.0
         ld, rd = lefts[0], rights[0]
         distf = lambda v1, v2, m: 1.0 - sqrt(min(1.0, abs(v1 - v2) / m))
@@ -26,4 +45,18 @@ class MoodbarDistance(DistanceFunction):
         lkeys, rkeys = ld.dominant_colors.keys(), rd.dominant_colors.keys()
         if lkeys and rkeys:
             distance -= 0.63 * (len(lkeys & rkeys) / max(len(lkeys), len(rkeys)))
-        return distance
+
+        # Good distances are in the range 0.3 - 0.5 usually
+        # Therefore we handle lower values better:
+        return 1.0 - sqrt(1.0 - distance)
+
+
+if __name__ == '__main__':
+    import unittest
+
+    class TestMoodbarDistance(unittest.TestCase):
+        def test_equality(self):
+            # TODO: write test
+            pass
+
+    unittest.main()
