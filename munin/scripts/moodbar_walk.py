@@ -7,7 +7,7 @@ import sys
 
 from itertools import combinations
 from collections import deque
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from multiprocessing import Queue
 
 
@@ -15,33 +15,45 @@ from munin.provider.moodbar import MoodbarAudioFileProvider
 from munin.distance.moodbar import MoodbarDistance
 
 
-def compute_moodbar(queue, full_path, path, root):
-    result = provider.process(full_path)
-    if result:
-        queue.put((result, path, root))
+def compute_moodbar(path_root):
+    try:
+        path, root = path_root
+        full_path = os.path.join(root, path)
+        result = provider.process(full_path)
+        if result:
+            return (result, path, root)
+    except Exception as e:
+        pass
+
+    return (None, path, root)
 
 
 if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print('usage: {} path_to_music_dir'.format(sys.argv[0]))
+        sys.exit(-1)
+
     provider = MoodbarAudioFileProvider()
     distance = MoodbarDistance(provider)
-    moodbar_descr = Queue()
+    moodbar_files = deque()
 
-    with ProcessPoolExecutor(max_workers=5) as executor:
-        for root, directory, paths in os.walk(sys.argv[1]):
-            print(root)
-            for path in paths:
-                if path.endswith('.mood'):
-                    continue
+    for root, directory, paths in os.walk(sys.argv[1]):
+        print(root)
+        for path in paths:
+            if path.endswith('.mood'):
+                continue
 
-                print('    ', path)
-                os.chdir(root)
-                full_path = os.path.join(root, path)
-                executor.submit(compute_moodbar, moodbar_descr, full_path, path, root)
+            print('    ', path)
+            moodbar_files.append((path, root))
 
-    print('done', moodbar_descr)
-    moodbar_descr = list(moodbar_descr)
+    moodbar_descr = []
+    with ProcessPoolExecutor() as executor:
+        futured = executor.map(compute_moodbar, moodbar_files)
+        for descr, path, root in futured:
+            if descr is not None:
+                moodbar_descr.append((descr, path, root))
+
     pairs = deque()
-
     for idx_a, idx_b in combinations(range(len(moodbar_descr)), 2):
         descr_a, path_a, root_a = moodbar_descr[idx_a]
         descr_b, path_b, root_b = moodbar_descr[idx_b]

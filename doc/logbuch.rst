@@ -392,14 +392,6 @@ Wirre Gedanken in keiner direkten Reihenfolge:
               Indikator für die dominierenden Frequenzen innerhalb dieses Bands.
               (sehr grobe Abschätzung der Instrumente).
 
-        * Arithmethisches Mittel. *(0-255)*
-        
-              Durschnittliche "Frequenz" für das jeweilige Band.
-
-        * Standardabweichung. *(0-255)*
-
-            Streuung des arithmethischen Mittels.
-
         * Diffsum: Die Summe der Differenzen von letzten Wert zum nächsten. *(0 - samples \* 255)*
 
             Indikator für die Abwechslungsreichheit der Daten.
@@ -423,7 +415,7 @@ Wirre Gedanken in keiner direkten Reihenfolge:
 
 *Speicherverbrauch:*
 
-    ``(10 * 4 + 2 + 3 * 8 + 1) * 8 = 536 Bytes``
+    ``(10 * 4 + 2 + 3 * 4 + 1) * 8 = 536 Bytes``
 
     Zwar gnädig gerechnet, aber braucht die ganze moodbar ja immerhin:
 
@@ -437,25 +429,21 @@ Wirre Gedanken in keiner direkten Reihenfolge:
 *Vergleich der einzelnen Beschreibungen:*
 
     
-+----------------------+--------+---------------------------------------------------------------+
-|  Name                | Weight | Formula                                                       |
-+======================+========+===============================================================+
-| *diffsum*            |   0.15 | ``min(((v1 + v2) / 2) / 50, 1.0)``                            |
-+----------------------+--------+---------------------------------------------------------------+
-| *mean*               |   0.05 | ``((v1 + v2) / 2) / 255``                                     |
-+----------------------+--------+---------------------------------------------------------------+
-| *histogram*          |   0.15 | ``sum(diff(common_v1, common_v2) / 255) / (5 - len(common))`` |
-+----------------------+--------+---------------------------------------------------------------+
-| *standard deviation* |   0.05 | ``abs(v1 - v2) / max(v1 - v2)``                               |
-+----------------------+--------+---------------------------------------------------------------+
-| *dominant colors*    |   0.4  | ``number of common(weight=1)/similar(weight=0.5) colors / 5`` |
-+----------------------+--------+---------------------------------------------------------------+
-| *blackness*          |   0.1  | ``abs(v1 - v2) / max(v1 - v2)``                               |
-+----------------------+--------+---------------------------------------------------------------+
-| *average min/max*    |   0.1  | ``abs(v1 - v2) / max(v1 - v2)``                               |
-+----------------------+--------+---------------------------------------------------------------+
-|                      |   1.0  |                                                               |
-+----------------------+--------+---------------------------------------------------------------+
++-------------------+---------+---------------------------------------------------------------+
+|  Name             | Weight  | Formula                                                       |
++===================+=========+===============================================================+
+| *diffsum*         |   0.135 | ``min(((v1 + v2) / 2) / 50, 1.0)``                            |
++-------------------+---------+---------------------------------------------------------------+
+| *histogram*       |   0.135 | ``sum(diff(common_v1, common_v2) / 255) / (5 - len(common))`` |
++-------------------+---------+---------------------------------------------------------------+
+| *dominant colors* |   0.63  | ``number of common(weight=1)/similar(weight=0.5) colors / 5`` |
++-------------------+---------+---------------------------------------------------------------+
+| *blackness*       |   0.05  | ``abs(v1 - v2) / max(v1 - v2)``                               |
++-------------------+---------+---------------------------------------------------------------+
+| *average min/max* |   0.05  | ``abs(v1 - v2) / max(v1 - v2)``                               |
++-------------------+---------+---------------------------------------------------------------+
+|                   |   1.0   |                                                               |
++-------------------+---------+---------------------------------------------------------------+
 
 *Beispielausführung:*
 
@@ -472,3 +460,57 @@ Wirre Gedanken in keiner direkten Reihenfolge:
       mich nicht...:
       
         http://www.spiegel.de/international/germany/german-police-develop-app-to-curb-neonazi-music-a-936711.html
+
+5. Dezember 2013
+----------------
+
+Allgemeine Moodbar Problematiken die ich hier festhalte:
+
+    * Unterschiedliche Stückqualität und v.a. Unterschiede in Dynamic Range.
+
+      Siehe dazu: http://pleasurizemusic.com/de
+
+    * Lieder die (u.a. fälschlich) längere Stille haben nach dem Lied (auch bei
+      Hidden Tracks zB.) werden nicht allzu gut behandelt.
+    * Verrauschte Live-Versionen werden oft mit stark E-Gitarren haltiger Musik 
+      gruppiert. (zB. mit **Before the Hangman's Noose -> Abschiedslied**)
+    * Generell lassen sich Lieder mit verzerrten E-Gitarren und starken Einsatz
+      von Drums relativ schlecht matchen.
+    * *Die Leiche* :-)
+
+Anonsten funktionier die Moodbar Analyse einigermaßen gut (*): ::
+
+    [Y] 0.22408:                  11 Der Letzte Stern (reprise).mp3 -> 03 Lieder übers Vögeln.mp3                        
+    [N] 0.22500:      08 Das letzte Einhorn & Vince - Spielmann.mp3 -> 1-08 Die Leiche.mp3                               
+    [N] 0.22870:                    13 In Extremo - Rasend Herz.mp3 -> 17 OK _ Kein Zurück.mp3                           
+    [N] 0.22986:                         03 Lieder übers Vögeln.mp3 -> 19 Immer noch.mp3                                 
+    [Y] 0.23770:                  16 Der ziemlich okaye Popsong.mp3 -> 13 Lieber Staat.mp3                               
+    [N] 0.24097:                                07 Auferstehung.mp3 -> 05 Der Tod und das Mädchen.flac                   
+    [Y] 0.24808:                               22 Abschiedslied.mp3 -> 18 Unter Wasser.mp3                               
+    [Y] 0.25127:             08 In Extremo - Omnia Sol temperat.mp3 -> 13 In Extremo - Rasend Herz.mp3                   
+    [Y] 0.25470:                                   05 Glücklich.mp3 -> 13 Lieber Staat.mp3                               
+    [Y] 0.26314:                                   03 Am Strand.mp3 -> 17 OK _ Kein Zurück.mp3                           
+    [N] 0.26566:                12 The Fury of Our Maker's Hand.mp3 -> 22 Abschiedslied.mp3                              
+    [N] 0.26720:                  11 Der Letzte Stern (reprise).mp3 -> 19 Immer noch.mp3                                 
+    [N] 0.27299:                    13 In Extremo - Rasend Herz.mp3 -> 02 Augenblick.mp3                                 
+    [N] 0.27458:                                10 Lebenslehre.flac -> 1-08 Die Leiche.mp3                               
+    [N] 0.27858:                      09 In Extremo - Küss mich.mp3 -> 13 Kind im Brunnen.mp3                            
+    [Y] 0.27868:             08 In Extremo - Omnia Sol temperat.mp3 -> 03 In Extremo - Vollmond.mp3                      
+    [N] 0.28066:                                1-08 Die Leiche.mp3 -> 10 Phänomenal egal.mp3                            
+    [N] 0.28091:                             05 Sin & Sacrifice.mp3 -> 04 Ohne Herz.mp3                                  
+    [N] 0.28459:                           04 Hold Back the Day.mp3 -> 08 Mayday Mayday.mp3                              
+    [N] 0.28478:                12 The Fury of Our Maker's Hand.mp3 -> 17 OK _ Kein Zurück.mp3                           
+    [N] 0.28585:                       06 Silbermond - Die Gier.mp3 -> 1-05 Krieg.mp3                                    
+    [Y] 0.28654:                       03 In Extremo - Vollmond.mp3 -> 01 Blind - Ave Maria.mp3  
+
+(*) 
+
+    *Manchmal werden Lieder gefunden die tatsächlich eine ähnliche moodbar haben
+    sonst aber ziemlich unterschiedlich sind*.
+
+
+
+**Randnotizen:**
+
+    * Empfehlung des Tages: ``Wer hat uns verraten => Die Leiche``
+ 

@@ -77,7 +77,7 @@ def compute_moodbar_for_file(audio_file, output_file, print_output=False):
     if print_output:
         stdout, stderr = None, None
 
-    return suprocess.call(
+    return subprocess.call(
             ['moodbar', audio_file, '-o', output_file],
             stdout=stdout, stderr=stderr
     )
