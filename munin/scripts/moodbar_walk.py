@@ -47,7 +47,7 @@ if __name__ == '__main__':
             moodbar_files.append((path, root))
 
     moodbar_descr = []
-    with ProcessPoolExecutor() as executor:
+    with ProcessPoolExecutor(max_workers=10) as executor:
         futured = executor.map(compute_moodbar, moodbar_files)
         for descr, path, root in futured:
             if descr is not None:
