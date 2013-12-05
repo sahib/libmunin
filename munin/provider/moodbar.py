@@ -24,7 +24,7 @@ MoodbarDescription = namedtuple('MoodbarDescription', [
 
 
 MoodbarChannel = namedtuple('MoodbarChannel', [
-    'histogram', 'mean', 'sd', 'diffsum'
+    'histogram', 'diffsum'
 ])
 
 
@@ -46,10 +46,9 @@ def discretize(chan_r, chan_g, chan_b, n=50):
         yield sum(gr) / n, sum(gg) / n, sum(gb) / n
 
 
-def histogram(channel, bin_width=17, take_max=5):
+def histogram(channel, bin_width=51, take_max=5):
     hist = Histogram(bin_width=bin_width, data=channel)
-    hist_data = [(int((s + e) / 2), value) for s, e, value in hist.bins()][:take_max]
-    return hist_data, int(round(hist.mean)), int(round(hist.sd))
+    return [value for s, e, value in hist.bins()]
 
 
 def extract(vector, chan):
@@ -74,9 +73,7 @@ def find_dominant_colors(vector, samples, roundoff=17):
 
 def process_moodbar(vector, samples=25, print_to_sdout=False):
     chan_r, chan_g, chan_b = (extract(vector, chan) for chan in range(3))
-    hist_r, mean_r, sd_r = histogram(chan_r)
-    hist_g, mean_g, sd_g = histogram(chan_g)
-    hist_b, mean_b, sd_b = histogram(chan_b)
+    hist_r, hist_g, hist_b = histogram(chan_r), histogram(chan_g), histogram(chan_b)
 
     # dominant_colors = Counter(vector).most_common(samples)
     dominant_colors, blackness = find_dominant_colors(vector, samples)
@@ -106,18 +103,16 @@ def process_moodbar(vector, samples=25, print_to_sdout=False):
     diff_r, diff_g, diff_b = (int(round(v / max_diff * 100)) for v in (diff_r, diff_g, diff_b))
 
     if print_to_sdout:
-        def print_channel(hist, mean, sd, diff):
+        def print_channel(hist, diff):
             print('    hist:', ', '.join(('{:d} ({:d}x)'.format(value, count) for value, count in hist)))
-            print('    mean:', mean)
-            print('    sdev:', sd)
             print('    diff:', diff)
 
         print('channel red:')
-        print_channel(hist_r, mean_r, sd_r, diff_r)
+        print_channel(hist_r, diff_r)
         print('channel green:')
-        print_channel(hist_g, mean_g, sd_g, diff_g)
+        print_channel(hist_g, diff_g)
         print('channel blue:')
-        print_channel(hist_b, mean_b, sd_b, diff_b)
+        print_channel(hist_b, diff_b)
         print()
         print('average maximum:')
         print('    ', average_max)
@@ -131,9 +126,9 @@ def process_moodbar(vector, samples=25, print_to_sdout=False):
 
     return MoodbarDescription(
             (
-                MoodbarChannel(dict(hist_r), mean_r, sd_r, diff_r),
-                MoodbarChannel(dict(hist_g), mean_g, sd_g, diff_g),
-                MoodbarChannel(dict(hist_b), mean_b, sd_b, diff_b),
+                MoodbarChannel(hist_r, diff_r),
+                MoodbarChannel(hist_g, diff_g),
+                MoodbarChannel(hist_b, diff_b),
             ),
             average_max, average_min,
             dict(dominant_colors), blackness
