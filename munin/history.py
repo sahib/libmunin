@@ -287,6 +287,8 @@ class RuleIndex:
     If more rules are added they become invalid and get deleted on the
     next add or once all adds were done (with :func:`begin_add_many`).
 
+    Duplicated rules are silently ignored.
+
     This class implements the contains operator to check if a rule tuple
     is in the index. Also ``__iter__`` is supported, and will yield
     the rules in the index sorted by their Kulczynski measure multiplied
@@ -309,6 +311,17 @@ class RuleIndex:
 
     def __iter__(self):
         return reversed(self._rule_pool)
+
+    def insert_rules(self, rule_tuples):
+        '''Convienience function for adding many rules at once.
+
+        Calls :func:`drop_invalid` when done inserting.
+
+        :param rule_tuples: a list of rule tuples.
+        '''
+        with self.begin_add_many():
+            for rule in rule_tuples:
+                self.insert_rule(rule, drop_invalid=False)
 
     def insert_rule(self, rule_tuple, drop_invalid=False):
         '''Add a new rule to the index.
@@ -335,7 +348,7 @@ class RuleIndex:
         if len(self._rule_list) > self._max_rules:
             fst_uid, fst_rule = self._rule_list.popitem(last=False)
             self._rule_pool.remove(fst_rule)
-            if drop_invalid is True:
+            if drop_invalid:
                 for uid_set in self._rule_dict.values():
                     uid_set.discard(fst_uid)
 

@@ -12,6 +12,7 @@ import math
 # Internal:
 from munin.song import Song
 from munin.utils import sliding_window, centering_window
+from munin.history import ListenHistory, RuleIndex
 
 # External:
 import igraph
@@ -40,7 +41,12 @@ class Database:
         self._graph = igraph.Graph()
 
         self._revoked_uids = set()
-        self._dirtyness_count = 0
+
+        # TODO: Provide config options
+        # TODO: Implement history (remove!)
+        self._listen_history = ListenHistory()
+        self._rule_index = RuleIndex()
+        self._playcounts = Counter()
 
     def __iter__(self):
         return iter(self._song_list)
@@ -52,6 +58,25 @@ class Database:
         if len(self._revoked_uids) > 0:
             return self._revoked_uids.pop()
         return len(self._song_list)
+
+    def feed_history(self, song):
+        '''Feed a single song to the history.
+
+        If the feeded song is not yet in the database,
+        it will be added automatically.
+
+        :param song: The song to feed in the history.
+        '''
+        try:
+            self.lookup_song(song.uid)
+        except IndexError:
+            self.insert_song(song)
+
+        if self._listen_history.feed(song):
+            rules = self._listen_history.find_rules()
+            self._rule_index.insert_rules(rules)
+
+        self._playcounts[song] += 1
 
     def plot(self):
         '''Plot the current graph for debugging purpose.
@@ -277,6 +302,17 @@ class Database:
                 if last is not None and last > dist:
                     print('!! warning: unsorted elements: !({} < {})'.format(dist, last))
                 last = dist
+
+    def lookup_song(self, uid):
+        '''Lookup a certain song by it's uid.
+
+        :param uid: A uid previously given by
+        :returns: a :class:`munin.song.Song`, which is a read-only mapping of normalized attributes.
+        '''
+        try:
+            return self._song_list[uid]
+        except IndexError:
+            raise IndexError('song uid #{} is not valid'.format(uid))
 
     def insert_song(self, value_dict, star_threshold=0.75):
         '''Insert a song to the database without doing a rebuild.
