@@ -66,7 +66,7 @@ def neighbors_from_song_sorted(graph, song, n=0):
         for vx, *_ in group_list:
             yield vx['song']
             if n is 1:
-                return
+                raise StopIteration
             n -= 1
 
 
@@ -113,11 +113,16 @@ def recommendations_from_song(graph, rule_index, song, n=20):
     '''
     # Shortcuts:
     if n is 0:
-        return []
+        return iter([])
 
     if n < 5:
-        return list(song.distance_iter())[:n]
+        return iter(list(song.distance_iter())[:n])
 
+    return _recommendations_from_song(graph, rule_index, song, n=n)
+
+
+# Generator implementation:
+def _recommendations_from_song(graph, rule_index, song, n=20):
     # Find rules, that affect this song:
     associated = list(rule_index.lookup(song))
 
@@ -126,41 +131,41 @@ def recommendations_from_song(graph, rule_index, song, n=20):
     if not associated:
         for song in neighbors_from_song_sorted(graph, song, n=n):
             yield song
-        return
 
-    # Create an iterator for each song, in each associated rule:
-    breadth_first_iters = deque()
+    else:
+        # Create an iterator for each song, in each associated rule:
+        breadth_first_iters = deque()
 
-    # We weight the number of songs max. given per iterator by their rating:
-    sum_rating = sum(rating for *_, rating in associated)
+        # We weight the number of songs max. given per iterator by their rating:
+        sum_rating = sum(rating for *_, rating in associated)
 
-    # Now populate the list of breadth first iterators:
-    for left, right, *_, rating in associated:
-        # The maximum number that a single song in this rule may deliver
-        # (at least 1 - himself, therefore the ceil)
-        max_n = ceil(((rating / sum_rating) * (n / 2)) / len(bulk))
+        # Now populate the list of breadth first iterators:
+        for left, right, *_, rating in associated:
+            # The maximum number that a single song in this rule may deliver
+            # (at least 1 - himself, therefore the ceil)
+            max_n = ceil(((rating / sum_rating) * (n / 2)) / len(bulk))
 
-        # We take the songs in the opposite set of the rule:
-        for song in (right if song in left else left):
-            breadth_first = islice(neighbors_from_song_sorted(graph, song))
-            breadth_first_iters.append(breadth_first, max_n)
+            # We take the songs in the opposite set of the rule:
+            for song in (right if song in left else left):
+                breadth_first = islice(neighbors_from_song_sorted(graph, song))
+                breadth_first_iters.append(breadth_first, max_n)
 
-    # The result set will be build by half
-    base_half = islice(neighbors_from_song_sorted(graph, song), 1, n / 2 + 1)
-    songs_set = set()
+        # The result set will be build by half
+        base_half = islice(neighbors_from_song_sorted(graph, song), 1, n / 2 + 1)
+        songs_set = set()
 
-    # Now build the final result set by filling one half original songs,
-    # and one half songs that were pointed to by rules.
-    for song in chain(base_half, roundrobin(breadth_first_iters)):
-        # We have this already in the result set:
-        if song in songs_set:
-            continue
+        # Now build the final result set by filling one half original songs,
+        # and one half songs that were pointed to by rules.
+        for song in chain(base_half, roundrobin(breadth_first_iters)):
+            # We have this already in the result set:
+            if song in songs_set:
+                continue
 
-        songs_set.add(song)
-        yield song
+            songs_set.add(song)
+            yield song
 
-        if len(songs_set) >= n:
-            break
+            if len(songs_set) >= n:
+                break
 
 
 def recommendations_from_graph(graph, rule_index, n=20):
