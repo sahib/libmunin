@@ -38,7 +38,7 @@ class EasySession(Session):
                 LancasterStemProvider(compress=True),
                 None,
                 0.1
-            )
+            ),
             'album': pairup(
                 LancasterStemProvider(compress=True),
                 None,
@@ -53,15 +53,15 @@ class EasySession(Session):
                 GenreTreeProvider(),
                 GenreTreeDistance(),
                 0.2
-            )
+            ),
             'moodbar': pairup(
                 MoodbarAudioFileProvider(),
                 MoodbarDistance(),
                 0.5
-            )
+            ),
             'lyrics': pairup(
                 WordListProvider(),
-                WordListDistance()
+                WordListDistance(),
                 0.3
             )
         })

@@ -1,6 +1,10 @@
 Introduction
 ============
 
+.. note::
+
+   This library is in a very early developement stage and far from being usable.
+
 ``libmunin`` is a fancy music recommendations library which is based on
 datamining algorithms of all kind. `Bonus:` It's able to learn from you!
 I write it for my bachelor thesis and therefore it's still in developement.
