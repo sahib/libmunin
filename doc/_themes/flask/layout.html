@@ -1,7 +1,7 @@
 {%- extends "basic/layout.html" %}
 {%- block sidebarlogo %}
     <a href="{{ pathto('index') }}">
-        <img src="_static/logo.png" width="200px"/>
+        <img src="{{ pathto('_static/logo.png', 1) }}" width="200px"/>
     </a>
 {% endblock %}
 {%- block sidebarsearch %}
