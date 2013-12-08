@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 '''
-Methods to traverse the igraph graph in order to do recomnendations.
+Methods to traverse the igraph graph in order to do recommendations.
 '''
 # Stdlib:
 from itertools import chain, cycle, islice, groupby
@@ -15,7 +15,7 @@ from munin.utils import roundrobin
 def neighbors_from_song(graph, song, n=0):
     '''Give `n` recommendations based on a breadth-first search starting on  `song`.
 
-    The given recomnendations won't be ordered in any particular way.
+    The given recommendations won't be ordered in any particular way.
     If you want that you should use :func:`neighbors_from_song_sorted`.
 
     :param graph: an `igrah.Graph` to select the neighbors from.
@@ -70,7 +70,7 @@ def neighbors_from_song_sorted(graph, song, n=0):
             n -= 1
 
 
-def common_recomnendations(graph, song_a, song_b, n=10):
+def common_recommendations(graph, song_a, song_b, n=10):
     '''Find the common recommendations between two songs.
 
     This might be useful when we need to base recommendations on more than one song.
@@ -94,8 +94,8 @@ def common_recomnendations(graph, song_a, song_b, n=10):
     return ((g.vs[edge.source], g.vs[edge.target]) for edge in edges)
 
 
-def recomnendations_from_song(graph, rule_index, song, n=20):
-    '''Give 'n' recomnendations based on 'song'.
+def recommendations_from_song(graph, rule_index, song, n=20):
+    '''Give 'n' recommendations based on 'song'.
 
     - Will lookup rules for song.
     - If no rules found, a breadth first search starting with song is
@@ -106,10 +106,10 @@ def recomnendations_from_song(graph, rule_index, song, n=20):
     :type graph: :class:`igraph.Graph`
     :param rule_index: Rule database.
     :type rule_index: :class:`munin.history.RuleIndex`
-    :param song: Song to base recomnendations on.
+    :param song: Song to base recommendations on.
     :type song: :class:`munin.song.Song`
-    :param n: Deliver so many recomnendations (at max.)
-    :returns: An iterator that yields recomnend songs.
+    :param n: Deliver so many recommendations (at max.)
+    :returns: An iterator that yields recommend songs.
     '''
     # Shortcuts:
     if n is 0:
@@ -163,14 +163,14 @@ def recomnendations_from_song(graph, rule_index, song, n=20):
             break
 
 
-def recomnendations_from_graph(graph, rule_index, n=20):
-    '''Find n recomnendations solely from the graph.
+def recommendations_from_graph(graph, rule_index, n=20):
+    '''Find n recommendations solely from the graph.
 
     This will try to find a good rule, that indicates a user's
-    favourite song, and will call :func:`recomnendations_from_song` on it.
+    favourite song, and will call :func:`recommendations_from_song` on it.
     If no rules are known, a random song is chosen.
 
-    .. seealso: :func:`recomnendations_from_song`
+    .. seealso: :func:`recommendations_from_song`
     '''
     try:
         # Get the best rule from the index
@@ -182,7 +182,7 @@ def recomnendations_from_graph(graph, rule_index, n=20):
     except StopIteration:
         chosen_song = random.choice(graph.vs)['song']
 
-    return recomnendations_from_song(graph, rule_index, chosen_song, n=n)
+    return recommendations_from_song(graph, rule_index, chosen_song, n=n)
 
 
 if __name__ == '__main__':

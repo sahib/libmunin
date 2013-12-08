@@ -2,8 +2,14 @@
 # encoding: utf-8
 
 
+# Stdlib:
 import abc
 
+# External
+from bidict import bidict
+
+
+# TODO: make this name nonsense sane
 
 class Provider:
     '''
@@ -18,85 +24,67 @@ class Provider:
                 Takes input values and returns a list of output values
                 or None on failure.
 
-            ``is_reversible``:
-
-                This property should be True if the results returned by
-                ``process()`` can be transormed back to the input value.
+        A concrete Provider may have these functions:
 
             ``reverse()``:
 
                 The method that is able to do the transformation.
                 It takes a list of output values and returns a list of
                 input values, or None on failure.
-
-                This method should also exist even if ``is_reversible``
-                is False. In this case the output_value list shall be
-                returned.
-
-            Additional each provider should have a settable ``name``
-            property for display purpose.
         '''
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, name='Default Provider', is_reversible=True):
+    def __init__(self, compress=False):
         '''Create a new Provider with the following attributes:
 
-        :param name: A display name for this Provider.
-        :param is_reversible: Can the output of ``process()`` reversed by ``reverse()``.
+        :param compress: Deduplicate data?
         '''
-        self._name = name
-        self._is_reversible = is_reversible
+        self.compress = compress
+        if compress:
+            self._store = bidict()
+            self._last_id = 0
 
-    @property
-    def name(self):
-        return self._name
+    def __or__(self, other_provider):
+        '''Allows to chain providers by bit oring them.
 
-    @name.setter
-    def name(self, value):
-        self._name = value
+        Example: ::
 
-    @abc.abstractproperty
-    def is_reversible(self):
-        'If *True* this provider is reversible via :func:`reverse` (aka **injective**)'
-        return self._is_reversible
+            >>> GenreTreeProvider | LancasterStemProvider
+            CompositeProvider(GenreTreeProvider, LancasterStemProvider)
+
+        If you chain together many providers it is recommended to use only one
+        CompositeProvider for speed reasons.
+        '''
+        from munin.provider.composite import CompositeProvider
+        return CompositeProvider([self, other_provider])
+
+    def _lookup(self, idx_list):
+        return tuple(self._store[:idx] for idx in idx_list)
+
+    def process(self, input_value):
+        processed_value = self.do_process(input_value)
+        if self.compress:
+            if input_value in self._store:
+                return (self._store[input_value], )
+
+            self._last_id += 1
+            self._store[input_value] = self._last_id
+            return (self._last_id, )
+
+        return processed_value
 
     @abc.abstractmethod
-    def process(self, input_value):
+    def do_process(self, input_value):
         # Default Implementations will only passthrough the value.
+        if isinstance(input_value, tuple):
+            return input_value
         return (input_value, )
-
-    def reverse(self, output_values):
-        '''Reverse the value previously processed by :func:`process`.
-
-        This only works if the :func:`is_reversible` is set, otherwise
-        the value will be simply returned. (Which is the default for
-        :class:`Provider`).
-
-        .. note::
-
-            It is not required that the return value is the excact input value
-            you gave into :func:`process`. It is only required that a value is
-            returned that gives the same result when processing it again.
-
-            Example for the :class:`munin.provider.genre.GenreTreeProvider`: ::
-
-                >>> p.process([('Metalcore', )])
-                [(82, 1)]
-                >>> p.reverse([(82, 1)])
-                [('metal core', )]  # Note the space.
-                >>> p.process([('metal core', )])
-                [(82, 1)]
-
-        :param output_value: A value previously returned from :func:`process`.
-        :return: A value similar to the input value you gave into :func:`process`.
-        '''
-        return tuple(output_values)
 
 ###########################################################################
 #                             Import Aliases                              #
 ###########################################################################
 
 from munin.provider.genre import GenreTreeProvider
-from munin.provider.attic import AtticProvider
 from munin.provider.composite import CompositeProvider
 from munin.provider.stem import LancasterStemProvider, SnowballStemProvider
+from munin.provider.moodbar import MoodbarProvider, MoodbarMoodFileProvider, MoodbarAudioFileProvider

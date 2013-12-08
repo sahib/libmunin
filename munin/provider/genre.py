@@ -391,7 +391,7 @@ def load_genre_tree(pickle_path):
 
 class GenreTreeProvider(Provider):
     'Normalize a genre by matching it agains precalculated Tree of sub genres'
-    def __init__(self, quality='all'):
+    def __init__(self, quality='all', compress=False):
         '''Creates a GenreTreeProvider with a certain quality.
 
         A GenreTreeProvider will try to normalize a genre by using a Tree of
@@ -417,7 +417,7 @@ class GenreTreeProvider(Provider):
         :param quality: One of ``all``, ``best_two``  ``single`` [*default:* ``all``]
         :type quality: String
         '''
-        Provider.__init__(self, 'GenreTree', is_reversible=True)
+        Provider.__init__(self, compress=compress)
         self._root = load_genre_tree(get_cache_path('genre_tree.dump'))
         self._build_func = {
             'all': build_genre_path_all,
@@ -425,7 +425,7 @@ class GenreTreeProvider(Provider):
             'single': build_genre_path_single
         }.get(quality, build_genre_path_all)
 
-    def process(self, input_value):
+    def do_process(self, input_value):
         'Subclassed from Provider, will be called for you on the input.'
         result = []
         for sub_genre in prepare_genre_list(input_value):
@@ -501,8 +501,8 @@ if __name__ == '__main__':
     #               Other commandline utility for visualization               #
     ###########################################################################
     else:
-        if len(sys.argv) < 2:
-            print('Usage: {program} "metalcore/melodic death metal"'.format(
+        if len(sys.argv) < 3:
+            print('Usage: {program} --cli "metalcore/melodic death metal"'.format(
                 program=sys.argv[0]
             ))
             sys.exit(1)

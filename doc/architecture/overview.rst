@@ -16,7 +16,7 @@ Inputs
 
 1) **Music Database**
 
-   The Music Database is the set of songs you want to generate recomnendations
+   The Music Database is the set of songs you want to generate recommendations
    from. Initally you define how a :term:`Song` looks like, i.e. you define it
    has an ``artist``, ``album`` and ``title`` field for example. 
 

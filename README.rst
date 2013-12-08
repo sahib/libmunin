@@ -1,7 +1,7 @@
 Introduction
 ============
 
-``libmunin`` is a fancy music recomnendations library which is based on
+``libmunin`` is a fancy music recommendations library which is based on
 datamining algorithms of all kind. `Bonus:` It's able to learn from you!
 I write it for my bachelor thesis and therefore it's still in developement.
 
@@ -30,7 +30,7 @@ Your distribution might package it or you can compile it from here:
 
     http://pwsp.net/~qbob/moodbar-0.1.2.tar.gz
 
-The moodbar is not strictly required but recomnended.
+The moodbar is not strictly required but recommended.
 
 Required Python Modules
 -----------------------

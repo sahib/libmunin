@@ -215,15 +215,9 @@ class MoodbarProvider(Provider):
 
     Takes a vector of RGB Tuples.
     '''
-    def __init__(self):
-        Provider.__init__(self, 'Moodbar', is_reversible=False)
-
-    def process(self, vector):
+    def do_process(self, vector):
         'Subclassed from Provider, will be called for you on the input.'
         return tuple([process_moodbar(vector)])
-
-    def reverse(self, output_values):
-        raise NotImplemented('moodbars are not reversible')
 
 
 class MoodbarMoodFileProvider(MoodbarProvider):
@@ -231,10 +225,10 @@ class MoodbarMoodFileProvider(MoodbarProvider):
 
     Takes a path to a mood file.
     '''
-    def process(self, mood_file_path):
+    def do_process(self, mood_file_path):
         try:
             vector = read_moodbar_values(mood_file_path)
-            return MoodbarProvider.process(self, vector)
+            return MoodbarProvider.do_process(self, vector)
         except OSError:
             return ()
 
@@ -246,12 +240,12 @@ class MoodbarAudioFileProvider(MoodbarMoodFileProvider):
     Will look for audio_file_path + '.mood' before computing it.
     Resulting mood file will be stored in the same path.
     '''
-    def process(self, audio_file_path):
+    def do_process(self, audio_file_path):
         mood_file_path = audio_file_path + '.mood'
         if not os.path.exists(mood_file_path):
             if compute_moodbar_for_file(audio_file_path, mood_file_path) is not 0:
                 return ()
-        return MoodbarMoodFileProvider.process(self, mood_file_path)
+        return MoodbarMoodFileProvider.do_process(self, mood_file_path)
 
 
 if __name__ == '__main__':
@@ -259,6 +253,7 @@ if __name__ == '__main__':
     import unittest
 
     if '--cli' in sys.argv:
+        # This expects a mood.file in the current directory
         vector = read_moodbar_values('mood.file')
         print(process_moodbar(vector, samples=10))
     else:

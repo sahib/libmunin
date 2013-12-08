@@ -21,43 +21,35 @@ class DistanceFunction:
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, provider, name='Default', to_reverse=None):
+    def __init__(self, provider):
         '''This class is supposed to be overriden, but can also be used
         as fallback.
 
-        .. todo:: Write documentation for rules.
-
         ``__call__`` is implemented as shortcut to :func:`compute`
 
-        :param provider: Provider to be used to normalize Rules.
         :type provider: instance of :class:`munin.provider.Provider`
         :param name: Name of the DistanceFunction (used for display)
         :type name: String.
         '''
-        self._rules = {}
-        self._name = name
         self._provider = provider
-        self._to_reverse = to_reverse or []
-
-    def __repr__(self):
-        'Prints a simple table of rules'
-        return '<DistanceFunction rules=' + self.format_rules() + '>'
 
     def __call__(self, list_a, list_b):
         'Shortcut for :func:`compute`'
         return self.compute(list_a, list_b)
+
+    def compute(self, lefts, rights):
+        if self._provider.compress:
+            lefts = self._provider._lookup(lefts)
+            rights = self._provider._lookup(rights)
+
+        return self.do_compute(lefts, rights)
 
     ##############################
     #  Interface for subclasses  #
     ##############################
 
     @abc.abstractmethod
-    def get_name(self):
-        '''Return the name of this DistanceFunction (for display purpose)'''
-        return self._name
-
-    @abc.abstractmethod
-    def compute(self, list_a, list_b):
+    def do_compute(self, list_a, list_b):
         '''Compare both lists with eq by default.
 
         This goes through both lists and counts the matching elements.
@@ -65,41 +57,12 @@ class DistanceFunction:
 
         :return: Number of matches divivded through the max length of both lists.
         '''
-        list_a, list_b = self.apply_reverse_both(list_a, list_b)
-
         # Default to max. diversity:
         n_max = max(len(list_a), len(list_b))
         if n_max is 0:
             return 1.0
 
         return 1.0 - sum(a == b for a, b in zip(sorted(list_a), sorted(list_b))) / n_max
-
-    ###############
-    #  Reversing  #
-    ###############
-
-    def apply_reverse_both(self, lefts, rights):
-        '''Convienience function that applies :func:`apply_reverse` to both lists.
-
-        :param lefts: A list of input values.
-        :param rights: Another list of input values.
-        :return: A tuple of two lists.
-        '''
-        return self.apply_reverse(lefts), self.apply_reverse(rights)
-
-    def apply_reverse(self, input_values):
-        '''Apply the ``reverse()`` function of the providers in the ``to_reverse``
-        list passed to ``__init__()`` to each value in ``input_values.``
-        '''
-        if not self._to_reverse:
-            return input_values
-
-        return [self.apply_reverse_single(value) for value in input_values]
-
-    def apply_reverse_single(self, single_value):
-        for provider in self._to_reverse:
-            single_value = provider.reverse((single_value, ))
-        return single_value
 
 
 ###########################################################################
@@ -163,12 +126,10 @@ if __name__ == '__main__':
 
     class DistanceFunctionTest(unittest.TestCase):
         def test_apply(self):
-            from munin.provider.attic import AtticProvider
-            provider = AtticProvider()
+            from munin.provider import Provider
+            provider = Provider(compress=True)
             dist = DistanceFunction(
-                    provider=provider,
-                    to_reverse=[provider],
-                    name='test'
+                provider=provider
             )
 
             a = provider.process('Akrea')
@@ -178,6 +139,8 @@ if __name__ == '__main__':
             self.assertEqual(a, (1, ))
             self.assertEqual(b, (2, ))
             self.assertEqual(c, (1, ))
+
+            print(provider._store)
 
             self.assertAlmostEqual(dist.compute(a, b), 1.0)
             self.assertAlmostEqual(dist.compute(a, c), 0.0)

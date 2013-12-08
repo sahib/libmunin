@@ -339,13 +339,13 @@ if __name__ == '__main__':
             )
 
         def test_song_distance_indirect_iter(self):
-            with self._session.database.transaction():
+            with self._session.transaction():
                 # Pseudo-Random, but deterministic:
                 import math
                 euler = lambda x: math.fmod(math.e ** x, 1.0)
                 N = 40
                 for i in range(N):
-                    self._session.database.add_values({
+                    self._session.database.add({
                         'genre': euler(i + 1),
                         'artist': euler(N - i + 1)
                     })

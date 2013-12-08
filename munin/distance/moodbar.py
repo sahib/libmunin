@@ -15,10 +15,7 @@ class MoodbarDistance(DistanceFunction):
         * :class:`munin.provider.moodbar.MoodbarMoodFileProvider`
         * :class:`munin.provider.moodbar.MoodbarAudioFileProvider`
     '''
-    def __init__(self, provider):
-        DistanceFunction.__init__(self, provider, 'Moodbar')
-
-    def compute(self, lefts, rights):
+    def do_compute(self, lefts, rights):
         '''Compute the distance between two moodbar desc
 
         Only the first element in the individual lists is used.

@@ -5,10 +5,10 @@ libmununin docs
 
 **Introduction**
 
-**libmunin** is a versatile python library that can do music recomnendations
+**libmunin** is a versatile python library that can do music recommendations
 based on datamining algorithms. You give it your music collection, some time
 to learn in the background and in return it will give you some clever
-recomnendations.
+recommendations.
 
 If you wonder what ravens have to do with this: Go to wikipedia_. 
 
@@ -52,7 +52,7 @@ I love early examples, so here's one:
        session = Session.create_default(__name__)
        with session.transaction():
            for your_song in your_database:
-                session.database.add_values({
+                session.database.add({
                     'artist': your_song.artist,
                     'album': your_song.album,
                     'title': your_song.title,
@@ -62,12 +62,12 @@ I love early examples, so here's one:
                 })
 
     # In any case: We have a running session now.
-    # We can now use to do useful stuff like recomnendations:
+    # We can now use to do useful stuff like recommendations:
     # In this case, give me 10 songs similar to some_song
-    ten_recomnendations = session.recomned(some_song, 10)
+    ten_recommendations = session.recommed(some_song, 10)
 
     # You can feed also your lately listened songs:
-    # libmunin will try to base newer recomnendations on this.
+    # libmunin will try to base newer recommendations on this.
     session.feed_history(some_munin_song)
 
     # Rules can be created to add certain relations we don't know about.

@@ -514,3 +514,69 @@ Anonsten funktionier die Moodbar Analyse einigermaßen gut (*): ::
 
     * Empfehlung des Tages: ``Wer hat uns verraten => Die Leiche``
  
+
+7 Dezember 2013
+---------------
+
+
+*Mögliche Ideen:*
+
+    * **Beats per Minute Detection**
+
+      .. code-block:: bash
+
+          λ file='wir_reiten.mp3'
+          λ sox -v 0.5 $file -t raw -r 44100 -e float -c 1 - | ./bpm
+          128.008
+
+    * Noch weitaus kompliziertere Analysen sind mithilfe der **aubio**
+      Bibliothek machbar:
+
+        https://github.com/piem/aubio
+
+      Beispielsweise:
+
+        * several onset detection methods
+        * different pitch detection methods
+        * tempo tracking and beat detection
+
+    * Empfehlungen die neben den entsprechenden Song auch eine Begründung
+      liefern. Beispiel: ::
+
+        - Requested 5 recommendations for Song #123. 
+        - Affected Rules are:
+
+            [123, 345] -> [111]
+            [123]      -> [222, 333]
+
+          Using [111, 222, 333] as additional bases.
+        - Neigbors of 123: [456, 789, 222]
+        - Neigbors of 111: [333, 777]
+        - Neigbors of 222: [444, 555]
+        - Neigbors of 333: [999]
+        - Yielding:
+
+            * Recomending 456, because of:
+
+                - similar moodbar (0.1)
+                - similar genre (X <-> Y)
+
+            ...
+                
+      * Vergleich zu Mirage einbringen:
+
+            http://hop.at/mirage/
+            
+        Hauptsächlich:
+
+            - **Mirage** nutzt nur Audiodaten, und anaylisiert diese anhand 
+              eines ausgeklügelten statistischen Datenmodells. Mirage scheint
+              zudem weniger auf große Datenmengen ausgelegt zu sein, alle 
+              
+              **libmunin** nutzt auch andere Daten wie lyrics, tags etc. und
+              vergleicht diese anhand generischer Datamining Strategien.
+              Die Funktionalität von Mirage könnte daher durch verschiedene
+              Provider und Distanzfunktionen integriert werden. Zudem
+              funktioniert Mirage nur mit einem Player (Banshee) während
+              libmunin prinzipiell mit allem arbeiten kann dass irgendwie die
+              nötigen Informationen beschaffen kann.

@@ -12,18 +12,13 @@ class GenreTreeDistance(DistanceFunction):
 
     (Lists of GenrePaths as returned by the GenreTree Provider)
     '''
-    def __init__(self, provider):
-        DistanceFunction.__init__(self, provider, 'GenreTree')
-
-    def compute(self, lefts, rights):
+    def do_compute(self, lefts, rights):
         '''Calculate distance between two genre paths by using complete linkage.
 
         :param lefts: A list of Genre Paths.
         :param rights: A list of Genre Paths to compare with.
         :returns: A distance between 0.0 and 1.0 (max diversity.)
         '''
-        lefts, rights = self.apply_reverse_both(lefts, rights)
-
         min_dist = 1.0
         for left, right in product(lefts, rights):
             min_dist = min(min_dist, self.compare_single_path(left, right))

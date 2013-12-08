@@ -8,6 +8,7 @@
 from itertools import chain
 from collections import deque, Counter, OrderedDict, defaultdict
 from contextlib import contextmanager
+from operator import itemgetter
 from time import time
 
 # External:
@@ -266,8 +267,8 @@ class ListenHistory(History):
         return sorted(rules, key=lambda x: x[-1], reverse=True)
 
 
-class RecomnendationHistory(History):
-    '''A History that holds all recently given recomnendations.
+class RecommendationHistory(History):
+    '''A History that holds all recently given recommendations.
     '''
     def __init__(self):
         'Sane defaults are chosen for ``History.__init__``'
@@ -277,6 +278,10 @@ class RecomnendationHistory(History):
 ###########################################################################
 #                             Rule Management                             #
 ###########################################################################
+
+def _sort_by_rating(elem):
+    return elem[-1]
+
 
 class RuleIndex:
     '''A Manager for all known and usable rules.
@@ -294,6 +299,7 @@ class RuleIndex:
     the rules in the index sorted by their Kulczynski measure multiplied
     by their imbalance ratio.
     '''
+
     def __init__(self, maxlen=1000):
         '''Create a new Index with a certain maximal length:
 
@@ -302,7 +308,7 @@ class RuleIndex:
         self._max_rules = maxlen or 2 ** 100
         self._rule_list = OrderedDict()
         self._rule_dict = defaultdict(set)
-        self._rule_pool = sortedset(key=lambda e: e[-1])
+        self._rule_pool = sortedset(key=_sort_by_rating)
         self._rule_cuid = 0
 
     def __contains__(self, rule_tuple):

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#q!/usr/bin/env python
 # encoding: utf-8
 
 '''
@@ -17,6 +17,7 @@ you want to configure the processing of it.
 # Standard:
 from shutil import rmtree
 from copy import copy
+from contextlib import contextmanager
 
 import tarfile
 import shutil
@@ -32,6 +33,8 @@ except ImportError:
 
 # Internal:
 from munin.database import Database
+from munin.helper import song_or_uid
+import munin.graph
 
 
 def check_or_mkdir(path):
@@ -140,6 +143,9 @@ class Session:
 
         # Create the associated database.
         self._database = Database(self)
+
+        # Publicly readable attribute.
+        self.mapping = {}
 
     def _create_file_structure(self, path):
         if os.path.isfile(path):
@@ -270,6 +276,80 @@ class Session:
             tar.add(self._path, arcname='')
 
         shutil.rmtree(self._path)
+
+    ###########################################################################
+    #                             Recommendations                             #
+    ###########################################################################
+
+    def recommend_from_seed(self, song, number=20):
+        song = song_or_uid(self.database, song)
+        return munin.graph.recommendations_from_song(
+                self.database._graph,
+                self.database.rule_index,
+                song,
+                number
+        )
+
+    def recommend_from_graph(self, song, number=20):
+        song = song_or_uid(self.database, song)
+        return munin.graph.recommendations_from_graph(
+                self.database._graph,
+                self.database.rule_index,
+                number
+        )
+
+    ###########################################################################
+    #                          Proxy Methods                                  #
+    ###########################################################################
+
+    def feed_history(self, song):
+        self.database.feed_history(song)
+
+    def add_song(self, song, value_mapping):
+        song = song_or_uid(self.database, song)
+        return self.database.add(song, value_mapping)
+
+    def insert_song(self, song, value_mapping):
+        song = song_or_uid(self.database, song)
+        return self.database.insert_song(song, value_mapping)
+
+    def remove_song(self, song):
+        song = song_or_uid(self.database, song)
+        return self.database.remove_song(song.uid)
+
+    def playcount(self, song):
+        return self.database.playcount(song)
+
+    @contextmanager
+    def transaction(self):
+        'Convienience method: Excecute block and call :func:`rebuild` afterwards.'
+        with self.fixing():
+            yield
+            self.database.rebuild()
+
+    @contextmanager
+    def fixing(self):
+        '''Fix the previosuly rebuild graph.
+
+        This means checking if unsorted distances can be found (which should not happend)
+        and checking if unidirectional edges can be found (which get deleted).
+
+        You should this contextmanager when calling :func:`insert_song` or :func:`remove_song`.
+        '''
+        yield
+        self.database.fix_graph()
+
+    @property
+    def graph(self):
+        return self.database._graph
+
+    @property
+    def rule_index(self):
+        return self.database._rule_index
+
+    @property
+    def listen_history(self):
+        return self.database._listen_history
 
 
 if __name__ == '__main__':
