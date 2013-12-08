@@ -1,5 +1,5 @@
-The *History*
-=============
+The History
+===========
 
 .. automodule:: munin.history
     :members:

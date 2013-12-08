@@ -13,9 +13,9 @@ Glossary
 
     Distance
 
-        A distance is the similarity of two songs **a** and **b** expressed in a
-        number between 0.0 and 1.0. The Distance is calculated by the
-        :term:`DistanceFunction` and is cached in the :term:`DistanceMatrix`.
+        A distance is the similarity of two songs or attributes **a** and **b**
+        expressed in a number between 0.0 and 1.0. The Distance is calculated by
+        the :term:`DistanceFunction`.
 
     DistanceFunction
 
@@ -27,18 +27,13 @@ Glossary
         These results are weighted, so that e.g. ``genre`` gets a higher
         precedence, and summed up to one number.
 
-        **See also:** :term:`DistanceMatrix`
-
-    DistanceMatrix
-
-        A **DM** caches all calculated Distances. The size of the matrix ``D``
-        is ``NxN`` if ``N`` is the number of songs loaded in a :term:`Session`.
-
-        You can assume:
-
+        The following must be true for a valid DistanceFunction:
+   
             :math:`D(i, j) = D(j, i) \forall i,j \in D`
 
             :math:`D(i, i) = 0.0 \forall i \in D`
+
+            :math:`D(i, j) \leq D(i, x) + (x, j)`
 
     Session
 

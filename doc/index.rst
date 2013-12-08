@@ -32,8 +32,6 @@ Key Features
 * …create and honor Rules mined from the listening history.
 * …extend the API to fit your custom project.
 
-=============================
-
 Table of Contents
 -----------------
 
@@ -66,8 +64,6 @@ Table of Contents
 
 * :ref:`modindex`
 * :ref:`search`
-
-=============================
 
 Minimal Example
 ---------------

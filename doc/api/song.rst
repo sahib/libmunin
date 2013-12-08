@@ -1,5 +1,5 @@
-The ``Song`` Class
-==================
+The Song Class
+==============
 
-.. automodule:: munin.song
+.. autoclass:: munin.song.Song
     :members:
