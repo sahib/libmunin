@@ -9,8 +9,6 @@ import abc
 from bidict import bidict
 
 
-# TODO: make this name nonsense sane
-
 class Provider:
     '''
     A Provider transforms (i.e normalizes) a input value

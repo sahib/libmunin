@@ -580,3 +580,12 @@ Anonsten funktionier die Moodbar Analyse einigermaßen gut (*): ::
               funktioniert Mirage nur mit einem Player (Banshee) während
               libmunin prinzipiell mit allem arbeiten kann dass irgendwie die
               nötigen Informationen beschaffen kann.
+
+9 Dezember 2013
+---------------
+
+**Randnotizen:**
+
+    * Alte links aus meinen bookmarks, vlt. noch interessant:
+      
+        * http://www.musicplasma.com/

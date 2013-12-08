@@ -13,7 +13,7 @@ from munin.utils import roundrobin
 
 
 def neighbors_from_song(graph, song, n=0):
-    '''Give `n` recommendations based on a breadth-first search starting on  `song`.
+    '''Give `n` recommendations based on a breadth-first search starting on `song`.
 
     The given recommendations won't be ordered in any particular way.
     If you want that you should use :func:`neighbors_from_song_sorted`.
@@ -23,13 +23,13 @@ def neighbors_from_song(graph, song, n=0):
     :param n: How many songs to return. Might return less songs. If 0, return all.
     :returns: A generator that will yield the next song and it's depth, including `song`.
     '''
-
     # Give us a new breadth first iterator:
     breadth_first = graph.bfsiter(song.uid, advanced=True)
+    # print(list(graph.bfsiter(song.uid, advanced=True)))
 
     # Take n items from it and only fetch the song/depth from each item
     song_iter = (vertex['song'] for vertex, depth, _ in breadth_first)
-    if n is 0:
+    if n < 1:
         return song_iter
     else:
         return islice(song_iter, n)
@@ -191,5 +191,65 @@ def recommendations_from_graph(graph, rule_index, n=20):
 
 
 if __name__ == '__main__':
-    # TODO: unittests
-    pass
+    import unittest
+    import igraph
+
+    from munin.song import Song
+    from munin.session import Session
+    from itertools import combinations
+
+    # Mock the distance class
+    class DistanceDummy:
+        def __init__(self, d):
+            self.distance = d
+
+        def __eq__(self, other):
+            return self.distance == other.distance
+
+        def __lt__(self, other):
+            return self.distance > other.distance
+
+        def __repr__(self):
+            return str(self.distance)
+
+    class TestNeighborsFrom(unittest.TestCase):
+        def setUp(self):
+            self._session = Session('test', {
+                'genre': (None, None, 1.0)
+            })
+
+            self.N = 10
+
+            self._graph = igraph.Graph()
+            self._songs = []
+            for idx in range(self.N):
+                song = Song(self._session, {
+                    'genre': self.N - idx,
+                })
+                song.uid = idx
+                self._graph.add_vertex(song=song)
+                self._songs.append(song)
+
+            edges = set()
+            for song_a, song_b in combinations(self._songs, 2):
+                a, b = song_a.uid, song_b.uid
+                Song.distance_add(song_a, song_b, DistanceDummy((a + b) / (2 * self.N)))
+                if a < b:
+                    edges.add((a, b))
+                else:
+                    edges.add((b, a))
+            self._graph.add_edges(list(edges))
+
+        def test_neighbors(self):
+            rec = neighbors_from_song(self._graph, self._songs[0], n=self.N)
+            self.assertEqual(set(rec), set(self._songs))
+            for song in rec:
+                print(song.uid)
+
+        def test_neighbors_sorted(self):
+            rec = list(neighbors_from_song_sorted(self._graph, self._songs[0], n=10))
+            self.assertEqual(rec[1:], sorted(self._songs[1:], key=lambda s: s.uid, reverse=True))
+            for song in rec:
+                print(song.uid)
+
+    unittest.main()

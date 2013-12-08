@@ -17,15 +17,12 @@ from munin.distance import GenreTreeDistance
 # Part 9: EasySession and AyncSession
 
 
-'''
-API TODOS:
-
-- Methods should take uid or songs
-- session.database.rule_index
-- AudioFileWalker -- done
-- Delete Songs -> delete according rules? Nope, nur beim rebuild.
-- recommend_from_seed()
-- recommend()
+# - Methods should take uid or songs -- done
+# - session.database.rule_index -- done
+# - AudioFileWalker -- done
+# - Delete Songs -> delete according rules? Nope, nur beim rebuild. -- done
+# - recommend_from_seed() -- done
+# - recommend() -- done
 
 
 Session:
@@ -103,7 +100,6 @@ if __name__ == '__main__':
 
     # Part 5:
     # Let's say we listened the first song twice, the last song once:
-    # TODO: Support uid and song
     session.database.feed_history(session.database.lookup(0))
     session.database.feed_history(session.database.lookup(0))
     session.database.feed_history(session.database.lookup(2))

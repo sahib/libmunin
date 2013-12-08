@@ -102,7 +102,7 @@ class Session:
         '''Create a new session:
 
         :param name: The name of the session. Used to load it again from disk.
-        :param attribute_mask: The attribute mask. See: TODO
+        :param attribute_mask: The attribute mask. See :term:`AttributeMask`
         :param path: The directory to store the sessions in. If none XDG_CACHE_HOME is used.
         :param config: A dictionary with config values. See :class`DEFAULT_CONFIG` for available keys.
         '''

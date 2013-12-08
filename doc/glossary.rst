@@ -27,7 +27,7 @@ Glossary
         These results are weighted, so that e.g. ``genre`` gets a higher
         precedence, and summed up to one number.
 
-        The following must be true for a valid DistanceFunction:
+        The following must be true for a valid **DF**:
    
             :math:`D(i, j) = D(j, i) \forall i,j \in D`
 
@@ -39,3 +39,11 @@ Glossary
 
         A Session is the usage of *libmunin* over the time on one music
         collection. It can be saved to disk and later resumed.
+
+    AttributeMask
+
+        Every :term:`Session` requires a Mapping where the possible keys 
+        are defined that a single song may have. The **AM** stores this
+        information as dictionary, the keys being the names of the possible
+        attributes and the values being a tuple, conisting of the Provider for
+        this Attribute, a fitting Distance Function and a weight.
