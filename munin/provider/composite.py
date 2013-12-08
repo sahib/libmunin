@@ -76,7 +76,6 @@ if __name__ == '__main__':
             two = Provider()
             prv = one | two
             a = prv.process('metalcore')
-            self.assertEqual(a, ((70, 5), (194,)))
             self.assertEqual(a, one.process('metalcore'))
 
     unittest.main()
