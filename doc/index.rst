@@ -3,7 +3,8 @@
 libmununin docs
 ===============
 
-**Introduction**
+Introduction
+------------
 
 **libmunin** is a versatile python library that can do music recommendations
 based on datamining algorithms. You give it your music collection, some time
@@ -19,71 +20,22 @@ If you wonder what ravens have to do with this: Go to wikipedia_.
 
 .. _wikipedia: http://en.wikipedia.org/wiki/Huginn_and_Muninn
 
-**Key Features:**
+Key Features
+------------
 
 *Ability to…*
 
-* …recomend *N* songs to a song *X*. 
-* …recomend *N* songs based on a certain attribute.
+* …recommend songs to a certain song. 
+* …find uninion recommendations for two songs.
+* …recommend any song from using habits.
 * …do mood-analysis and keyword-extraction.
-* …create and honor Rules (like ``rock ==> metal = cool!``)
-* …monitor the user's behaviour by creating Rules.
+* …create and honor Rules mined from the listening history.
 * …extend the API to fit your custom project.
-
-
-..  .. sidebar:: Sidebar with the very first example!
-
-**Quick Example**
-
-I love early examples, so here's one:
-
-.. code-block:: python
-   
-   from munin.session import Session
-   from munin.provider import AtticProvider, GenreTreeProvider, StemProvider
-   from munin.distance import GenreTreeDistance, WordlistDistance
-
-   # Perhaps we already had an prior session?
-   try:
-      session = Session.from_name(__name__)
-   except FileNotFoundError:
-       # Looks like it didn't exist yet.
-       # Well, go and create it! (You gonna have to adapt your data)
-       session = Session.create_default(__name__)
-       with session.transaction():
-           for your_song in your_database:
-                session.database.add({
-                    'artist': your_song.artist,
-                    'album': your_song.album,
-                    'title': your_song.title,
-                    'genre': your_song.genre,
-                    'mood': file_to_song(your_song)
-                    # ...
-                })
-
-    # In any case: We have a running session now.
-    # We can now use to do useful stuff like recommendations:
-    # In this case, give me 10 songs similar to some_song
-    ten_recommendations = session.recommed(some_song, 10)
-
-    # You can feed also your lately listened songs:
-    # libmunin will try to base newer recommendations on this.
-    session.feed_history(some_munin_song)
-
-    # Rules can be created to add certain relations we don't know about.
-    session.add_rule_from_string('genre', 'metal <=> rock = 0.0')
-
-
-That was quite a lot to grok for a *small* example. 
-Don't worry we discuss every bit of this in the documentation.
 
 =============================
 
-.. sidebar:: Official Logo of ``libmunin``
-
-   .. image:: _static/logo.png
-      :width: 100%
-
+Table of Contents
+-----------------
 
 **Design**
 
@@ -114,3 +66,34 @@ Don't worry we discuss every bit of this in the documentation.
 
 * :ref:`modindex`
 * :ref:`search`
+
+=============================
+
+Minimal Example
+---------------
+
+.. code-block:: python
+   
+    from munin.easy import EasySession
+
+    MY_DATABASE = [
+        ('Akrea', 'Lebenslinie', 'Trugbild', 'death metal'),
+        ('Vogelfrey', 'Wiegenfest', 'Heldentod', 'folk metal'),
+        ('Letzte Instanz', 'Götter auf Abruf', 'Salve te', 'folk rock'),
+        ('Debauchery', 'Continue to Kill', 'Apostle of War', 'brutal death')
+    ]
+
+    session = EasySession()
+    with session.transaction():
+        for idx, (artist, album, title, genre) in enumerate(MY_DATABASE):
+             session.mapping[session.add({
+                 'artist': artist,
+                 'album': album,
+                 'title': title,
+                 'genre': genre
+             })] = idx
+
+    for munin_song in session.recommend_from_song(session.lookup(0), 2):
+        print(MY_DATABASE[munin_song.uid])
+
+    # -> Prints 2nd and 4th song, because of the similar genre.

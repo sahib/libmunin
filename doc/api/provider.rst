@@ -1,4 +1,3 @@
-
 .. _provider_chapter:
 
 Direct Provider and Indirect Providers
@@ -6,7 +5,6 @@ Direct Provider and Indirect Providers
 
 Introduction
 ------------
-
 
 List of concrete Providers
 --------------------------
