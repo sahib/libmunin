@@ -1,4 +1,10 @@
 {%- extends "basic/layout.html" %}
+{%- block sidebarsearch %}
+  {{ super() }}
+  <a href="https://travis-ci.org/sahib/libmunin/builds/15106696">
+      <img src="https://travis-ci.org/sahib/libmunin.png?branch=master"/>
+  </a>
+{% endblock %}
 {%- block extrahead %}
   {{ super() }}
   {% if theme_touch_icon %}
