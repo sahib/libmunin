@@ -5,8 +5,11 @@
 Methods to traverse the igraph graph in order to do recommendations.
 '''
 # Stdlib:
-from itertools import chain, cycle, islice, groupby
+from itertools import chain, islice, groupby
+from collections import deque
 from math import ceil
+
+import random
 
 # Internal:
 from munin.utils import roundrobin
@@ -91,7 +94,7 @@ def common_recommendations(graph, song_a, song_b, n=10):
         [song for song, _ in neighbors_from_song(graph, song_b, n=n)]
     ))
 
-    return ((g.vs[edge.source], g.vs[edge.target]) for edge in edges)
+    return ((graph.vs[edge.source], graph.vs[edge.target]) for edge in edges)
 
 
 def recommendations_from_song(graph, rule_index, song, n=20):
@@ -143,10 +146,11 @@ def _recommendations_from_song(graph, rule_index, song, n=20):
         for left, right, *_, rating in associated:
             # The maximum number that a single song in this rule may deliver
             # (at least 1 - himself, therefore the ceil)
+            bulk = right if song in left else left
             max_n = ceil(((rating / sum_rating) * (n / 2)) / len(bulk))
 
             # We take the songs in the opposite set of the rule:
-            for song in (right if song in left else left):
+            for song in bulk:
                 breadth_first = islice(neighbors_from_song_sorted(graph, song))
                 breadth_first_iters.append(breadth_first, max_n)
 

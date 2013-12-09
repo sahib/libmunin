@@ -7,8 +7,7 @@ import sys
 
 from itertools import combinations
 from collections import deque
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
-from multiprocessing import Queue
+from concurrent.futures import ProcessPoolExecutor
 
 # Internal:
 from munin.provider.moodbar import MoodbarAudioFileProvider
@@ -22,7 +21,7 @@ def compute_moodbar(full_path):
         result = provider.process(full_path)
         if result:
             return (result, path, root)
-    except Exception as e:
+    except Exception:
         pass
     return (None, path, root)
 

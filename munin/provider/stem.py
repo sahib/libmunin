@@ -23,7 +23,6 @@ Reference
 '''
 
 from munin.provider import Provider
-from collections import Iterable
 
 
 class _BaseStemProvider(Provider):

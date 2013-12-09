@@ -25,18 +25,16 @@ from munin.distance import GenreTreeDistance
 # - recommend() -- done
 
 
-Session:
+# Session:
+#
+#     add / add
+#     insert_song / remove_song
+#     feed_history
+#     attribute_mask
+#     config
+#     recommend_global()
+#     recommend_from_seed()
 
-    add / add
-    insert_song / remove_song
-    feed_history
-    attribute_mask
-    config
-    recommend_global()
-    recommend_from_seed()
-
-
-'''
 
 # Well, let's just use fake data. You should load here your actual database!
 MY_DATABASE = [

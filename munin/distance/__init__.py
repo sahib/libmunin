@@ -2,7 +2,6 @@
 # encoding: utf-8
 
 # stdlib:
-import datetime
 import logging
 import abc
 
@@ -126,7 +125,6 @@ if __name__ == '__main__':
 
     class DistanceFunctionTest(unittest.TestCase):
         def test_apply(self):
-            from munin.provider import Provider
             provider = Provider(compress=True)
             dist = DistanceFunction(
                 provider=provider

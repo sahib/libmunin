@@ -5,7 +5,7 @@
 Commonly utility functions used througout.
 '''
 
-from collections import Mapping, Hashable
+from collections import Mapping
 from itertools import chain, islice, cycle, zip_longest
 import sys
 

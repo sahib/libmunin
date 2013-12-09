@@ -3,13 +3,14 @@
 
 # Stdlib:
 from collections import Hashable, OrderedDict, deque
+from itertools import combinations
 from operator import itemgetter
 from logging import getLogger
 LOGGER = getLogger(__name__)
 
 # Internal:
 from munin.distance import Distance
-from munin.utils import SessionMapping, float_cmp
+from munin.utils import SessionMapping
 
 # External:
 from blist import sortedlist
@@ -244,7 +245,7 @@ class Song(SessionMapping, Hashable):
         for neighbor in neighbors:
             neighbor._max_distance += 1
 
-        for neigh_a, neigh_b in combination(neighbors):
+        for neigh_a, neigh_b in combinations(neighbors):
             distance = Song.distance_compute(neigh_a, neigh_b)
             Song.distance_add(neigh_a, neigh_b, distance)
 
@@ -265,7 +266,7 @@ class Song(SessionMapping, Hashable):
 
     def to_dict(self):
         'Shortcut for ``dict(iter(song))``'
-        return dict(iter(song))
+        return dict(iter(self))
 
 
 ###########################################################################
