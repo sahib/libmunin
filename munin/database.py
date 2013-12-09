@@ -50,7 +50,10 @@ class Database:
         self._playcounts = Counter()
 
     def __iter__(self):
-        return iter(self._song_list)
+        return filter(None, self._song_list)
+
+    def __len__(self):
+        return len(self._song_list) - len(self._revoked_uids)
 
     def __getitem__(self, idx):
         '''Lookup a certain song by it's uid.
@@ -59,9 +62,9 @@ class Database:
         :returns: a :class:`munin.song.Song`, which is a read-only mapping of normalized attributes.
         '''
         try:
-            return self._song_list[uid]
+            return self._song_list[idx]
         except IndexError:
-            raise IndexError('song uid #{} is not valid'.format(uid))
+            raise IndexError('song uid #{} is not valid'.format(idx))
 
     def _current_uid(self):
         if len(self._revoked_uids) > 0:
@@ -138,9 +141,9 @@ class Database:
         :param step_size: The movement of the window per iteration.
         '''
         # Base Iteration:
-        slider = sliding_window(self._song_list, window_size, step_size)
-        center = centering_window(self._song_list, window_size // 2)
-        anticn = centering_window(self._song_list, window_size // 2, parallel=False)
+        slider = sliding_window(self, window_size, step_size)
+        center = centering_window(self, window_size // 2)
+        anticn = centering_window(self, window_size // 2, parallel=False)
 
         # Prebind the functions for performance reasons.
         compute = Song.distance_compute
@@ -181,7 +184,7 @@ class Database:
             newly_found = 0
 
             # Go through the song_list...
-            for idx, song in enumerate(self._song_list):
+            for idx, song in enumerate(self):
                 # ..and remember each calculated distance
                 # we got from compare the song with its indirect neighbors.
                 result_set = deque()
@@ -201,7 +204,7 @@ class Database:
             # Stop iteration when not enough new distances were gathered
             # (at least one new addition per song)
             # This usually only triggers for high num_passes
-            if newly_found < len(self._song_list) // 2:
+            if newly_found < len(self) // 2:
                 print('o [not enough additions, breaking]', end='')
                 break
         print()
@@ -218,13 +221,13 @@ class Database:
         # Create the actual graph:
         self._graph = igraph.Graph(directed=False)
 
-        for song in self._song_list:
+        for song in self:
             self._graph.add_vertex(song=song)
 
         # Gather all edges in one container
         # (this speeds up adding edges)
         edge_set = deque()
-        for song_a in self._song_list:
+        for song_a in self:
             # print(len(song_a._dist_pool))
             for song_b, _ in song_a.distance_iter():
                 if song_a.distance_get(song_b) is None or song_b.distance_get(song_a) is None:
@@ -295,7 +298,7 @@ class Database:
         return new_song.uid
 
     def fix_graph(self):
-        for song in self._song_list:
+        for song in self:
             song.distance_finalize()
 
             # This is just some sort of assert and has no functionality:
@@ -326,9 +329,10 @@ class Database:
 
         distances = deque()
         for song in self._song_list[::iterstep]:
-            distance = Song.distance_compute(song, new_song)
-            distances.append((song, distance))
-            new_song.distance_add(song, distance)
+            if song is not None:
+                distance = Song.distance_compute(song, new_song)
+                distances.append((song, distance))
+                new_song.distance_add(song, distance)
 
         for song, distance in distances:
             if distance.distance > star_threshold:
@@ -350,7 +354,7 @@ class Database:
         if len(self._song_list) <= uid:
             raise ValueError('Invalid UID #{}'.format(uid))
 
-        song = self._song_list.pop(uid)
+        song = self._song_list[uid] = None
         self._revoked_uids.add(uid)
 
         # Patch the hole:

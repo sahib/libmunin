@@ -589,3 +589,4 @@ Anonsten funktionier die Moodbar Analyse einigermaßen gut (*): ::
     * Alte links aus meinen bookmarks, vlt. noch interessant:
       
         * http://www.musicplasma.com/
+        * https://bbs.archlinux.org/viewtopic.php?id=174049
