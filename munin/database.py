@@ -38,7 +38,6 @@ class Database:
         self._session = session
         self._song_list = []
         self._graph = igraph.Graph()
-
         self._revoked_uids = set()
 
         # TODO: Provide config options
@@ -64,7 +63,7 @@ class Database:
             raise IndexError('song uid #{} is not valid'.format(uid))
 
     def _current_uid(self):
-        if len(self._revoked_uids) > 0:
+        if self._revoked_uids:
             return self._revoked_uids.pop()
         return len(self._song_list)
 
@@ -170,13 +169,14 @@ class Database:
         '''
         # Prebind the functions for performance reasons:
         add = Song.distance_add
-        dfn = Song.distance_compute
+        compute = Song.distance_compute
 
         # Do the whole thing `num_passes` times...
         for n_iteration in range(num_passes):
             print('.', end='')
             stdout.flush()
 
+            # TODO: Overthink this?
             threshold = (mean_counter.mean * mean_scale - mean_counter.sd) / mean_scale
             newly_found = 0
 
@@ -189,7 +189,7 @@ class Database:
                 # Iterate over the indirect neighbors (those having a certain
                 # distance lower than threshold):
                 for ind_ngb in set(song.distance_indirect_iter(threshold)):
-                    distance = dfn(song, ind_ngb)
+                    distance = compute(song, ind_ngb)
                     result_set.append((ind_ngb, distance))
                     mean_counter.add(distance.distance)
 
@@ -247,6 +247,7 @@ class Database:
         # Average and Standard Deviation Counter:
         mean_counter = igraph.statistics.RunningMean()
 
+        # TODO: print -> logging
         print('+ Step #1: Calculating base distance (sliding window)')
         self._rebuild_step_base(
                 mean_counter,
@@ -350,7 +351,8 @@ class Database:
         if len(self._song_list) <= uid:
             raise ValueError('Invalid UID #{}'.format(uid))
 
-        song = self._song_list.pop(uid)
+        # TODO: Check for None
+        song = self._song_list[uid] = None
         self._revoked_uids.add(uid)
 
         # Patch the hole:
@@ -411,18 +413,18 @@ if __name__ == '__main__':
         import math
 
         with session.transaction():
-            N = 50
+            N = 100
             for i in range(int(N / 2) + 1):
                 session.database.add({
                     'genre': 1.0 - i / N,
                     'artist': 1.0 - i / N
                 })
                 # Pseudo-Random, but deterministic:
-                euler = lambda x: math.fmod(math.e ** x, 1.0)
-                session.database.add({
-                    'genre': euler((i + 1) % 30),
-                    'artist': euler((N - i + 1) % 30)
-                })
+                # euler = lambda x: math.fmod(math.e ** x, 1.0)
+                # session.database.add({
+                #     'genre': euler((i + 1) % 30),
+                #     'artist': euler((N - i + 1) % 30)
+                # })
 
         print('+ Step #4: Layouting and Plotting')
         session.database.plot()

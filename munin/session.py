@@ -1,10 +1,8 @@
 #q!/usr/bin/env python
 # encoding: utf-8
 
-'''
-.. currentmodule:: munin.session
+''':class:`Session` is the main entrance to using libmunin.
 
-:class:`Session` is the main entrance to using libmunin.
 It implements a caching layer around the lower level API, being able to
 save a usage-*Session* for later re-use. The session data will be saved packed
 on disk as a .gzip archive.
@@ -67,7 +65,7 @@ def get_cache_path(extra_name=None):
 
 
 DEFAULT_CONFIG = {
-    'max_neighbors': 10,
+    'max_neighbors': 5,
     'max_distance': 0.999,
 }
 
@@ -116,11 +114,17 @@ class Session:
 
         # Lookup tables for those attributes (fast access is crucial here)
         def make_index(idx, default_func):
-            items = self._attribute_mask.items()
-            nvlfn = lambda x, d: x if x is not None else d
-            return {key: nvlfn(descr[idx], default_func(key)) for key, descr in items}
+            index = {}
+            for key, descr in self._attribute_mask.items():
+                if descr[idx] is not None:
+                    index[key] = descr[idx]
+                else:
+                    index[key] = default_func(key)
+
+            return index
 
         # Import this locally, since we might get circular import otherway:
+        # TODO: Validate this crap.
         from munin.distance import DistanceFunction
         from munin.provider import Provider
 
@@ -128,7 +132,7 @@ class Session:
         self._key_to_providers = make_index(0,
                 lambda key: Provider()
         )
-        self._key_to_dmeasures = make_index(1,
+        self._key_to_distfuncs = make_index(1,
                 lambda key: DistanceFunction(self._key_to_providers[key])
         )
         self._key_to_weighting = make_index(2,
@@ -202,7 +206,7 @@ class Session:
 
     def distance_function_for_key(self, key):
         'Get the :class:`munin.distance.DistanceFunction` for ``key``'
-        return self._key_to_dmeasures[key]
+        return self._key_to_distfuncs[key]
 
     def weight_for_key(self, key):
         'Get the weighting (*float*) for ``key``'
@@ -243,6 +247,7 @@ class Session:
         :returns: A cached session.
         :rtype: :class:`Session`
         '''
+        # TODO: test if zip makes any sense
         base_path, _ = os.path.splitext(full_path)
         with tarfile.open(full_path, 'r:*') as tar:
             tar.extractall(base_path)
@@ -260,9 +265,7 @@ class Session:
         :returns: A cached session.
         :rtype: :class:`Session`
         '''
-        return Session.from_archive_path(
-            get_cache_path(session_name)
-        )
+        return Session.from_archive_path(get_cache_path(session_name))
 
     def save(self, compress=True):
         '''Save the session (and all caches) to disk.
@@ -305,15 +308,15 @@ class Session:
     def feed_history(self, song):
         self.database.feed_history(song)
 
-    def add_song(self, song, value_mapping):
+    def add(self, song, value_mapping):
         song = song_or_uid(self.database, song)
         return self.database.add(song, value_mapping)
 
-    def insert_song(self, song, value_mapping):
+    def insert(self, song, value_mapping):
         song = song_or_uid(self.database, song)
         return self.database.insert_song(song, value_mapping)
 
-    def remove_song(self, song):
+    def remove(self, song):
         song = song_or_uid(self.database, song)
         return self.database.remove_song(song.uid)
 
@@ -323,12 +326,12 @@ class Session:
     @contextmanager
     def transaction(self):
         'Convienience method: Excecute block and call :func:`rebuild` afterwards.'
-        with self.fixing():
+        with self.fix_graph():
             yield
             self.database.rebuild()
 
     @contextmanager
-    def fixing(self):
+    def fix_graph(self):
         '''Fix the previosuly rebuild graph.
 
         This means checking if unsorted distances can be found (which should not happend)

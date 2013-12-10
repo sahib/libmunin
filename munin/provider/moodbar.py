@@ -22,12 +22,16 @@ from munin.provider import Provider
 from igraph.statistics import Histogram
 
 
+MoodbarChannel = namedtuple('MoodbarChannel', [
+    'histogram', 'diffsum'
+])
+
+
 MoodbarDescription = namedtuple('MoodbarDescription', [
         'channels',
         'average_max', 'average_min',
         'dominant_colors', 'blackness'
 ])
-
 
 MoodbarDescription.__repr__ = lambda self: '''\
 Red:
@@ -59,11 +63,6 @@ Dominant colors:
 )
 
 
-MoodbarChannel = namedtuple('MoodbarChannel', [
-    'histogram', 'diffsum'
-])
-
-
 def compute_moodbar_for_file(audio_file, output_file, print_output=False):
     '''Call a moodbar process on a certain audio file.
 
@@ -72,6 +71,7 @@ def compute_moodbar_for_file(audio_file, output_file, print_output=False):
     :param print_output: Print the output of the moodbar utility?
 
     :returns: The exit code of the moodbar utility (0 on success).
+
     '''
     stdout, stderr = DEVNULL, DEVNULL
     if print_output:
@@ -103,6 +103,7 @@ def discretize(chan_r, chan_g, chan_b, n=50):
     :param n: How big the block size shall be.
     :returns: A generator that yields the new list lazily.
     '''
+    # TODO: Make kittehs eyes bleed less.
     for gr, gg, gb in zip(*(grouper(c, n) for c in (chan_r, chan_g, chan_b))):
         yield sum(gr) / n, sum(gg) / n, sum(gb) / n
 
@@ -192,8 +193,11 @@ def process_moodbar(vector, samples=25):
     average_min = int(sum(min_samples) / samples)
 
     # The potentially maximal diff per channel:
-    max_diff = samples * 255
-    diff_r, diff_g, diff_b = (int(round(v / max_diff * 100)) for v in (diff_r, diff_g, diff_b))
+    # TODO: Stretch values?
+    max_diff = (samples - 1) * 255
+
+    percentize = lambda v: int(round(v / max_diff * 100))
+    diff_r, diff_g, diff_b = map(percentize, (diff_r, diff_g, diff_b))
 
     # Built an easy accesable namedtuple:
     return MoodbarDescription((
@@ -243,7 +247,7 @@ class MoodbarAudioFileProvider(MoodbarMoodFileProvider):
     def do_process(self, audio_file_path):
         mood_file_path = audio_file_path + '.mood'
         if not os.path.exists(mood_file_path):
-            if compute_moodbar_for_file(audio_file_path, mood_file_path) is not 0:
+            if compute_moodbar_for_file(audio_file_path, mood_file_path):
                 return ()
         return MoodbarMoodFileProvider.do_process(self, mood_file_path)
 

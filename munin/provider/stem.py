@@ -41,7 +41,7 @@ class LancasterStemProvider(_BaseStemProvider):
 
         .. note:: LancasterStemmer is known to be more aggressive than PorterStemmer.
         '''
-        Provider.__init__(self, 'LancasterStemmer', compress=compress)
+        Provider.__init__(self, compress=compress)
 
         from nltk.stem import LancasterStemmer
         self._stemmer = LancasterStemmer()
@@ -62,7 +62,7 @@ class SnowballStemProvider(_BaseStemProvider):
         :param language: the language for the algorithm to use.
         :type language: str
         '''
-        Provider.__init__(self, 'SnowballStemmer', compress=compress)
+        Provider.__init__(self, compress=compress)
 
         from nltk.stem import SnowballStemmer
         self._stemmer = SnowballStemmer(language)
@@ -76,10 +76,11 @@ if __name__ == '__main__':
         def test_valid(self):
             for prov in [LancasterStemProvider(), SnowballStemProvider()]:
                 words = ['Fish', 'fisher', 'fishing']
+                # words = ['heaven', 'beatles', 'beatle']
                 print(prov)
                 print([prov.process(word) for word in words])
                 print(prov.process(words))
 
     # Disabled for now, since we'd need to import it on TravisCI
     # and the PyPi package simply does not work for Py3.
-    # unittest.main()
+    unittest.main()
