@@ -1,30 +1,28 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-
+# Stdlib:
 import os
 import sys
 
 from itertools import combinations
 from collections import deque
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
-from multiprocessing import Queue
+from concurrent.futures import ProcessPoolExecutor
 
-
+# Internal:
 from munin.provider.moodbar import MoodbarAudioFileProvider
 from munin.distance.moodbar import MoodbarDistance
+from munin.helper import AudioFileWalker
 
 
-def compute_moodbar(path_root):
+def compute_moodbar(full_path):
     try:
-        path, root = path_root
-        full_path = os.path.join(root, path)
+        root, path = os.path.dirname(full_path), os.path.basename(full_path)
         result = provider.process(full_path)
         if result:
             return (result, path, root)
-    except Exception as e:
+    except Exception:
         pass
-
     return (None, path, root)
 
 
@@ -35,18 +33,9 @@ if __name__ == '__main__':
 
     provider = MoodbarAudioFileProvider()
     distance = MoodbarDistance(provider)
-    moodbar_files = deque()
-
-    for root, directory, paths in os.walk(sys.argv[1]):
-        print(root)
-        for path in paths:
-            if path.endswith('.mood'):
-                continue
-
-            print('    ', path)
-            moodbar_files.append((path, root))
-
+    moodbar_files = list(AudioFileWalker(sys.argv[1]))
     moodbar_descr = []
+
     with ProcessPoolExecutor(max_workers=10) as executor:
         futured = executor.map(compute_moodbar, moodbar_files)
         for descr, path, root in futured:

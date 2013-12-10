@@ -151,6 +151,9 @@ class Session:
         # Publicly readable attribute.
         self.mapping = {}
 
+    def __getitem__(self, idx):
+        return self.database[idx]
+
     def _create_file_structure(self, path):
         if os.path.isfile(path):
             os.remove(path)
@@ -284,6 +287,17 @@ class Session:
     #                             Recommendations                             #
     ###########################################################################
 
+    # TODO: Missing docstrings
+    def recommend_from_attributes(self, subset, number=20):
+        song = song_or_uid(self.database, song)
+        return munin.graph.recommendations_from_attributes(
+                subset,
+                self.database,
+                self.database._graph,
+                self.database.rule_index,
+                number
+        )
+
     def recommend_from_seed(self, song, number=20):
         song = song_or_uid(self.database, song)
         return munin.graph.recommendations_from_song(
@@ -296,6 +310,7 @@ class Session:
     def recommend_from_graph(self, song, number=20):
         song = song_or_uid(self.database, song)
         return munin.graph.recommendations_from_graph(
+                self.database,
                 self.database._graph,
                 self.database.rule_index,
                 number
@@ -306,22 +321,53 @@ class Session:
     ###########################################################################
 
     def feed_history(self, song):
+        '''Feed a single song to the history.
+
+        If the feeded song is not yet in the database,
+        it will be added automatically.
+
+        :param song: The song to feed in the history.
+        '''
         self.database.feed_history(song)
 
-    def add(self, song, value_mapping):
-        song = song_or_uid(self.database, song)
-        return self.database.add(song, value_mapping)
+    def add(self, value_mapping):
+        return self.database.add(value_mapping)
 
-    def insert(self, song, value_mapping):
-        song = song_or_uid(self.database, song)
-        return self.database.insert_song(song, value_mapping)
+    def insert(self, value_mapping):
+        return self.database.insert(value_mapping)
 
     def remove(self, song):
         song = song_or_uid(self.database, song)
-        return self.database.remove_song(song.uid)
+        return self.database.remove(song.uid)
 
     def playcount(self, song):
+        '''Get the playcount of a song.
+
+        If no playcount is known for it, 0 will be returned.
+
+        :returns: Number of times this song was played.
+        :rtype: int
+        '''
         return self.database.playcount(song)
+
+    def playcounts(self, n=0):
+        '''Get all playcounts, or the most common.
+
+        :param n: The number of most  common plays to select. Might be less.
+        :returns: A list of tuples if n > 0, or a Mapping.
+        '''
+        return self.database.playcounts(n)
+
+    def find_matching_attributes(self, subset):
+        '''Search the database for a subset of the attributes/values in subset.
+
+        Example: ::
+
+            >>> find_matching_attributes({'genre': 'metal', 'artist': 'Debauchery'})
+
+        :returns: A lazy iterator over the matching songs.
+        '''
+        return self.database.find_matching_attributes(subset)
 
     @contextmanager
     def transaction(self):

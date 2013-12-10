@@ -8,7 +8,6 @@
 from itertools import chain
 from collections import deque, Counter, OrderedDict, defaultdict
 from contextlib import contextmanager
-from operator import itemgetter
 from time import time
 
 # External:

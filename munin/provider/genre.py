@@ -264,7 +264,7 @@ def prepare_single_genre(genre):
     '''
     return list(filter(
         lambda elem: elem != '-',
-        [STEMMER.stemWord(genre.lower()) for genre in re.split('(core|[\s-])', genre) if genre.strip()]
+        [STEMMER.stemWord(g.lower()) for g in re.split('(core|[\s-])', genre) if g.strip()]
     ))
 
 
@@ -456,6 +456,7 @@ class GenreTreeProvider(Provider):
 
         To get back the actual genre, do this: ::
 
+            >>> provider = GenreTreeProvider()
             >>> ' '.join(reversed(provider.resolve_path((197, 1, 0))))
             "brutal death metal"
 

@@ -49,7 +49,10 @@ class Database:
         self._playcounts = Counter()
 
     def __iter__(self):
-        return iter(self._song_list)
+        return filter(None, self._song_list)
+
+    def __len__(self):
+        return len(self._song_list) - len(self._revoked_uids)
 
     def __getitem__(self, idx):
         '''Lookup a certain song by it's uid.
@@ -58,9 +61,9 @@ class Database:
         :returns: a :class:`munin.song.Song`, which is a read-only mapping of normalized attributes.
         '''
         try:
-            return self._song_list[uid]
+            return self._song_list[idx]
         except IndexError:
-            raise IndexError('song uid #{} is not valid'.format(uid))
+            raise IndexError('song uid #{} is invalid'.format(idx))
 
     def _current_uid(self):
         if self._revoked_uids:
@@ -70,14 +73,13 @@ class Database:
     def playcount(self, song):
         return self._playcounts.get(song, 0)
 
+    def playcounts(self, n=0):
+        if n < 1:
+            return self._playcounts
+        else:
+            return self._playcounts.most_common(n)
+
     def feed_history(self, song):
-        '''Feed a single song to the history.
-
-        If the feeded song is not yet in the database,
-        it will be added automatically.
-
-        :param song: The song to feed in the history.
-        '''
         try:
             self[song.uid]
         except IndexError:
@@ -88,6 +90,19 @@ class Database:
             self._rule_index.insert_rules(rules)
 
         self._playcounts[song] += 1
+
+    def find_matching_attributes(self, subset):
+        try:
+            value_set = set()
+            for key, value in subset.items():
+                provider = self._session.provider_for_key(key)
+                value_set.add(provider.process(value))
+
+            for song in self:
+                if all((song[key] in value_set for key in subset.keys())):
+                    yield song
+        except KeyError:
+            raise KeyError('key "{k}" is not in attribute mask'.format(k=key))
 
     def plot(self):
         '''Plot the current graph for debugging purpose.
@@ -119,7 +134,7 @@ class Database:
         visual_style['vertex_label_color'] = [hsv_to_rgb(1 - v, 0.5, 1.0) for v in colors]
         visual_style['vertex_size'] = [42] * len(self._graph.vs)
         visual_style['layout'] = self._graph.layout('fr')
-        visual_style['bbox'] = (800, 800)
+        visual_style['bbox'] = (1500, 1500)
         igraph.plot(self._graph, **visual_style)
 
     def _rebuild_step_base(self, mean_counter, window_size=60, step_size=20):
@@ -137,9 +152,9 @@ class Database:
         :param step_size: The movement of the window per iteration.
         '''
         # Base Iteration:
-        slider = sliding_window(self._song_list, window_size, step_size)
-        center = centering_window(self._song_list, window_size // 2)
-        anticn = centering_window(self._song_list, window_size // 2, parallel=False)
+        slider = sliding_window(self, window_size, step_size)
+        center = centering_window(self, window_size // 2)
+        anticn = centering_window(self, window_size // 2, parallel=False)
 
         # Prebind the functions for performance reasons.
         compute = Song.distance_compute
@@ -181,7 +196,7 @@ class Database:
             newly_found = 0
 
             # Go through the song_list...
-            for idx, song in enumerate(self._song_list):
+            for idx, song in enumerate(self):
                 # ..and remember each calculated distance
                 # we got from compare the song with its indirect neighbors.
                 result_set = deque()
@@ -201,7 +216,7 @@ class Database:
             # Stop iteration when not enough new distances were gathered
             # (at least one new addition per song)
             # This usually only triggers for high num_passes
-            if newly_found < len(self._song_list) // 2:
+            if newly_found < len(self) // 2:
                 print('o [not enough additions, breaking]', end='')
                 break
         print()
@@ -218,13 +233,13 @@ class Database:
         # Create the actual graph:
         self._graph = igraph.Graph(directed=False)
 
-        for song in self._song_list:
+        for song in self:
             self._graph.add_vertex(song=song)
 
         # Gather all edges in one container
         # (this speeds up adding edges)
         edge_set = deque()
-        for song_a in self._song_list:
+        for song_a in self:
             # print(len(song_a._dist_pool))
             for song_b, _ in song_a.distance_iter():
                 if song_a.distance_get(song_b) is None or song_b.distance_get(song_a) is None:
@@ -268,13 +283,6 @@ class Database:
         self._reset_history()
 
     def add(self, value_dict):
-        '''Creates a song from value dict and add it to the database.
-
-        The song will be configured to the config values set in the Session.
-
-        :raises: ``KeyError`` if any key in `value_dict` is invalid.
-        :returns: the added song for convinience
-        '''
         for key, value in value_dict.items():
             try:
                 provider = self._session.provider_for_key(key)
@@ -296,7 +304,7 @@ class Database:
         return new_song.uid
 
     def fix_graph(self):
-        for song in self._song_list:
+        for song in self:
             song.distance_finalize()
 
             # This is just some sort of assert and has no functionality:
@@ -306,30 +314,16 @@ class Database:
                     print('!! warning: unsorted elements: !({} < {})'.format(dist, last))
                 last = dist
 
-    def insert_song(self, value_dict, star_threshold=0.75):
-        '''Insert a song to the database without doing a rebuild.
-
-        This works by iterating partially over the songlist, trying to find
-        a suitable point to insert it. If a distance to a random song is
-        over ``star_threshold``, also the neighbors of this song is
-        investigated.
-
-        Songs inserted this way tend to have wider connections than normal
-        songs, which may enrich the graph.
-
-        :param value_dict: Same as for :func:`add`.
-        :param star_threshold: Also consider neighbors for songs with a
-                               distance higher than this.
-        :returns: The uid of this new song.
-        '''
+    def insert(self, value_dict, star_threshold=0.75):
         new_song = self._song_list[self.add(value_dict)]
         iterstep = max(1, math.log(len(self._song_list) or 1))
 
         distances = deque()
         for song in self._song_list[::iterstep]:
-            distance = Song.distance_compute(song, new_song)
-            distances.append((song, distance))
-            new_song.distance_add(song, distance)
+            if song is not None:
+                distance = Song.distance_compute(song, new_song)
+                distances.append((song, distance))
+                new_song.distance_add(song, distance)
 
         for song, distance in distances:
             if distance.distance > star_threshold:
@@ -339,19 +333,10 @@ class Database:
 
         return new_song.uid
 
-    def remove_song(self, uid):
-        '''Delete a single song from the graph without rebuilding it.
-
-        Holes that may be created will be tried to be patched by connecting
-        the neighbors to each other.
-
-        :param uid: The uid of the song to delete.
-        :returns: The uid you passed in for convienience.
-        '''
+    def remove(self, uid):
         if len(self._song_list) <= uid:
             raise ValueError('Invalid UID #{}'.format(uid))
 
-        # TODO: Check for None
         song = self._song_list[uid] = None
         self._revoked_uids.add(uid)
 
@@ -415,16 +400,16 @@ if __name__ == '__main__':
         with session.transaction():
             N = 100
             for i in range(int(N / 2) + 1):
-                session.database.add({
+                session.add({
                     'genre': 1.0 - i / N,
                     'artist': 1.0 - i / N
                 })
                 # Pseudo-Random, but deterministic:
-                # euler = lambda x: math.fmod(math.e ** x, 1.0)
-                # session.database.add({
-                #     'genre': euler((i + 1) % 30),
-                #     'artist': euler((N - i + 1) % 30)
-                # })
+                euler = lambda x: math.fmod(math.e ** x, 1.0)
+                session.database.add({
+                    'genre': euler((i + 1) % 30),
+                    'artist': euler((N - i + 1) % 30)
+                })
 
         print('+ Step #4: Layouting and Plotting')
         session.database.plot()

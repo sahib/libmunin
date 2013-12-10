@@ -5,8 +5,11 @@
 Methods to traverse the igraph graph in order to do recommendations.
 '''
 # Stdlib:
-from itertools import chain, cycle, islice, groupby
+from itertools import chain, islice, groupby
+from collections import deque
 from math import ceil
+
+import random
 
 # Internal:
 from munin.utils import roundrobin
@@ -91,7 +94,7 @@ def common_recommendations(graph, song_a, song_b, n=10):
         [song for song, _ in neighbors_from_song(graph, song_b, n=n)]
     ))
 
-    return ((g.vs[edge.source], g.vs[edge.target]) for edge in edges)
+    return ((graph.vs[edge.source], graph.vs[edge.target]) for edge in edges)
 
 
 def recommendations_from_song(graph, rule_index, song, n=20):
@@ -143,10 +146,11 @@ def _recommendations_from_song(graph, rule_index, song, n=20):
         for left, right, *_, rating in associated:
             # The maximum number that a single song in this rule may deliver
             # (at least 1 - himself, therefore the ceil)
+            bulk = right if song in left else left
             max_n = ceil(((rating / sum_rating) * (n / 2)) / len(bulk))
 
             # We take the songs in the opposite set of the rule:
-            for song in (right if song in left else left):
+            for song in bulk:
                 breadth_first = islice(neighbors_from_song_sorted(graph, song))
                 breadth_first_iters.append(breadth_first, max_n)
 
@@ -168,12 +172,31 @@ def _recommendations_from_song(graph, rule_index, song, n=20):
                 break
 
 
-def recommendations_from_graph(graph, rule_index, n=20):
+def recommendations_from_attributes(subset, database, graph, rule_index, n=20):
+    '''Recommend songs based on a certain attribute.
+
+    For example you can search by a certain genre by calling it like this: ::
+
+        >>> recommendations_from_attribute({'genre', 'death metal'}, ...)
+
+    The value passed must match fully, no fuzzy matching is performed.
+
+    :returns: Recommendations like the others or None if no suitable song found.
+    '''
+    try:
+        chosen_song = next(database.find_matching_attributes(keys, values))
+        return recommendations_from_song(graph, rule_index, chosen_song, n=n)
+    except StopIteration:
+        return iter([])
+
+
+def recommendations_from_graph(database, graph, rule_index, n=20):
     '''Find n recommendations solely from the graph.
 
     This will try to find a good rule, that indicates a user's
     favourite song, and will call :func:`recommendations_from_song` on it.
-    If no rules are known, a random song is chosen.
+    If no rules are known, the most played song will be chosen.
+    If there is none, a random song is picked.
 
     .. seealso: :func:`recommendations_from_song`
     '''
@@ -183,9 +206,10 @@ def recommendations_from_graph(graph, rule_index, n=20):
 
         # First song of the rules' left side
         chosen_song = best_rule[0][0]
-
     except StopIteration:
-        chosen_song = random.choice(graph.vs)['song']
+        (chosen_song, count), *_ = database.playcount(n=1)
+        if count is 0:
+            chosen_song = random.choice(graph.vs)['song']
 
     return recommendations_from_song(graph, rule_index, chosen_song, n=n)
 

@@ -4,7 +4,7 @@
 # Stdlib:
 import os
 
-from collections import deque, Counter, namedtuple
+from collections import Counter, namedtuple
 from operator import itemgetter
 
 # Fix for Python 3.2

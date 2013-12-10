@@ -1,6 +1,5 @@
 #Stdlib:
 from collections import deque
-from itertools import zip_longest
 
 # Interal:
 from munin.utils import grouper

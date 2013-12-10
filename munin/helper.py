@@ -1,13 +1,22 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-"""Contains method that help the user of the library finding the date he needs.
+"""
+Overview
+--------
+
+Contains method that help the user of the library finding the date he needs.
 
 *Helpers*:
 
     * :class:`AudioFileWalker` - generator class that yields files to audio files.
     * :func:`song_or_uid` - function that delivers the song for uids or just
                             returns the song if passed in.
+
+    * :func:`pairup` - Easy AttributeMask building.
+
+Reference
+---------
 """
 
 import os
@@ -42,18 +51,44 @@ class AudioFileWalker:
                 if ending in self._extension:
                     yield os.path.join(root, path)
 
-###########################################################################
-#                               Song or UID                               #
-###########################################################################
 
+###########################################################################
+#                               Misc Utils                                #
+###########################################################################
 
 def song_or_uid(database, song_or_uid):
+    '''Takes a song or the uid of it and return the song.
+
+    This function is purely for your convinience,
+    you can always use :func:`munin.database.Database.__getitem__`
+
+    :param database: Database to lookup uid from.
+    :raises: IndexError on invalid uid.
+    :returns: A :class:`munin.song.Song` in any case.
+    '''
     if hasattr(song_or_uid, 'uid'):
         return song_or_uid
     return database[song_or_uid]
 
 
 def pairup(provider, distance, weight):
+    '''Convienience function for easy attribute mask building.
+
+    Every distance function needs to know the provider that processed the value.
+    This is needed to implement the compress functionality. In order to stop you
+    from writing code like this:
+
+        >>> prov = Provider()
+        >>> dfunc = DistanceFunction(prov)
+        >>> # Somehwere down:
+        >>> {'artist': (prov, dfunc, 0.5)}
+
+    You can just write:
+
+        >>> {'artist': pairup(Provider(), DistanceFunction(), 0.5)}
+
+    This function will set the provider in the DistanceFunction for you.
+    '''
     if distance is not None:
         distance._provider = provider
     return (provider, distance, weight)
