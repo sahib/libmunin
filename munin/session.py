@@ -147,6 +147,9 @@ class Session:
         # Publicly readable attribute.
         self.mapping = {}
 
+    def __getitem__(self, idx):
+        return self.database[idx]
+
     def _create_file_structure(self, path):
         if os.path.isfile(path):
             os.remove(path)
