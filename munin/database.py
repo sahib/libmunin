@@ -5,8 +5,11 @@
 from itertools import combinations
 from collections import Counter, deque
 from colorsys import hsv_to_rgb
-from sys import stdout
+
 import math
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 # Internal:
 from munin.song import Song
@@ -134,7 +137,7 @@ class Database:
         visual_style['vertex_label_color'] = [hsv_to_rgb(1 - v, 0.5, 1.0) for v in colors]
         visual_style['vertex_size'] = [42] * len(self._graph.vs)
         visual_style['layout'] = self._graph.layout('fr')
-        visual_style['bbox'] = (1500, 1500)
+        visual_style['bbox'] = (2500, 2500)
         igraph.plot(self._graph, **visual_style)
 
     def _rebuild_step_base(self, mean_counter, window_size=60, step_size=20):
@@ -162,7 +165,7 @@ class Database:
 
         # Select the iterator:
         for idx, iterator in enumerate((slider, center, anticn)):
-            print('|-- Applying iteration #{}: {}'.format(idx + 1, iterator))
+            LOGGER.debug('|-- Applying iteration #{}: {}'.format(idx + 1, iterator))
 
             # Iterate over the list:
             for window in iterator:
@@ -188,10 +191,6 @@ class Database:
 
         # Do the whole thing `num_passes` times...
         for n_iteration in range(num_passes):
-            print('.', end='')
-            stdout.flush()
-
-            # TODO: Overthink this?
             threshold = (mean_counter.mean * mean_scale - mean_counter.sd) / mean_scale
             newly_found = 0
 
@@ -217,9 +216,8 @@ class Database:
             # (at least one new addition per song)
             # This usually only triggers for high num_passes
             if newly_found < len(self) // 2:
-                print('o [not enough additions, breaking]', end='')
                 break
-        print()
+        LOGGER.debug('Did {}x (of max. {}) refinement steps.'.format(n_iteration, num_passes))
 
     def _rebuild_step_build_graph(self):
         '''Built an actual igraph.Graph from the songlist.
@@ -240,7 +238,6 @@ class Database:
         # (this speeds up adding edges)
         edge_set = deque()
         for song_a in self:
-            # print(len(song_a._dist_pool))
             for song_b, _ in song_a.distance_iter():
                 if song_a.distance_get(song_b) is None or song_b.distance_get(song_a) is None:
                     continue
@@ -262,23 +259,22 @@ class Database:
         # Average and Standard Deviation Counter:
         mean_counter = igraph.statistics.RunningMean()
 
-        # TODO: print -> logging
-        print('+ Step #1: Calculating base distance (sliding window)')
+        LOGGER.debug('+ Step #1: Calculating base distance (sliding window)')
         self._rebuild_step_base(
                 mean_counter,
                 window_size=window_size,
                 step_size=step_size
         )
 
-        print('|-- Mean Distane: {:f} (sd: {:f})'.format(mean_counter.mean, mean_counter.sd))
-        print('+ Step #2: Applying refinement:', end='')
+        LOGGER.debug('|-- Mean Distane: {:f} (sd: {:f})'.format(mean_counter.mean, mean_counter.sd))
+        LOGGER.debug('+ Step #2: Applying refinement:', end='')
         self._rebuild_step_refine(
             mean_counter,
             num_passes=refine_passes
         )
 
-        print('|-- Mean Distane: {:f} (sd: {:f})'.format(mean_counter.mean, mean_counter.sd))
-        print('+ Step #3: Building Graph')
+        LOGGER.debug('|-- Mean Distane: {:f} (sd: {:f})'.format(mean_counter.mean, mean_counter.sd))
+        LOGGER.debug('+ Step #3: Building Graph')
         self._rebuild_step_build_graph()
         self._reset_history()
 
@@ -311,7 +307,7 @@ class Database:
             last = None
             for other, dist in song.distance_iter():
                 if last is not None and last > dist:
-                    print('!! warning: unsorted elements: !({} < {})'.format(dist, last))
+                    LOGGER.critical('!! warning: unsorted elements: !({} < {})'.format(dist, last))
                 last = dist
 
     def insert(self, value_dict, star_threshold=0.75):
@@ -398,7 +394,7 @@ if __name__ == '__main__':
         import math
 
         with session.transaction():
-            N = 100
+            N = 500
             for i in range(int(N / 2) + 1):
                 session.add({
                     'genre': 1.0 - i / N,
@@ -411,7 +407,7 @@ if __name__ == '__main__':
                     'artist': euler((N - i + 1) % 30)
                 })
 
-        print('+ Step #4: Layouting and Plotting')
+        LOGGER.debug('+ Step #4: Layouting and Plotting')
         session.database.plot()
 
     if '--cli' in sys.argv:

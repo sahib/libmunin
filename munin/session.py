@@ -124,7 +124,6 @@ class Session:
             return index
 
         # Import this locally, since we might get circular import otherway:
-        # TODO: Validate this crap.
         from munin.distance import DistanceFunction
         from munin.provider import Provider
 

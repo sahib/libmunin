@@ -103,9 +103,13 @@ def discretize(chan_r, chan_g, chan_b, n=50):
     :param n: How big the block size shall be.
     :returns: A generator that yields the new list lazily.
     '''
-    # TODO: Make kittehs eyes bleed less.
-    for gr, gg, gb in zip(*(grouper(c, n) for c in (chan_r, chan_g, chan_b))):
-        yield sum(gr) / n, sum(gg) / n, sum(gb) / n
+    group_r = grouper(chan_r, n)
+    group_g = grouper(chan_g, n)
+    group_b = grouper(chan_b, n)
+    mean = lambda group: sum(group) / n
+
+    for red, green, blue in zip(group_r, group_g, group_b):
+        yield mean(red), mean(green), mean(blue)
 
 
 def histogram(channel, bin_width=51):
@@ -192,11 +196,12 @@ def process_moodbar(vector, samples=25):
     average_max = int(sum(max_samples) / samples)
     average_min = int(sum(min_samples) / samples)
 
-    # The potentially maximal diff per channel:
-    # TODO: Stretch values?
-    max_diff = (samples - 1) * 255
+    # The potentially maximal diff per channel is (samples - 1) * 255,
+    # but we stretch the value since most music will only use at max.
+    # a third of that.
+    max_diff = ((samples - 1) * 255) / 3
 
-    percentize = lambda v: int(round(v / max_diff * 100))
+    percentize = lambda v: min(100, int(round(v / max_diff * 100)))
     diff_r, diff_g, diff_b = map(percentize, (diff_r, diff_g, diff_b))
 
     # Built an easy accesable namedtuple:
