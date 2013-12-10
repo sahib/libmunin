@@ -47,8 +47,8 @@ class Provider:
 
         Example: ::
 
-            >>> GenreTreeProvider | LancasterStemProvider
-            CompositeProvider(GenreTreeProvider, LancasterStemProvider)
+            >>> WordListProvider | LancasterStemProvider
+            CompositeProvider(WordListProvider, LancasterStemProvider)
 
         If you chain together many providers it is recommended to use only one
         CompositeProvider for speed reasons.
@@ -82,6 +82,7 @@ class Provider:
 #                             Import Aliases                              #
 ###########################################################################
 
+# TODO: Circular imports
 from munin.provider.genre import GenreTreeProvider
 from munin.provider.composite import CompositeProvider
 from munin.provider.stem import LancasterStemProvider, SnowballStemProvider

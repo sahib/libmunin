@@ -83,7 +83,7 @@ class Database:
         try:
             self[song.uid]
         except IndexError:
-            self.insert_song(song)
+            self.insert(song)
 
         if self._listen_history.feed(song):
             rules = self._listen_history.find_rules()
@@ -331,6 +331,8 @@ class Database:
                     distance = new_song.distance_compute(neighbor)
                     new_song.distance_add(neighbor, distance)
 
+        # TODO: add new vertex to graph
+
         return new_song.uid
 
     def remove(self, uid):
@@ -340,6 +342,7 @@ class Database:
         song = self._song_list[uid] = None
         self._revoked_uids.add(uid)
 
+        # TODO: remove vertex to graph
         # Patch the hole:
         song.disconnect()
 
@@ -367,6 +370,7 @@ if __name__ == '__main__':
             }, path='/tmp')
 
         def test_basics(self):
+            # TODO: See if all with statements are exception safe
             with self._session.transaction():
                 N = 200
                 for i in range(N):
@@ -406,10 +410,10 @@ if __name__ == '__main__':
                 })
                 # Pseudo-Random, but deterministic:
                 euler = lambda x: math.fmod(math.e ** x, 1.0)
-                session.database.add({
-                    'genre': euler((i + 1) % 30),
-                    'artist': euler((N - i + 1) % 30)
-                })
+                # session.database.add({
+                #     'genre': euler((i + 1) % 30),
+                #     'artist': euler((N - i + 1) % 30)
+                # })
 
         print('+ Step #4: Layouting and Plotting')
         session.database.plot()

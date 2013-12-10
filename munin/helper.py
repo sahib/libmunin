@@ -71,7 +71,7 @@ def song_or_uid(database, song_or_uid):
     return database[song_or_uid]
 
 
-def pairup(provider, distance, weight):
+def pairup(provider, distance_function, weight):
     '''Convienience function for easy attribute mask building.
 
     Every distance function needs to know the provider that processed the value.
@@ -89,9 +89,9 @@ def pairup(provider, distance, weight):
 
     This function will set the provider in the DistanceFunction for you.
     '''
-    if distance is not None:
-        distance._provider = provider
-    return (provider, distance, weight)
+    if distance_function is not None:
+        distance_function._provider = provider
+    return (provider, distance_function, weight)
 
 ###########################################################################
 #                              Stupid Tests                               #

@@ -37,7 +37,7 @@ class Song(SessionMapping, Hashable):
 
     **Reference**
     '''
-    def __init__(self, session, value_dict, max_neighbors=100, max_distance=0.999, default_value=None):
+    def __init__(self, session, value_dict, max_neighbors=10, max_distance=0.999, default_value=None):
         '''Creates a Song (a set of attributes) that behaves like a dictionary:
 
         :param session: A Session objective (the session this song belongs to)
@@ -64,7 +64,7 @@ class Song(SessionMapping, Hashable):
         d = self._dist_dict
 
         # Make sure bad and nonexisting songs goes to the end:
-        self._pop_list = sortedlist(key=lambda x: d[x])
+        self._pop_list = sortedlist(key=lambda x: ~d[x])
 
         # Settings:
         self._max_neighbors = max_neighbors
@@ -146,16 +146,14 @@ class Song(SessionMapping, Hashable):
             # and why we do not care.
             sdd[other] = odd[self] = distance
             return True
-
+        # TODO: Check if heapq has a reason here.
         elif distance.distance <= self._max_distance:
             # Check if we still have room left
             if len(sdd) >= self._max_neighbors:
                 # Find the worst song in the dictionary
                 idx = 1
-                pop_list = self._pop_list
-                rev_list = reversed(pop_list)
-                while 1:
-                    worst_song = next(rev_list)
+                # TODO: test if reverse necessary
+                for worst_song in self._pop_list:
                     if worst_song in sdd:
                         break
                     idx += 1
@@ -169,7 +167,7 @@ class Song(SessionMapping, Hashable):
                 # BUT: do not delete the connection from worst to self
                 # we create unidir edges here on purpose.
                 del sdd[worst_song]
-                del pop_list[-idx:]
+                del self._pop_list[idx + 1:]
         else:
             return False
 

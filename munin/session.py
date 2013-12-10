@@ -373,8 +373,10 @@ class Session:
     def transaction(self):
         'Convienience method: Excecute block and call :func:`rebuild` afterwards.'
         with self.fix_graph():
-            yield
-            self.database.rebuild()
+            try:
+                yield
+            finally:
+                self.database.rebuild()
 
     @contextmanager
     def fix_graph(self):
@@ -385,8 +387,10 @@ class Session:
 
         You should this contextmanager when calling :func:`insert_song` or :func:`remove_song`.
         '''
-        yield
-        self.database.fix_graph()
+        try:
+            yield
+        finally:
+            self.database.fix_graph()
 
     @property
     def graph(self):

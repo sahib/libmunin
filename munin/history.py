@@ -110,7 +110,7 @@ def association_rules(data, min_confidence=0.5, min_support=2, min_kulc=0.66, ma
                             data, visited, rules, known_rules,
                             support, left, right, min_confidence,
                             min_kulc, max_ir
-                   )
+                    )
                     if item is not None:
                         cap = [item]
                         left, right = left.union(cap), right.difference(cap)
@@ -372,10 +372,17 @@ class RuleIndex:
     def begin_add_many(self):
         '''Contextmanager for adding many songs.
 
+        ::
+
+            >>> with rule_index.begin_add_many():
+            ...    rule_index.insert_rule(...)
+
         Calls :func:`drop_invalid` after some time.
         '''
-        yield
-        self.drop_invalid()
+        try:
+            yield
+        finally:
+            self.drop_invalid()
 
     def drop_invalid(self):
         '''Delete invalid rules from the cache.

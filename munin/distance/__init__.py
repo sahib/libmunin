@@ -32,6 +32,7 @@ class DistanceFunction:
         '''
         self._provider = provider
 
+    # TODO: ' -> "; " -> """
     def __call__(self, list_a, list_b):
         'Shortcut for :func:`compute`'
         return self.compute(list_a, list_b)
@@ -70,7 +71,7 @@ class DistanceFunction:
 
 
 class Distance(SessionMapping):
-    __slots__ = ('_distance')
+    __slots__ = ('distance')
 
     'A **Distance** between two Songs.'
     def __init__(self, session, dist_dict):
@@ -86,7 +87,7 @@ class Distance(SessionMapping):
         # Use only a list internally to save the values.
         # Keys are stored shared in the Session objective.
         SessionMapping.__init__(self, session, dist_dict, default_value=None)
-        self._distance = session._weight(dist_dict)
+        self.distance = session._weight(dist_dict)
 
     def __eq__(self, other):
         return float_cmp(self.distance, other.distance)
@@ -98,15 +99,10 @@ class Distance(SessionMapping):
         return '~{d:f}'.format(d=self.distance)
 
     def __hash__(self):
-        return hash(self._distance)
+        return hash(self.distance)
 
     def __invert__(self):
         return 1.0 - self.distance
-
-    @property
-    def distance(self):
-        'Return the condensed and weighted distance'
-        return self._distance
 
 ###########################################################################
 #                             Import Aliases                              #

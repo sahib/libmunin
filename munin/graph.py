@@ -63,17 +63,18 @@ def neighbors_from_song_sorted(graph, song, n=0):
         # But this way we do not e.g sort the whole 32k list for depth=4 just for one song.
         group_list = list(islice(group, n))
         if len(group_list) > 1:
+            # TODO: Go understand this :)
             group_list.sort(key=lambda tup: tup[0]['song'].distance_get(tup[2]['song']))
 
         # Now hand the new iteration results further.
-        for vx, *_ in group_list:
-            yield vx['song']
+        for vertex, *_ in group_list:
+            yield vertex['song']
             if n is 1:
                 raise StopIteration
             n -= 1
 
 
-def common_recommendations(graph, song_a, song_b, n=10):
+def common_neighbors(graph, song_a, song_b, n=10):
     '''Find the common recommendations between two songs.
 
     This might be useful when we need to base recommendations on more than one song.
@@ -94,7 +95,8 @@ def common_recommendations(graph, song_a, song_b, n=10):
         [song for song, _ in neighbors_from_song(graph, song_b, n=n)]
     ))
 
-    return ((graph.vs[edge.source], graph.vs[edge.target]) for edge in edges)
+    for edge in edges:
+        yield (graph.vs[edge.source]['song'], graph.vs[edge.target]['song'])
 
 
 def recommendations_from_song(graph, rule_index, song, n=20):
@@ -151,8 +153,8 @@ def _recommendations_from_song(graph, rule_index, song, n=20):
 
             # We take the songs in the opposite set of the rule:
             for song in bulk:
-                breadth_first = islice(neighbors_from_song_sorted(graph, song))
-                breadth_first_iters.append(breadth_first, max_n)
+                breadth_first = islice(neighbors_from_song_sorted(graph, song), max_n)
+                breadth_first_iters.append(breadth_first)
 
         # The result set will be build by half
         base_half = islice(neighbors_from_song_sorted(graph, song), 1, n / 2 + 1)
