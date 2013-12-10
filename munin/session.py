@@ -316,17 +316,54 @@ class Session:
     # TODO: Copy docstrings over from database
 
     def feed_history(self, song):
+        '''Feed a single song to the history.
+
+        If the feeded song is not yet in the database,
+        it will be added automatically.
+
+        :param song: The song to feed in the history.
+        '''
         self.database.feed_history(song)
 
     def add_song(self, song, value_mapping):
+        '''Creates a song from value dict and add it to the database.
+
+        The song will be configured to the config values set in the Session.
+
+        :raises: ``KeyError`` if any key in `value_dict` is invalid.
+        :returns: the added song for convinience
+        '''
         song = song_or_uid(self.database, song)
         return self.database.add(song, value_mapping)
 
     def insert_song(self, song, value_mapping):
+        '''Insert a song to the database without doing a rebuild.
+
+        This works by iterating partially over the songlist, trying to find
+        a suitable point to insert it. If a distance to a random song is
+        over ``star_threshold``, also the neighbors of this song is
+        investigated.
+
+        Songs inserted this way tend to have wider connections than normal
+        songs, which may enrich the graph.
+
+        :param value_dict: Same as for :func:`add`.
+        :param star_threshold: Also consider neighbors for songs with a
+                               distance higher than this.
+        :returns: The uid of this new song.
+        '''
         song = song_or_uid(self.database, song)
         return self.database.insert_song(song, value_mapping)
 
     def remove_song(self, song):
+        '''Delete a single song from the graph without rebuilding it.
+
+        Holes that may be created will be tried to be patched by connecting
+        the neighbors to each other.
+
+        :param uid: The uid of the song to delete.
+        :returns: The uid you passed in for convienience.
+        '''
         song = song_or_uid(self.database, song)
         return self.database.remove_song(song.uid)
 
@@ -335,6 +372,9 @@ class Session:
 
     def playcounts(self, n=0):
         return self.database.playcounts(n)
+
+    def find_matching_attributes(self, subset):
+        return self.database.find_matching_attributes(subset)
 
     @contextmanager
     def transaction(self):
@@ -366,9 +406,6 @@ class Session:
     @property
     def listen_history(self):
         return self.database._listen_history
-
-    def find_matching_attributes(self, subset):
-        return self.database.find_matching_attributes(subset)
 
 
 if __name__ == '__main__':

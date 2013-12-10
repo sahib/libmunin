@@ -64,7 +64,7 @@ class Database:
         try:
             return self._song_list[idx]
         except IndexError:
-            raise IndexError('song uid #{} is not valid'.format(idx))
+            raise IndexError('song uid #{} is invalid'.format(idx))
 
     def _current_uid(self):
         if len(self._revoked_uids) > 0:
@@ -81,13 +81,6 @@ class Database:
             return self._playcounts.most_common(n)
 
     def feed_history(self, song):
-        '''Feed a single song to the history.
-
-        If the feeded song is not yet in the database,
-        it will be added automatically.
-
-        :param song: The song to feed in the history.
-        '''
         try:
             self[song.uid]
         except IndexError:
@@ -289,13 +282,6 @@ class Database:
         self._reset_history()
 
     def add(self, value_dict):
-        '''Creates a song from value dict and add it to the database.
-
-        The song will be configured to the config values set in the Session.
-
-        :raises: ``KeyError`` if any key in `value_dict` is invalid.
-        :returns: the added song for convinience
-        '''
         for key, value in value_dict.items():
             try:
                 provider = self._session.provider_for_key(key)
@@ -328,21 +314,6 @@ class Database:
                 last = dist
 
     def insert_song(self, value_dict, star_threshold=0.75):
-        '''Insert a song to the database without doing a rebuild.
-
-        This works by iterating partially over the songlist, trying to find
-        a suitable point to insert it. If a distance to a random song is
-        over ``star_threshold``, also the neighbors of this song is
-        investigated.
-
-        Songs inserted this way tend to have wider connections than normal
-        songs, which may enrich the graph.
-
-        :param value_dict: Same as for :func:`add`.
-        :param star_threshold: Also consider neighbors for songs with a
-                               distance higher than this.
-        :returns: The uid of this new song.
-        '''
         new_song = self._song_list[self.add(value_dict)]
         iterstep = max(1, math.log(len(self._song_list) or 1))
 
@@ -362,14 +333,6 @@ class Database:
         return new_song.uid
 
     def remove_song(self, uid):
-        '''Delete a single song from the graph without rebuilding it.
-
-        Holes that may be created will be tried to be patched by connecting
-        the neighbors to each other.
-
-        :param uid: The uid of the song to delete.
-        :returns: The uid you passed in for convienience.
-        '''
         if len(self._song_list) <= uid:
             raise ValueError('Invalid UID #{}'.format(uid))
 
