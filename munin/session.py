@@ -281,9 +281,9 @@ class Session:
     #                             Recommendations                             #
     ###########################################################################
 
-    def recommend_from_attribute(self, subset, number=20):
+    def recommend_from_attributes(self, subset, number=20):
         song = song_or_uid(self.database, song)
-        return munin.graph.recommendations_from_attribute(
+        return munin.graph.recommendations_from_attributes(
                 subset,
                 self.database,
                 self.database._graph,

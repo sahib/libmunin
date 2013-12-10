@@ -172,7 +172,7 @@ def _recommendations_from_song(graph, rule_index, song, n=20):
                 break
 
 
-def recommendations_from_attribute(subset, database, graph, rule_index, n=20):
+def recommendations_from_attributes(subset, database, graph, rule_index, n=20):
     '''Recommend songs based on a certain attribute.
 
     For example you can search by a certain genre by calling it like this: ::
