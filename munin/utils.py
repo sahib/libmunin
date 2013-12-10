@@ -2,7 +2,9 @@
 # encoding: utf-8
 
 '''
-Commonly utility functions used througout.
+Commonly internally used utility functions.
+
+Some of these might be interesting to you.
 '''
 
 from collections import Mapping

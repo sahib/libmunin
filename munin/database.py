@@ -74,6 +74,12 @@ class Database:
     def playcount(self, song):
         return self._playcounts.get(song, 0)
 
+    def playcounts(self, n=0):
+        if n < 1:
+            return self._playcounts
+        else:
+            return self._playcounts.most_common(n)
+
     def feed_history(self, song):
         '''Feed a single song to the history.
 
@@ -92,6 +98,19 @@ class Database:
             self._rule_index.insert_rules(rules)
 
         self._playcounts[song] += 1
+
+    def find_matching_attributes(self, subset):
+        try:
+            value_set = set()
+            for key, value in subset.items():
+                provider = self._session.provider_for_key(key)
+                value_set.add(provider.process(value))
+
+            for song in self:
+                if all((song[key] in value_set for key in subset.keys())):
+                    yield song
+        except KeyError:
+            raise KeyError('key "{k}" is not in attribute mask'.format(k=key))
 
     def plot(self):
         '''Plot the current graph for debugging purpose.

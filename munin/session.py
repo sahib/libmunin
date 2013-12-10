@@ -281,6 +281,16 @@ class Session:
     #                             Recommendations                             #
     ###########################################################################
 
+    def recommend_from_attribute(self, subset, number=20):
+        song = song_or_uid(self.database, song)
+        return munin.graph.recommendations_from_attribute(
+                subset,
+                self.database,
+                self.database._graph,
+                self.database.rule_index,
+                number
+        )
+
     def recommend_from_seed(self, song, number=20):
         song = song_or_uid(self.database, song)
         return munin.graph.recommendations_from_song(
@@ -293,6 +303,7 @@ class Session:
     def recommend_from_graph(self, song, number=20):
         song = song_or_uid(self.database, song)
         return munin.graph.recommendations_from_graph(
+                self.database,
                 self.database._graph,
                 self.database.rule_index,
                 number
@@ -301,6 +312,8 @@ class Session:
     ###########################################################################
     #                          Proxy Methods                                  #
     ###########################################################################
+
+    # TODO: Copy docstrings over from database
 
     def feed_history(self, song):
         self.database.feed_history(song)
@@ -319,6 +332,9 @@ class Session:
 
     def playcount(self, song):
         return self.database.playcount(song)
+
+    def playcounts(self, n=0):
+        return self.database.playcounts(n)
 
     @contextmanager
     def transaction(self):
@@ -350,6 +366,9 @@ class Session:
     @property
     def listen_history(self):
         return self.database._listen_history
+
+    def find_matching_attributes(self, subset):
+        return self.database.find_matching_attributes(subset)
 
 
 if __name__ == '__main__':
