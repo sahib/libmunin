@@ -190,7 +190,6 @@ def recommendations_from_attributes(subset, database, graph, rule_index, n=20):
         return iter([])
 
 
-# TODO: update
 def recommendations_from_graph(database, graph, rule_index, n=20):
     '''Find n recommendations solely from the graph.
 

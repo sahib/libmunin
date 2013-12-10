@@ -284,6 +284,7 @@ class Session:
     #                             Recommendations                             #
     ###########################################################################
 
+    # TODO: Missing docstrings
     def recommend_from_attributes(self, subset, number=20):
         song = song_or_uid(self.database, song)
         return munin.graph.recommendations_from_attributes(
@@ -315,8 +316,6 @@ class Session:
     ###########################################################################
     #                          Proxy Methods                                  #
     ###########################################################################
-
-    # TODO: Copy docstrings over from database
 
     def feed_history(self, song):
         '''Feed a single song to the history.
@@ -371,12 +370,32 @@ class Session:
         return self.database.remove_song(song.uid)
 
     def playcount(self, song):
+        '''Get the playcount of a song.
+
+        If no playcount is known for it, 0 will be returned.
+
+        :returns: Number of times this song was played.
+        :rtype: int
+        '''
         return self.database.playcount(song)
 
     def playcounts(self, n=0):
+        '''Get all playcounts, or the most common.
+
+        :param n: The number of most  common plays to select. Might be less.
+        :returns: A list of tuples if n > 0, or a Mapping.
+        '''
         return self.database.playcounts(n)
 
     def find_matching_attributes(self, subset):
+        '''Search the database for a subset of the attributes/values in subset.
+
+        Example: ::
+
+            >>> find_matching_attributes({'genre': 'metal', 'artist': 'Debauchery'})
+
+        :returns: A lazy iterator over the matching songs.
+        '''
         return self.database.find_matching_attributes(subset)
 
     @contextmanager
