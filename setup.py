@@ -14,7 +14,7 @@ install_reqs = parse_requirements('pip_requirements.txt')
 
 setup(
     name='libmunin',
-    version='0.1-git',
+    version='0.1.1-git',
     description='Fancy library for music recommendations, based on datamining algorithms',
     long_description=open('README.rst').read(),
     url='http://libmunin-api.readthedocs.org/en/latest/index.html',
