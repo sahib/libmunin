@@ -10,7 +10,7 @@ from bidict import bidict
 
 
 class Provider:
-    '''
+    """
     A Provider transforms (i.e normalizes) a input value
 
     Provider Protocol:
@@ -29,30 +29,30 @@ class Provider:
                 The method that is able to do the transformation.
                 It takes a list of output values and returns a list of
                 input values, or None on failure.
-        '''
+        """
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, compress=False):
-        '''Create a new Provider with the following attributes:
+        """Create a new Provider with the following attributes:
 
         :param compress: Deduplicate data?
-        '''
+        """
         self.compress = compress
         if compress:
             self._store = bidict()
             self._last_id = 0
 
     def __or__(self, other_provider):
-        '''Allows to chain providers by bit oring them.
+        """Allows to chain providers by bit oring them.
 
         Example: ::
 
-            >>> GenreTreeProvider | LancasterStemProvider
-            CompositeProvider(GenreTreeProvider, LancasterStemProvider)
+            >>> WordListProvider | LancasterStemProvider
+            CompositeProvider(WordListProvider, LancasterStemProvider)
 
         If you chain together many providers it is recommended to use only one
         CompositeProvider for speed reasons.
-        '''
+        """
         from munin.provider.composite import CompositeProvider
         return CompositeProvider([self, other_provider])
 
@@ -82,6 +82,7 @@ class Provider:
 #                             Import Aliases                              #
 ###########################################################################
 
+# TODO: Circular imports
 from munin.provider.genre import GenreTreeProvider
 from munin.provider.composite import CompositeProvider
 from munin.provider.stem import LancasterStemProvider, SnowballStemProvider

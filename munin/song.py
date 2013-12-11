@@ -19,7 +19,7 @@ from blist import sortedlist
 class Song(SessionMapping, Hashable):
     # Note: Use __slots__ (sys.getsizeof will report even more memory, but pympler less)
     __slots__ = ('_dist_dict', '_pop_list', '_max_distance', '_max_neighbors', '_hash', '_confidence', 'uid')
-    '''
+    """
     **Overview**
 
     A song is a readonly mapping of keys to values (like a readonly dict).
@@ -36,9 +36,9 @@ class Song(SessionMapping, Hashable):
     .. todo:: Make some numbers up to prove this :-)
 
     **Reference**
-    '''
-    def __init__(self, session, value_dict, max_neighbors=100, max_distance=0.999, default_value=None):
-        '''Creates a Song (a set of attributes) that behaves like a dictionary:
+    """
+    def __init__(self, session, value_dict, max_neighbors=10, max_distance=0.999, default_value=None):
+        """Creates a Song (a set of attributes) that behaves like a dictionary:
 
         :param session: A Session objective (the session this song belongs to)
         :type session: :class:`munin.session.Session`
@@ -51,7 +51,7 @@ class Song(SessionMapping, Hashable):
                              You should try to keep this small (i.e. to only
                              filter 1.0 distances)
         :type max_distance: float
-        '''
+        """
         # Make sure the list is as long as the attribute_mask
         SessionMapping.__init__(
                 self, session,
@@ -64,7 +64,7 @@ class Song(SessionMapping, Hashable):
         d = self._dist_dict
 
         # Make sure bad and nonexisting songs goes to the end:
-        self._pop_list = sortedlist(key=lambda x: d[x])
+        self._pop_list = sortedlist(key=lambda x: ~d[x])
 
         # Settings:
         self._max_neighbors = max_neighbors
@@ -93,18 +93,18 @@ class Song(SessionMapping, Hashable):
     ############################
 
     def neighbors(self):
-        '''Like :func:`distance_iter`, but only return the neighbor song, not the distance'''
+        """Like :func:`distance_iter`, but only return the neighbor song, not the distance"""
         return self._dist_dist.keys()
 
     def distance_compute(self, other_song):
-        '''Compute the distance to another song.
+        """Compute the distance to another song.
 
         This is a method of :class:`Song` and not a static method for convinience.
         If you need a static method do this: ``Song.distance_compute(s1, s2)``.
 
         :param other_song: a :class:`munin.song.Song`
         :returns: A :class:`munin.distance.Distance` with according weighting.
-        '''
+        """
         distance_dict = {}
         common_keys = set(self.keys()).intersection(other_song.keys())
 
@@ -119,7 +119,7 @@ class Song(SessionMapping, Hashable):
         return Distance(self._session, distance_dict)
 
     def distance_add(self, other, distance):
-        '''Add a relation to ``other_song`` with a certain distance.
+        """Add a relation to ``other_song`` with a certain distance.
 
         .. warning::
 
@@ -133,7 +133,7 @@ class Song(SessionMapping, Hashable):
         :type distance: :class:`munin.distance.Distance`
         :returns: *False* if the song was not added because of a bad distance.
                   *True* in any other case.
-        '''
+        """
         if other is self:
             return False
 
@@ -146,16 +146,12 @@ class Song(SessionMapping, Hashable):
             # and why we do not care.
             sdd[other] = odd[self] = distance
             return True
-
         elif distance.distance <= self._max_distance:
             # Check if we still have room left
             if len(sdd) >= self._max_neighbors:
                 # Find the worst song in the dictionary
                 idx = 1
-                pop_list = self._pop_list
-                rev_list = reversed(pop_list)
-                while 1:
-                    worst_song = next(rev_list)
+                for worst_song in self._pop_list:
                     if worst_song in sdd:
                         break
                     idx += 1
@@ -169,7 +165,7 @@ class Song(SessionMapping, Hashable):
                 # BUT: do not delete the connection from worst to self
                 # we create unidir edges here on purpose.
                 del sdd[worst_song]
-                del pop_list[-idx:]
+                del self._pop_list[idx + 1:]
         else:
             return False
 
@@ -194,12 +190,12 @@ class Song(SessionMapping, Hashable):
         self._dist_dict = OrderedDict(sorted(self._dist_dict.items(), key=itemgetter(1)))
 
     def distance_get(self, other_song, default_value=None):
-        '''Return the distance to the song ``other_song``
+        """Return the distance to the song ``other_song``
 
         :param other_song: The song to lookup the relation to.
         :param default_value: The default value to return (default to None)
         :returns: A Distance.
-        '''
+        """
         if self is other_song:
             return self.distance_compute(self)
         else:
@@ -209,20 +205,20 @@ class Song(SessionMapping, Hashable):
         return len(self._dist_dict)
 
     def distance_iter(self):
-        '''Iterate over all distances stored in this song.
+        """Iterate over all distances stored in this song.
 
         Will yield songs with smallest distance first.
 
         :returns: iterable that yields (song, distance) tuples.
         :rtype: generator
-        '''
+        """
         return self._dist_dict.items()
 
     def distance_indirect_iter(self, dist_threshold=1.1):
-        '''Iterate over the indirect neighbors of this song.
+        """Iterate over the indirect neighbors of this song.
 
         :returns: an generator that yields one song at a time.
-        '''
+        """
         # Iterate over the *sorted* set.
         for song, curr_dist in self._dist_dict.items():
             if curr_dist.distance < dist_threshold:
@@ -235,11 +231,11 @@ class Song(SessionMapping, Hashable):
                 break
 
     def disconnect(self):
-        '''Deletes all edges to other songs and tries to fill the resulting hole.
+        """Deletes all edges to other songs and tries to fill the resulting hole.
 
         Filling the hole that may be created is by comparing it's neighbors
         with each other and adding new distances.
-        '''
+        """
         # Step 1: Find new distances:
         neighbors = list(self._dist_dict.keys())
         for neighbor in neighbors:

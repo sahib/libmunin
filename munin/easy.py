@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-'''
+"""
 A "easy" version of the Session object where you do not have to set the attribute mask yourself.
 
 Instead a number of preconfigured number of attributes are selected that
 are know to work well together.
-'''
+"""
 
 from munin.session import Session
 from munin.helper import pairup

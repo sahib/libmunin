@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-'''
+"""
 Methods to traverse the igraph graph in order to do recommendations.
-'''
+"""
 # Stdlib:
 from itertools import chain, islice, groupby
 from collections import deque
@@ -16,7 +16,7 @@ from munin.utils import roundrobin
 
 
 def neighbors_from_song(graph, song, n=0):
-    '''Give `n` recommendations based on a breadth-first search starting on `song`.
+    """Give `n` recommendations based on a breadth-first search starting on `song`.
 
     The given recommendations won't be ordered in any particular way.
     If you want that you should use :func:`neighbors_from_song_sorted`.
@@ -25,7 +25,7 @@ def neighbors_from_song(graph, song, n=0):
     :param song: The start of the breadth-first search.
     :param n: How many songs to return. Might return less songs. If 0, return all.
     :returns: A generator that will yield the next song and it's depth, including `song`.
-    '''
+    """
     # Give us a new breadth first iterator:
     breadth_first = graph.bfsiter(song.uid, advanced=True)
     # print(list(graph.bfsiter(song.uid, advanced=True)))
@@ -39,7 +39,7 @@ def neighbors_from_song(graph, song, n=0):
 
 
 def neighbors_from_song_sorted(graph, song, n=0):
-    '''Mostly like :func:`neighbors_from_song`, but sort results.
+    """Mostly like :func:`neighbors_from_song`, but sort results.
 
     The sorting is done by sorting every individual depth before returning it.
     You should note that this may require sorting large lists for high `n`'s.
@@ -49,7 +49,7 @@ def neighbors_from_song_sorted(graph, song, n=0):
     :param song: The start of the breadth-first search.
     :param n: How many songs to return. Might return less songs. If 0, return all.
     :returns: A generator that will yield a song and the depth, including `song`.
-    '''
+    """
     # Give us a new breadth first iterator:
     breadth_first = graph.bfsiter(song.uid, advanced=True)
     if n is 0:
@@ -66,15 +66,15 @@ def neighbors_from_song_sorted(graph, song, n=0):
             group_list.sort(key=lambda tup: tup[0]['song'].distance_get(tup[2]['song']))
 
         # Now hand the new iteration results further.
-        for vx, *_ in group_list:
-            yield vx['song']
+        for vertex, *_ in group_list:
+            yield vertex['song']
             if n is 1:
                 raise StopIteration
             n -= 1
 
 
-def common_recommendations(graph, song_a, song_b, n=10):
-    '''Find the common recommendations between two songs.
+def common_neighbors(graph, song_a, song_b, n=10):
+    """Find the common recommendations between two songs.
 
     This might be useful when we need to base recommendations on more than one song.
 
@@ -87,18 +87,19 @@ def common_recommendations(graph, song_a, song_b, n=10):
     :param song_b: Other song to base recommendations to.
     :param n: This is forwarded to :func:`neighbors_from_song`
     :returns: a generator that will yield many pairs of songs from each individual set.
-    '''
+    """
     # Get the edges between the stars of song_a and song_b:
     edges = graph.es.select(_between=(
         [song for song, _ in neighbors_from_song(graph, song_a, n=n)],
         [song for song, _ in neighbors_from_song(graph, song_b, n=n)]
     ))
 
-    return ((graph.vs[edge.source], graph.vs[edge.target]) for edge in edges)
+    for edge in edges:
+        yield (graph.vs[edge.source]['song'], graph.vs[edge.target]['song'])
 
 
 def recommendations_from_song(graph, rule_index, song, n=20):
-    '''Give 'n' recommendations based on 'song'.
+    """Give 'n' recommendations based on 'song'.
 
     - Will lookup rules for song.
     - If no rules found, a breadth first search starting with song is
@@ -113,7 +114,7 @@ def recommendations_from_song(graph, rule_index, song, n=20):
     :type song: :class:`munin.song.Song`
     :param n: Deliver so many recommendations (at max.)
     :returns: An iterator that yields recommend songs.
-    '''
+    """
     # Shortcuts:
     if n is 0:
         return iter([])
@@ -151,8 +152,8 @@ def _recommendations_from_song(graph, rule_index, song, n=20):
 
             # We take the songs in the opposite set of the rule:
             for song in bulk:
-                breadth_first = islice(neighbors_from_song_sorted(graph, song))
-                breadth_first_iters.append(breadth_first, max_n)
+                breadth_first = islice(neighbors_from_song_sorted(graph, song), max_n)
+                breadth_first_iters.append(breadth_first)
 
         # The result set will be build by half
         base_half = islice(neighbors_from_song_sorted(graph, song), 1, n / 2 + 1)
@@ -173,7 +174,7 @@ def _recommendations_from_song(graph, rule_index, song, n=20):
 
 
 def recommendations_from_attributes(subset, database, graph, rule_index, n=20):
-    '''Recommend songs based on a certain attribute.
+    """Recommend songs based on a certain attribute.
 
     For example you can search by a certain genre by calling it like this: ::
 
@@ -182,7 +183,7 @@ def recommendations_from_attributes(subset, database, graph, rule_index, n=20):
     The value passed must match fully, no fuzzy matching is performed.
 
     :returns: Recommendations like the others or None if no suitable song found.
-    '''
+    """
     try:
         chosen_song = next(database.find_matching_attributes(keys, values))
         return recommendations_from_song(graph, rule_index, chosen_song, n=n)
@@ -191,7 +192,7 @@ def recommendations_from_attributes(subset, database, graph, rule_index, n=20):
 
 
 def recommendations_from_graph(database, graph, rule_index, n=20):
-    '''Find n recommendations solely from the graph.
+    """Find n recommendations solely from the graph.
 
     This will try to find a good rule, that indicates a user's
     favourite song, and will call :func:`recommendations_from_song` on it.
@@ -199,7 +200,7 @@ def recommendations_from_graph(database, graph, rule_index, n=20):
     If there is none, a random song is picked.
 
     .. seealso: :func:`recommendations_from_song`
-    '''
+    """
     try:
         # Get the best rule from the index
         best_rule = next(iter(rule_index))

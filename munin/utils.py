@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-'''
+"""
 Commonly internally used utility functions.
 
 Some of these might be interesting to you.
-'''
+"""
 
 from collections import Mapping
 from itertools import chain, islice, cycle, zip_longest
@@ -26,7 +26,7 @@ float_cmp = lambda a, b: abs(a - b) < sys.float_info.epsilon
 
 
 def sliding_window(iterable, n=2, step=1):
-    '''Iterate over an iterable with a sliding window of size `n`.
+    """Iterate over an iterable with a sliding window of size `n`.
 
     This works best if len(iterable) can be cheaply calculated.
 
@@ -34,7 +34,7 @@ def sliding_window(iterable, n=2, step=1):
     :param n: The size of the window (max size)
     :param step: How much right shall the window be tranformed with each iteration?
     :returns: a generator that yields slices as windows.
-    '''
+    """
     n2 = n // 2
     for idx in range(0, len(iterable), step):
         fst, snd = idx - n2, idx + n2
@@ -45,13 +45,13 @@ def sliding_window(iterable, n=2, step=1):
 
 
 def centering_window(iterable, n=4, parallel=True):
-    '''Provide an iterator that moves windows slowly towards center of the iterable.
+    """Provide an iterator that moves windows slowly towards center of the iterable.
 
     :param iterable: The iterable to provide an iterator for.
     :param parallel: If False the window move together, if True they move parallel to each other.
     :param n: The size of the window.
     :returns: a generator that yields slices as windows.
-    '''
+    """
     l2 = len(iterable) // 2
     n2 = n // 2
 

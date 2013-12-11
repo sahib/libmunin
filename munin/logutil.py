@@ -28,11 +28,11 @@ UNICODE_ICONS = {
 
 
 def create_logger(name=None, log_file=None, verbosity=logging.DEBUG):
-    '''Create a new Logger configured with moosecat's defaults.
+    """Create a new Logger configured with moosecat's defaults.
 
     :name: A user-define name that describes the logger
     :return: A new logger .
-    '''
+    """
     logger = logging.getLogger(name)
 
     # This is hack to see if this function was already called

@@ -8,17 +8,17 @@ from munin.utils import float_cmp
 
 
 class GenreTreeDistance(DistanceFunction):
-    '''DistanceFunction Calculator for comparing two lists of GenrePaths.
+    """DistanceFunction Calculator for comparing two lists of GenrePaths.
 
     (Lists of GenrePaths as returned by the GenreTree Provider)
-    '''
+    """
     def do_compute(self, lefts, rights):
-        '''Calculate distance between two genre paths by using complete linkage.
+        """Calculate distance between two genre paths by using complete linkage.
 
         :param lefts: A list of Genre Paths.
         :param rights: A list of Genre Paths to compare with.
         :returns: A distance between 0.0 and 1.0 (max diversity.)
-        '''
+        """
         min_dist = 1.0
         for left, right in product(lefts, rights):
             min_dist = min(min_dist, self.compare_single_path(left, right))
@@ -30,10 +30,10 @@ class GenreTreeDistance(DistanceFunction):
         return min_dist
 
     def compare_single_path(self, left, right):
-        '''Compare a single path with another.
+        """Compare a single path with another.
 
         :returns: The ratio of matching numbers divided by max. length of both.
-        '''
+        """
         n = 0.0
         for l, r in zip(left, right):
             if l != r:
