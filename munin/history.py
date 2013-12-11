@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-'''This module implements the history mechanism of libmunin.
-'''
+"""This module implements the history mechanism of libmunin.
+"""
 
 # Stdlib:
 from itertools import chain
@@ -23,12 +23,12 @@ def append_rule(
         data, visited, rules, known_rules, support, left, right,
         min_confidence, min_kulc, max_ir
 ):
-    '''Internal Function. Append a rule if it's good enoguh to `rules`.
+    """Internal Function. Append a rule if it's good enoguh to `rules`.
 
     :param visited: Set of visited pairs.
     :param known_rules: Rules that are known, and do not need to be recaclulated.
     :param support: Support count for this rule.
-    '''
+    """
     visited.add((left, right))
     if not all((right, left, right in data, left in data)):
         return
@@ -64,7 +64,7 @@ def append_rule(
 
 
 def association_rules(data, min_confidence=0.5, min_support=2, min_kulc=0.66, max_ir=0.35):
-    '''Compute strong association rules from the itemset_to_support dict in data.
+    """Compute strong association rules from the itemset_to_support dict in data.
 
     Inspiration for some tricks in this function were take from:
 
@@ -88,7 +88,7 @@ def association_rules(data, min_confidence=0.5, min_support=2, min_kulc=0.66, ma
     :type max_ir: float
     :returns: An iterable with rules.
     :rtype: [(left, right, support, confidence, kulc, ir, rating), ...]
-    '''
+    """
     visited, rules, known_rules = set(), deque(), set()
 
     # Sort data items by their size, large itemsets first:
@@ -124,7 +124,7 @@ def association_rules(data, min_confidence=0.5, min_support=2, min_kulc=0.66, ma
 
 
 class History:
-    '''A History implements a mechanism to store groups of songs together
+    """A History implements a mechanism to store groups of songs together
     that were listened in a certain order.
 
     Songs can be feeded to the history. Songs that were feeded at the same time
@@ -134,15 +134,15 @@ class History:
 
     The whole history can be set to store only a certain amount of groups.
     If new groups are added, the oldest ones are removed.
-    '''
+    """
     def __init__(self, maxlen=100, time_threshold_sec=1200, max_group_size=5):
-        '''Instance a new History object with these settings:
+        """Instance a new History object with these settings:
 
         :param maxlen: Max. number of groups that may be fed to the history.
         :param time_threshold_sec: Time after which a new group is opened, even
                                    if the current group is not yet full.
         :param max_group_size: Max. size of a single group.
-        '''
+        """
         self._buffer = deque(maxlen=maxlen)
         self._current_group = []
         self._time_threshold_sec, self._max_group_size = time_threshold_sec, max_group_size
@@ -152,7 +152,7 @@ class History:
         return chain.from_iterable(self.groups())
 
     def last_time(self):
-        '''Gives the last inserted timestamp, or if empty, the current time'''
+        """Gives the last inserted timestamp, or if empty, the current time"""
         # Check if we have a current group:
         if self._current_group:
             return self._current_group[-1][1]
@@ -161,12 +161,12 @@ class History:
         return time()
 
     def feed(self, song):
-        '''Feed a single song to the History.
+        """Feed a single song to the History.
 
         :param song: The song to add to the listen history.
         :type song: A :class:`munin.song.Song`
         :returns: True if a new group was started.
-        '''
+        """
         # Check if we need to clear the current group:
         exceeds_size = len(self._current_group) >= self._max_group_size
         exceeds_time = abs(time() - self.last_time()) >= self._time_threshold_sec
@@ -181,18 +181,18 @@ class History:
         return exceeds_size or exceeds_time
 
     def clear(self):
-        '''Clear the history fully.
+        """Clear the history fully.
 
         Will be as freshly instantiated afterwards.
-        '''
+        """
         self._buffer.clear()
         self._current_group = []
 
     def groups(self):
-        '''Return an iterator to iterate over all groups in the History.
+        """Return an iterator to iterate over all groups in the History.
 
         :returns: an iterator that yields a list of iteralbes with songs in it.
-        '''
+        """
         iterables = deque()
         for group in self._buffer:
             iterables.append((song for song, _ in group))
@@ -203,23 +203,23 @@ class History:
         return iterables
 
     def count_keys(self):
-        '''Count the key distribution of the songs in the history
+        """Count the key distribution of the songs in the history
 
         Not all songs have all keys set.
         This can be helpful to find often missing data.
 
         :returns: A collections.Counter object with each attribute and their count.
-        '''
+        """
         counter = Counter()
         for song in self:
             counter.update(song.keys())
         return counter
 
     def count_listens(self):
-        '''Count the listens of the songs in the history
+        """Count the listens of the songs in the history
 
         :returns: A collections.Counter object with each song and their count.
-        '''
+        """
         counter = Counter()
         for song in self:
             counter[song] += 1
@@ -232,24 +232,24 @@ class History:
 
 
 class ListenHistory(History):
-    '''A History that holds all recently listened Songs.
-    '''
+    """A History that holds all recently listened Songs.
+    """
     def __init__(self):
         'Sane defaults are chosen for ``History.__init__``'
         History.__init__(self, maxlen=10000, max_group_size=5)
 
     def frequent_itemsets(self, min_support=2):
-        '''Mine frequent item sets (FIM) using the RELIM algorithm.
+        """Mine frequent item sets (FIM) using the RELIM algorithm.
 
         :param min_support: Minimum count of occurences an itemset must have to be returned.
         :returns: A mapping of itemsets to their supportcount.
         :rtype: dict(set=int)
-        '''
+        """
         relim_input = itemmining.get_relim_input(list(self.groups()))
         return itemmining.relim(relim_input, min_support=min_support)
 
     def find_rules(self, itemsets=None, min_support=2, **kwargs):
-        '''Find frequent itemsets and try to find association rules in them.
+        """Find frequent itemsets and try to find association rules in them.
 
         :param itemsets: A itemset-mapping, as returned by :func:`frequent_itemsets`.
                          If None, the current history will be mined.
@@ -258,7 +258,7 @@ class ListenHistory(History):
 
         :returns: An iterable of rules, each rule being a tuple.
         :rtype: [(left, right, support, confidence, kulc, ir), ...]
-        '''
+        """
         if itemsets is None:
             itemsets = self.frequent_itemsets(min_support=min_support)
 
@@ -267,8 +267,8 @@ class ListenHistory(History):
 
 
 class RecommendationHistory(History):
-    '''A History that holds all recently given recommendations.
-    '''
+    """A History that holds all recently given recommendations.
+    """
     def __init__(self):
         'Sane defaults are chosen for ``History.__init__``'
         History.__init__(self, maxlen=100)
@@ -283,7 +283,7 @@ def _sort_by_rating(elem):
 
 
 class RuleIndex:
-    '''A Manager for all known and usable rules.
+    """A Manager for all known and usable rules.
 
     This class offers an Index for all rules, so one can ask
     for all rules that affect a certain song. Additionally
@@ -297,13 +297,13 @@ class RuleIndex:
     is in the index. Also ``__iter__`` is supported, and will yield
     the rules in the index sorted by their Kulczynski measure multiplied
     by their imbalance ratio.
-    '''
+    """
 
     def __init__(self, maxlen=1000):
-        '''Create a new Index with a certain maximal length:
+        """Create a new Index with a certain maximal length:
 
         :param maxlen: Max. number of rules to save, or 0 for no limit.
-        '''
+        """
         self._max_rules = maxlen or 2 ** 100
         self._rule_list = OrderedDict()
         self._rule_dict = defaultdict(set)
@@ -318,23 +318,23 @@ class RuleIndex:
         return reversed(self._rule_pool)
 
     def insert_rules(self, rule_tuples):
-        '''Convienience function for adding many rules at once.
+        """Convienience function for adding many rules at once.
 
         Calls :func:`drop_invalid` when done inserting.
 
         :param rule_tuples: a list of rule tuples.
-        '''
+        """
         with self.begin_add_many():
             for rule in rule_tuples:
                 self.insert_rule(rule, drop_invalid=False)
 
     def insert_rule(self, rule_tuple, drop_invalid=False):
-        '''Add a new rule to the index.
+        """Add a new rule to the index.
 
         :param rule_tuple: The rule to add, coming from :func:`association_rules`.
         :param drop_invalid: If True, delete the first element
                              immediately if index is too large.
-        '''
+        """
         # Step 0: Check if we already know that item.
         if rule_tuple in self:
             return
@@ -358,19 +358,19 @@ class RuleIndex:
                     uid_set.discard(fst_uid)
 
     def lookup(self, song):
-        '''Lookup all rules that would affect a certain song.
+        """Lookup all rules that would affect a certain song.
 
         :param song: The song to lookup.
         :type song: :class:`munin.song.Song`
         :returns: An iterable with all rule_tuples affecting this song.
-        '''
+        """
         for uid in self._rule_dict.get(song, ()):
             if uid in self._rule_list:
                 yield self._rule_list[uid]
 
     @contextmanager
     def begin_add_many(self):
-        '''Contextmanager for adding many songs.
+        """Contextmanager for adding many songs.
 
         ::
 
@@ -378,14 +378,14 @@ class RuleIndex:
             ...    rule_index.insert_rule(...)
 
         Calls :func:`drop_invalid` after some time.
-        '''
+        """
         try:
             yield
         finally:
             self.drop_invalid()
 
     def drop_invalid(self):
-        '''Delete invalid rules from the cache.
+        """Delete invalid rules from the cache.
 
         Often, a large number of rules is added at once.
         For maintaining a valid index, rules that are no longer valid
@@ -393,7 +393,7 @@ class RuleIndex:
 
         With this, the cache is checked for consistenct only once all rules
         were added, which might be a lot faster for many rules.
-        '''
+        """
         # Prune invalid items (if any)
         for uid_set in self._rule_dict.values():
             for uid in list(uid_set):

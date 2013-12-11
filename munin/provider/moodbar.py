@@ -33,7 +33,7 @@ MoodbarDescription = namedtuple('MoodbarDescription', [
         'dominant_colors', 'blackness'
 ])
 
-MoodbarDescription.__repr__ = lambda self: '''\
+MoodbarDescription.__repr__ = lambda self: """\
 Red:
     Histogram: {hist_r}
     Diffsum:   {diff_r}
@@ -51,7 +51,7 @@ Average Maximum: {avg_max}
 Dominant colors:
 
     {dominant_colors}
-'''.format(
+""".format(
     hist_r=self.channels[0].histogram, diff_r=self.channels[0].diffsum,
     hist_g=self.channels[1].histogram, diff_g=self.channels[1].diffsum,
     hist_b=self.channels[2].histogram, diff_b=self.channels[2].diffsum,
@@ -64,7 +64,7 @@ Dominant colors:
 
 
 def compute_moodbar_for_file(audio_file, output_file, print_output=False):
-    '''Call a moodbar process on a certain audio file.
+    """Call a moodbar process on a certain audio file.
 
     :param audio_file: Path to an arbitary audio file.
     :param output_file: Path to where the outputfile shall be written.
@@ -72,7 +72,7 @@ def compute_moodbar_for_file(audio_file, output_file, print_output=False):
 
     :returns: The exit code of the moodbar utility (0 on success).
 
-    '''
+    """
     stdout, stderr = DEVNULL, DEVNULL
     if print_output:
         stdout, stderr = None, None
@@ -84,17 +84,17 @@ def compute_moodbar_for_file(audio_file, output_file, print_output=False):
 
 
 def read_moodbar_values(path):
-    '''Read a vector of RGB triples from a mood-file (as produced by moodbar).
+    """Read a vector of RGB triples from a mood-file (as produced by moodbar).
 
     :param path: The path where the mood file is located.
     :returns: A list of 1000 RGB Triples.
-    '''
+    """
     with open(path, 'rb') as f:
         return [tuple(rgb) for rgb in grouper(f.read(), n=3)]
 
 
 def discretize(chan_r, chan_g, chan_b, n=50):
-    '''Split the list down into blocks and calculate their mean.
+    """Split the list down into blocks and calculate their mean.
     Results in a smaller (original_len / n) list with approximated values.
 
     :param chan_r: Iterable of the red channel
@@ -102,36 +102,36 @@ def discretize(chan_r, chan_g, chan_b, n=50):
     :param chan_b: Iterable of the blue channel
     :param n: How big the block size shall be.
     :returns: A generator that yields the new list lazily.
-    '''
+    """
     # TODO: Make kittehs eyes bleed less.
     for gr, gg, gb in zip(*(grouper(c, n) for c in (chan_r, chan_g, chan_b))):
         yield sum(gr) / n, sum(gg) / n, sum(gb) / n
 
 
 def histogram(channel, bin_width=51):
-    '''Calculate a histogram (i.e. a binned counter of elements) of an iterable.
+    """Calculate a histogram (i.e. a binned counter of elements) of an iterable.
 
     :param channel: The channel to consider.
     :param bin_width: The width of each bin (255 / bin_width == 0!)
     :returns: a list of binned values (len = 255 / bin_width)
-    '''
+    """
     hist = Histogram(bin_width=bin_width, data=channel)
     return [value for s, e, value in hist.bins()]
 
 
 def extract(vector, chan_idx):
-    '''Extract a certain channel from an iterable of rgb triples.
+    """Extract a certain channel from an iterable of rgb triples.
 
     :param vector: The vector with rgb triples.
     :param chan_idx: The idx of the desired channel
     :returns: A flat list with the single values
-    '''
+    """
     f = itemgetter(chan_idx)
     return [f(rgb) for rgb in vector]
 
 
 def find_dominant_colors(vector, samples, roundoff=17):
-    '''Find the most dominant colors in the vector.
+    """Find the most dominant colors in the vector.
 
     :param vector: The vector of rgb triples.
     :param samples: How many dominant colors to find.
@@ -140,7 +140,7 @@ def find_dominant_colors(vector, samples, roundoff=17):
 
     :returns: A list with the dominant colors (max len is samples)
               and the percent of black colors as integer.
-    '''
+    """
     blackness_count, result = 0, []
     data = [tuple([int(v / roundoff) * roundoff for v in rgb]) for rgb in vector]
 
@@ -155,12 +155,12 @@ def find_dominant_colors(vector, samples, roundoff=17):
 
 
 def process_moodbar(vector, samples=25):
-    '''Turn a moodbar vector into a :class:`MoodbarDescription`.
+    """Turn a moodbar vector into a :class:`MoodbarDescription`.
 
     :param vector: The vector of RGB tuples.
     :param samples: How many samples shall be taken, low amountscolor  are faster.
     :returns: a :class:`MoodbarDescription` with all values set.
-    '''
+    """
     # Extract the separate channels:
     chan_r, chan_g, chan_b = (extract(vector, chan) for chan in range(3))
     hist_r, hist_g, hist_b = histogram(chan_r), histogram(chan_g), histogram(chan_b)
@@ -215,20 +215,20 @@ def process_moodbar(vector, samples=25):
 
 
 class MoodbarProvider(Provider):
-    '''Basic Moodbar Provider.
+    """Basic Moodbar Provider.
 
     Takes a vector of RGB Tuples.
-    '''
+    """
     def do_process(self, vector):
         'Subclassed from Provider, will be called for you on the input.'
         return tuple([process_moodbar(vector)])
 
 
 class MoodbarMoodFileProvider(MoodbarProvider):
-    '''Moodbar Provider for pre computed mood files.
+    """Moodbar Provider for pre computed mood files.
 
     Takes a path to a mood file.
-    '''
+    """
     def do_process(self, mood_file_path):
         try:
             vector = read_moodbar_values(mood_file_path)
@@ -238,12 +238,12 @@ class MoodbarMoodFileProvider(MoodbarProvider):
 
 
 class MoodbarAudioFileProvider(MoodbarMoodFileProvider):
-    '''Moodbar Provider for audio files.
+    """Moodbar Provider for audio files.
 
     Takes a path to an arbitary audio file.
     Will look for audio_file_path + '.mood' before computing it.
     Resulting mood file will be stored in the same path.
-    '''
+    """
     def do_process(self, audio_file_path):
         mood_file_path = audio_file_path + '.mood'
         if not os.path.exists(mood_file_path):

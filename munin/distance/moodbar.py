@@ -7,22 +7,22 @@ from math import sqrt
 
 
 class MoodbarDistance(DistanceFunction):
-    '''Distance Function that compares two MoodbarDescriptions.
+    """Distance Function that compares two MoodbarDescriptions.
 
     This DistanceFunction works with the following providers:
 
         * :class:`munin.provider.moodbar.MoodbarProvider`
         * :class:`munin.provider.moodbar.MoodbarMoodFileProvider`
         * :class:`munin.provider.moodbar.MoodbarAudioFileProvider`
-    '''
+    """
     def do_compute(self, lefts, rights):
-        '''Compute the distance between two moodbar desc
+        """Compute the distance between two moodbar desc
 
         Only the first element in the individual lists is used.
 
         :param lefts: Packed left moodbar description.
         :param rights: Packed right moodbar description.
-        '''
+        """
         if not (lefts and rights):
             return 1.0
 

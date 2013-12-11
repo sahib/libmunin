@@ -20,7 +20,7 @@ import igraph
 class Database:
     'Class managing Database concerns.'
     def __init__(self, session):
-        '''Usually you access this as ``.database`` attribute of
+        """Usually you access this as ``.database`` attribute of
         :class:`munin.session.Session`.
 
         You can do the following tasks with it:
@@ -34,7 +34,7 @@ class Database:
 
             The division of :class:`munin.session.Session` and :class:`Database`
             is purely cosmetical. Both classes cannot exist on its own.
-        '''
+        """
         self._session = session
         self._song_list = []
         self._graph = igraph.Graph()
@@ -55,11 +55,11 @@ class Database:
         return len(self._song_list) - len(self._revoked_uids)
 
     def __getitem__(self, idx):
-        '''Lookup a certain song by it's uid.
+        """Lookup a certain song by it's uid.
 
         :param uid: A uid previously given by
         :returns: a :class:`munin.song.Song`, which is a read-only mapping of normalized attributes.
-        '''
+        """
         try:
             return self._song_list[idx]
         except IndexError:
@@ -105,10 +105,10 @@ class Database:
             raise KeyError('key "{k}" is not in attribute mask'.format(k=key))
 
     def plot(self):
-        '''Plot the current graph for debugging purpose.
+        """Plot the current graph for debugging purpose.
 
         Will try to open an installed image viewer.
-        '''
+        """
         visual_style = {}
         visual_style['vertex_label'] = [str(vx['song'].uid) for vx in self._graph.vs]
 
@@ -138,7 +138,7 @@ class Database:
         igraph.plot(self._graph, **visual_style)
 
     def _rebuild_step_base(self, mean_counter, window_size=60, step_size=20):
-        '''Do the Base Iterations.
+        """Do the Base Iterations.
 
         This involves three iterations:
 
@@ -150,7 +150,7 @@ class Database:
         :param mean_counter: A RunningMean counter to sample the initial mean/sd
         :param window_size: The max. size of the window in which combinations are taken.
         :param step_size: The movement of the window per iteration.
-        '''
+        """
         # Base Iteration:
         slider = sliding_window(self, window_size, step_size)
         center = centering_window(self, window_size // 2)
@@ -175,13 +175,13 @@ class Database:
                     mean_counter.add(distance.distance)
 
     def _rebuild_step_refine(self, mean_counter, num_passes, mean_scale=2):
-        '''Do the refinement step.
+        """Do the refinement step.
 
         .. seealso:: :func:`rebuild`
 
         :param mean_counter: RunningMean Counter
         :param num_passes: How many times the song list shall be iterated.
-        '''
+        """
         # Prebind the functions for performance reasons:
         add = Song.distance_add
         compute = Song.distance_compute
@@ -222,14 +222,14 @@ class Database:
         print()
 
     def _rebuild_step_build_graph(self):
-        '''Built an actual igraph.Graph from the songlist.
+        """Built an actual igraph.Graph from the songlist.
 
         This is done by iteration over the songlist and gathering all
         deduplicated edges.
 
         The resulting graph will be stored in self._graph and will have
         len(self._song_list) vertices.
-        '''
+        """
         # Create the actual graph:
         self._graph = igraph.Graph(directed=False)
 
@@ -255,10 +255,10 @@ class Database:
         self._graph.add_edges(set(edge_set))
 
     def rebuild(self, window_size=60, step_size=20, refine_passes=25):
-        '''Rebuild all distances and the associated graph.
+        """Rebuild all distances and the associated graph.
 
         This will be triggered for you automatically after a transaction.
-        '''
+        """
         # Average and Standard Deviation Counter:
         mean_counter = igraph.statistics.RunningMean()
 

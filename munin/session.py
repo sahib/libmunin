@@ -1,7 +1,7 @@
 #q!/usr/bin/env python
 # encoding: utf-8
 
-''':class:`Session` is the main entrance to using libmunin.
+""":class:`Session` is the main entrance to using libmunin.
 
 It implements a caching layer around the lower level API, being able to
 save a usage-*Session* for later re-use. The session data will be saved packed
@@ -10,7 +10,7 @@ on disk as a .gzip archive.
 Apart from this it holds the **Attribute Mask** - in simple words:
 the part where you tell libmunin what data you have to offer and how
 you want to configure the processing of it.
-'''
+"""
 
 # Standard:
 from shutil import rmtree
@@ -42,7 +42,7 @@ def check_or_mkdir(path):
 
 
 def get_cache_path(extra_name=None):
-    '''Tries to find out the XDG caching path of your system.
+    """Tries to find out the XDG caching path of your system.
 
     This is done preferrably with PyXDG. If it's not installed,
     we try the XDG_CACHE_HOME environment variable or default to ~/.cache/
@@ -51,7 +51,7 @@ def get_cache_path(extra_name=None):
 
     :param extra_name: Extra path component to append to the path (or None).
     :returns: The full path, e.g.: /home/user/.cache/libmunin/<extra_name>
-    '''
+    """
     if HAS_XDG and 0:
         base_dir = BaseDirectory.xdg_cache_home
     else:
@@ -70,7 +70,7 @@ DEFAULT_CONFIG = {
 }
 
 
-DefaultConfig = type('DefaultConfig', (), dict(DEFAULT_CONFIG, __doc__='''
+DefaultConfig = type('DefaultConfig', (), dict(DEFAULT_CONFIG, __doc__="""
 Example: ::
 
     >>> from munin.session import DefaultConfig as default
@@ -90,20 +90,20 @@ The sole purpose of this class is to save a bit of typing.
 
     It is possible to mutate the DEFAULT_CONFIG dict to have the same defaults
     for every session.
-'''
+"""
 ))
 
 
 class Session:
-    '''Main API to *libmunin* and caching layer.'''
+    """Main API to *libmunin* and caching layer."""
     def __init__(self, name, attribute_mask, path=None, config=None):
-        '''Create a new session:
+        """Create a new session:
 
         :param name: The name of the session. Used to load it again from disk.
         :param attribute_mask: The attribute mask. See :term:`AttributeMask`
         :param path: The directory to store the sessions in. If none XDG_CACHE_HOME is used.
         :param config: A dictionary with config values. See :class`DEFAULT_CONFIG` for available keys.
-        '''
+        """
         self._config = config or DEFAULT_CONFIG
         self._path = os.path.join(path, name) if path else get_cache_path(name)
 
@@ -233,7 +233,7 @@ class Session:
 
     @staticmethod
     def from_archive_path(full_path):
-        '''Load a cached session from a file on the disk.
+        """Load a cached session from a file on the disk.
 
         Example usage: ::
 
@@ -249,7 +249,7 @@ class Session:
         :type full_path: str
         :returns: A cached session.
         :rtype: :class:`Session`
-        '''
+        """
         # TODO: test if zip makes any sense
         base_path, _ = os.path.splitext(full_path)
         with tarfile.open(full_path, 'r:*') as tar:
@@ -260,21 +260,21 @@ class Session:
 
     @staticmethod
     def from_name(session_name):
-        '''Like :func:`from_archive_path`, but be clever and load it
+        """Like :func:`from_archive_path`, but be clever and load it
         from *${XDG_CACHE_HOME}/libmunin/<session_name>/session.pickle*
 
         :param session_name: The name of a session.
         :type session_name: str
         :returns: A cached session.
         :rtype: :class:`Session`
-        '''
+        """
         return Session.from_archive_path(get_cache_path(session_name))
 
     def save(self, compress=True):
-        '''Save the session (and all caches) to disk.
+        """Save the session (and all caches) to disk.
 
         :param compress: Compress the resulting folder with **gzip**?
-        '''
+        """
         with open(os.path.join(self._path, 'session.pickle'), 'wb') as handle:
             pickle.dump(self, handle)
 
@@ -321,13 +321,13 @@ class Session:
     ###########################################################################
 
     def feed_history(self, song):
-        '''Feed a single song to the history.
+        """Feed a single song to the history.
 
         If the feeded song is not yet in the database,
         it will be added automatically.
 
         :param song: The song to feed in the history.
-        '''
+        """
         self.database.feed_history(song)
 
     def add(self, value_mapping):
@@ -341,32 +341,32 @@ class Session:
         return self.database.remove(song.uid)
 
     def playcount(self, song):
-        '''Get the playcount of a song.
+        """Get the playcount of a song.
 
         If no playcount is known for it, 0 will be returned.
 
         :returns: Number of times this song was played.
         :rtype: int
-        '''
+        """
         return self.database.playcount(song)
 
     def playcounts(self, n=0):
-        '''Get all playcounts, or the most common.
+        """Get all playcounts, or the most common.
 
         :param n: The number of most  common plays to select. Might be less.
         :returns: A list of tuples if n > 0, or a Mapping.
-        '''
+        """
         return self.database.playcounts(n)
 
     def find_matching_attributes(self, subset):
-        '''Search the database for a subset of the attributes/values in subset.
+        """Search the database for a subset of the attributes/values in subset.
 
         Example: ::
 
             >>> find_matching_attributes({'genre': 'metal', 'artist': 'Debauchery'})
 
         :returns: A lazy iterator over the matching songs.
-        '''
+        """
         return self.database.find_matching_attributes(subset)
 
     @contextmanager
@@ -380,13 +380,13 @@ class Session:
 
     @contextmanager
     def fix_graph(self):
-        '''Fix the previosuly rebuild graph.
+        """Fix the previosuly rebuild graph.
 
         This means checking if unsorted distances can be found (which should not happend)
         and checking if unidirectional edges can be found (which get deleted).
 
         You should this contextmanager when calling :func:`insert_song` or :func:`remove_song`.
-        '''
+        """
         try:
             yield
         finally:

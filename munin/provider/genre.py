@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-'''
+"""
 Overview
 --------
 
@@ -40,7 +40,7 @@ with 2-3 elements.
 
 Reference
 ---------
-'''
+"""
 
 import urllib.request
 import pickle
@@ -56,14 +56,14 @@ from munin.session import get_cache_path, check_or_mkdir
 
 
 def load_genrelist_from_echonest(dump_path=None):
-    '''Try yo load a list of genres from echonest (with libglyr's APIKEY)
+    """Try yo load a list of genres from echonest (with libglyr's APIKEY)
 
     This requires a working internet connection obviously.
 
     :param dump_path: Pickle the list under this path.
     :type dump_path: string
     :returns: a list with ~700 genres.
-    '''
+    """
     URL = 'http://developer.echonest.com/api/v4/artist/list_genres?api_key=ZSIUEIVVZGJVJVWIS&format=json'
     json_file = json.loads(urllib.request.urlopen(URL).read().decode('utf-8'))
     genres = [pair['name'] for pair in json_file['response']['genres']]
@@ -76,37 +76,37 @@ def load_genrelist_from_echonest(dump_path=None):
 
 
 class Tree:
-    '''
+    """
     Modelling a Tree of Genres. Each Tree can be a Node (no children) or
     can contain subgenres.
-    '''
+    """
 
     def __init__(self, genre, children=None):
-        '''
+        """
         :param genre: The genre.
         'param children: A list of children.'
-        '''
+        """
         self.genre = genre
         self.children = children or []
         self._index = {}
 
     def build_index_recursively(self):
-        '''Build a index of self.children (the stemmed genre being the key)'''
+        """Build a index of self.children (the stemmed genre being the key)"""
         self.children.sort(key=lambda elem: elem.genre)
         for idx, child in enumerate(self.children):
             self._index[STEMMER.stemWord(child.genre)] = idx
             child.build_index_recursively()
 
     def add(self, child):
-        '''Add a new child to this node. (child must be Tree)
+        """Add a new child to this node. (child must be Tree)
         If you want to call find() you gonna need to call build_index_recursively()
-        '''
+        """
         self.children.append(child)
 
     def remove(self, child):
-        '''Remove a child from the childrens list.
+        """Remove a child from the childrens list.
         If you want to call find() you gonna need to call build_index_recursively()
-        '''
+        """
         self.children.remove(child)
 
     def resolve_path(self, path):
@@ -118,40 +118,40 @@ class Tree:
         return (child.genre, ) + child.resolve_path(other)
 
     def find_linear(self, genre):
-        '''Linear scan of the childrens list.
+        """Linear scan of the childrens list.
 
         Works also when build_index_recursively() was not called yet.
         Only used during tree buildup, since this is quite expansive.
 
         :param genre: The unstemmed genre to search for
         :returns: a tree child
-        '''
+        """
         for child in self.children:
             if child.genre == genre:
                 return child
 
     def find_idx(self, genre):
-        '''Find a child node's index by it's stemmed genre
+        """Find a child node's index by it's stemmed genre
 
         As a prerequesite build_index_recursively must have been called before,
         and no other add or remove operation must have happened.
 
         :param genre: The stemmed genre.
         :returns: The idx of the desired child in self.children
-        '''
+        """
         # _index is a mapping <stem(genre), index_in_self.children)
         return self._index.get(genre)
 
     def print_tree(self, _tabs=1, _idx=0):
-        '''Recursively print the Tree with indentation and the stemmed variation.
-        '''
+        """Recursively print the Tree with indentation and the stemmed variation.
+        """
         print('    ' * _tabs, '#' + str(_idx), self.genre, STEMMER.stemWord(self.genre).join(('[', ']')))
         for idx, child in enumerate(self.children):
             child.print_tree(_tabs=_tabs + 1, _idx=idx)
 
 
 def unflatten_list(root):
-    '''Takes a list of genres stored in root.children and splits them up.
+    """Takes a list of genres stored in root.children and splits them up.
 
     Example:
 
@@ -174,7 +174,7 @@ def unflatten_list(root):
 
     :param child: Any Node that has subgenres that need to be split.
     :returns: True if at least one successful split was done.
-    '''
+    """
     genre_mapping = {}
     was_flattened = False
 
@@ -194,19 +194,19 @@ def unflatten_list(root):
 
 
 def recursive_unflatten_list(root):
-    '''Recursively calls unflatten_list on root until all nodes are unflattened.
-    '''
+    """Recursively calls unflatten_list on root until all nodes are unflattened.
+    """
     if unflatten_list(root):
         for child in root.children:
             recursive_unflatten_list(child)
 
 
 def build_genre_tree():
-    '''Buildup the genre Tree. On the first run the initial list will be downloaded
+    """Buildup the genre Tree. On the first run the initial list will be downloaded
     from echonest and cached for later reuse.
 
     :returns: The root node of the Genre tree.
-    '''
+    """
     # Add a caching layer:
     dump_path = '/tmp/genre_list.dump'
     try:
@@ -258,10 +258,10 @@ def build_genre_tree():
 
 
 def prepare_single_genre(genre):
-    '''Prepare a single genre from a genre list by cleaning and stemming it
+    """Prepare a single genre from a genre list by cleaning and stemming it
 
     :returns: A list of single words in the genre description.
-    '''
+    """
     return list(filter(
         lambda elem: elem != '-',
         [STEMMER.stemWord(g.lower()) for g in re.split('(core|[\s-])', genre) if g.strip()]
@@ -269,7 +269,7 @@ def prepare_single_genre(genre):
 
 
 def prepare_genre_list(genre):
-    '''Split a multi genre description into several single genre descriptions.
+    """Split a multi genre description into several single genre descriptions.
 
     Example: ::
 
@@ -279,7 +279,7 @@ def prepare_genre_list(genre):
     You should call prepare_single_genre() on every result.
 
     :returns: A list with single genre descriptions.
-    '''
+    """
     regex = '(\s&\s|[/,;])'
     dirty_subs = [sub_genre.strip() for sub_genre in re.split(regex, genre)]
     return list(filter(lambda elem: elem not in regex, dirty_subs))
@@ -290,9 +290,9 @@ def prepare_genre_list(genre):
 ###########################################################################
 
 def build_genre_path_single(root, words):
-    '''Try to map a list of genre words to a path in the tree.
+    """Try to map a list of genre words to a path in the tree.
 
-    '''
+    """
     current_node = root
     path = []
     words = list(reversed(words))
@@ -314,10 +314,10 @@ def build_genre_path_single(root, words):
 
 
 def build_genre_path_best_of_two(root, words):
-    '''Like build_genre_path_single() but try also the reverse order of the wordlist.
+    """Like build_genre_path_single() but try also the reverse order of the wordlist.
 
     This sometimes gives better results. It will return the longest path found.
-    '''
+    """
     fst_try = build_genre_path_single(root, words)
     words.reverse()
     snd_try = build_genre_path_single(root, words)
@@ -325,11 +325,11 @@ def build_genre_path_best_of_two(root, words):
 
 
 def build_genre_path_all(root, words):
-    '''Get a list of all possible matching genre buildable with the wordlist.
+    """Get a list of all possible matching genre buildable with the wordlist.
 
     This is by far more expensive than build_genre_path_single, but will get you
     the best results.
-    '''
+    """
     path_list = []
 
     def _iterate_recursive(current_root, _mask, _result):
@@ -361,14 +361,14 @@ def build_genre_path_all(root, words):
 
 
 def load_genre_tree(pickle_path):
-    '''Load the genre by either (in this order):
+    """Load the genre by either (in this order):
 
         1) Load it from a locally pickled file as given by pickle_path
         2) Load a list of genres from 'genre_list.dump' and build up the tree.
         3) Load a list of genres from echonest.com and build up the tree.
 
     :returns: The head of the tree.
-    '''
+    """
     # Load the tree from the disk or rebuild it:
     try:
         with open(pickle_path, 'rb') as fh:
@@ -392,7 +392,7 @@ def load_genre_tree(pickle_path):
 class GenreTreeProvider(Provider):
     'Normalize a genre by matching it agains precalculated Tree of sub genres'
     def __init__(self, quality='all', compress=False):
-        '''Creates a GenreTreeProvider with a certain quality.
+        """Creates a GenreTreeProvider with a certain quality.
 
         A GenreTreeProvider will try to normalize a genre by using a Tree of
         705 single genres that will be matched with the input genre in a fast way.
@@ -416,7 +416,7 @@ class GenreTreeProvider(Provider):
 
         :param quality: One of ``all``, ``best_two``  ``single`` [*default:* ``all``]
         :type quality: String
-        '''
+        """
         Provider.__init__(self, compress=compress)
         self._root = load_genre_tree(get_cache_path('genre_tree.dump'))
         self._build_func = {
@@ -434,11 +434,11 @@ class GenreTreeProvider(Provider):
         return tuple(result)
 
     def reverse(self, output_values):
-        '''Translate the paths in output_values back to genre strings.
+        """Translate the paths in output_values back to genre strings.
 
         :returns:  A list of genre strings.
         :rtype: [str]
-        '''
+        """
         results = []
         for output_value in output_values:
             val = (' '.join(reversed(self.resolve_path(p))) for p in output_value)
@@ -446,7 +446,7 @@ class GenreTreeProvider(Provider):
         return tuple(results)
 
     def resolve_path(self, path):
-        '''Resolve a path like: ::
+        """Resolve a path like: ::
 
             (197, 1, 0)
 
@@ -466,7 +466,7 @@ class GenreTreeProvider(Provider):
         :type path: tuple of ints
         :returns: A list of subgenres ordered by specialization.
         :rtype: list of strings
-        '''
+        """
         return self._root.resolve_path(path)
 
 

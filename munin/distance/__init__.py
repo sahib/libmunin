@@ -21,7 +21,7 @@ class DistanceFunction:
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, provider):
-        '''This class is supposed to be overriden, but can also be used
+        """This class is supposed to be overriden, but can also be used
         as fallback.
 
         ``__call__`` is implemented as shortcut to :func:`compute`
@@ -29,7 +29,7 @@ class DistanceFunction:
         :type provider: instance of :class:`munin.provider.Provider`
         :param name: Name of the DistanceFunction (used for display)
         :type name: String.
-        '''
+        """
         self._provider = provider
 
     # TODO: ' -> "; " -> """
@@ -50,13 +50,13 @@ class DistanceFunction:
 
     @abc.abstractmethod
     def do_compute(self, list_a, list_b):
-        '''Compare both lists with eq by default.
+        """Compare both lists with eq by default.
 
         This goes through both lists and counts the matching elements.
         The lists are sorted in before.
 
         :return: Number of matches divivded through the max length of both lists.
-        '''
+        """
         # Default to max. diversity:
         n_max = max(len(list_a), len(list_b))
         if n_max is 0:
@@ -75,7 +75,7 @@ class Distance(SessionMapping):
 
     'A **Distance** between two Songs.'
     def __init__(self, session, dist_dict):
-        '''A Distance saves the distances created by providers and boil it down
+        """A Distance saves the distances created by providers and boil it down
         to a single distance float by weighting the individual distances of each
         song's attributes and building the average of it.
 
@@ -83,7 +83,7 @@ class Distance(SessionMapping):
         :type session: Instance of :class:`munin.session.Session`
         :param dist_dict: A mapping to read the distance values from.
         :type dist_dict: mapping<str, float>
-        '''
+        """
         # Use only a list internally to save the values.
         # Keys are stored shared in the Session objective.
         SessionMapping.__init__(self, session, dist_dict, default_value=None)

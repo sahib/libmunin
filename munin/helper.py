@@ -30,17 +30,17 @@ ALLOWED_FORMATS = ['mpc', 'mp4', 'mp3', 'flac', 'wav', 'ogg', 'm4a', 'wma']
 
 
 class AudioFileWalker:
-    '''File Iterator that yields all files with a specific ending.
-    '''
+    """File Iterator that yields all files with a specific ending.
+    """
     def __init__(self, base_path, extensions=ALLOWED_FORMATS):
-        '''There ist a list of default extensions in
+        """There ist a list of default extensions in
         ``munin.helpers.ALLOWED_FORMATS`` with the most common formats.
 
         This class implements ``__iter__``, so you just can start using it.
 
         :param base_path: Recursively seach files in this path.
         :param extensions: An iterable of extensions that are allowed.
-        '''
+        """
         self._base_path = base_path
         self._extension = set(extensions)
 
@@ -57,7 +57,7 @@ class AudioFileWalker:
 ###########################################################################
 
 def song_or_uid(database, song_or_uid):
-    '''Takes a song or the uid of it and return the song.
+    """Takes a song or the uid of it and return the song.
 
     This function is purely for your convinience,
     you can always use :func:`munin.database.Database.__getitem__`
@@ -65,14 +65,14 @@ def song_or_uid(database, song_or_uid):
     :param database: Database to lookup uid from.
     :raises: IndexError on invalid uid.
     :returns: A :class:`munin.song.Song` in any case.
-    '''
+    """
     if hasattr(song_or_uid, 'uid'):
         return song_or_uid
     return database[song_or_uid]
 
 
 def pairup(provider, distance_function, weight):
-    '''Convienience function for easy attribute mask building.
+    """Convienience function for easy attribute mask building.
 
     Every distance function needs to know the provider that processed the value.
     This is needed to implement the compress functionality. In order to stop you
@@ -88,7 +88,7 @@ def pairup(provider, distance_function, weight):
         >>> {'artist': pairup(Provider(), DistanceFunction(), 0.5)}
 
     This function will set the provider in the DistanceFunction for you.
-    '''
+    """
     if distance_function is not None:
         distance_function._provider = provider
     return (provider, distance_function, weight)
