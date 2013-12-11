@@ -82,4 +82,4 @@ if __name__ == '__main__':
 
     # Disabled for now, since we'd need to import it on TravisCI
     # and the PyPi package simply does not work for Py3.
-    unittest.main()
+    # unittest.main()
