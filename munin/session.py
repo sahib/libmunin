@@ -29,6 +29,9 @@ try:
 except ImportError:
     HAS_XDG = False
 
+from bidict import bidict
+
+
 # Internal:
 from munin.database import Database
 from munin.helper import song_or_uid
@@ -96,16 +99,15 @@ The sole purpose of this class is to save a bit of typing.
 
 class Session:
     """Main API to *libmunin* and caching layer."""
-    def __init__(self, name, attribute_mask, path=None, config=None):
+    def __init__(self, name, attribute_mask, config=None):
         """Create a new session:
 
         :param name: The name of the session. Used to load it again from disk.
         :param attribute_mask: The attribute mask. See :term:`AttributeMask`
-        :param path: The directory to store the sessions in. If none XDG_CACHE_HOME is used.
         :param config: A dictionary with config values. See :class`DEFAULT_CONFIG` for available keys.
         """
         self._config = config or DEFAULT_CONFIG
-        self._path = os.path.join(path, name) if path else get_cache_path(name)
+        self._name = name
 
         # Make access to the attribute mask more efficient
         self._attribute_mask = copy(attribute_mask)
@@ -141,27 +143,19 @@ class Session:
         # Sum of the individual weights, pre-calculated once.
         self._weight_sum = sum((descr[2] for descr in attribute_mask.values()))
 
-        # Needed for later saving
-        self._create_file_structure(self._path)
-
         # Create the associated database.
         self._database = Database(self)
 
         # Publicly readable attribute.
-        self.mapping = {}
+        self.mapping = bidict()
 
     def __getitem__(self, idx):
         return self.database[idx]
 
-    def _create_file_structure(self, path):
-        if os.path.isfile(path):
-            os.remove(path)
-        if os.path.isdir(path):
-            rmtree(path, ignore_errors=True)
-
-        os.mkdir(path)
-        for subdir in ['distances', 'providers', 'rules']:
-            os.mkdir(os.path.join(path, subdir))
+    @property
+    def name(self):
+        'Return the name you passed to the session'
+        return self._name
 
     @property
     def database(self):
@@ -269,18 +263,26 @@ class Session:
         """
         return Session.from_archive_path(get_cache_path(session_name))
 
-    def save(self, compress=True):
+    def save(self, path=None, compress=True):
         """Save the session (and all caches) to disk.
 
+        :param path: Where to save the session in. If none XDG_CACHE_HOME is used.
         :param compress: Compress the resulting folder with **gzip**?
         """
-        with open(os.path.join(self._path, 'session.pickle'), 'wb') as handle:
+        path = os.path.join(path, self.name) if path else get_cache_path(self.name)
+        if os.path.isfile(path):
+            os.remove(path)
+        if os.path.isdir(path):
+            rmtree(path, ignore_errors=True)
+        os.mkdir(path)
+
+        with open(os.path.join(path, 'session.pickle'), 'wb') as handle:
             pickle.dump(self, handle)
 
-        with tarfile.open(self._path + '.gz', 'w:gz') as tar:
-            tar.add(self._path, arcname='')
+        with tarfile.open(path + '.gz', 'w:gz') as tar:
+            tar.add(path, arcname='')
 
-        shutil.rmtree(self._path)
+        shutil.rmtree(path)
 
     ###########################################################################
     #                             Recommendations                             #
@@ -306,8 +308,7 @@ class Session:
                 number
         )
 
-    def recommend_from_graph(self, song, number=20):
-        song = song_or_uid(self.database, song)
+    def recommend_from_graph(self, number=20):
         return munin.graph.recommendations_from_graph(
                 self.database,
                 self.database._graph,
@@ -412,10 +413,10 @@ if __name__ == '__main__':
             self._session = Session('session_test', {
                 'genre': (None, None, 0.2),
                 'artist': (None, None, 0.3)
-            }, path='/tmp')
+            })
 
         def test_writeout(self):
-            self._session.save()
+            self._session.save('/tmp')
             path = '/tmp/session_test.gz'
             self.assertTrue(os.path.isfile(path))
             new_session = Session.from_archive_path(path)

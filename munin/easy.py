@@ -32,6 +32,10 @@ from munin.distance import GenreTreeDistance
 #    WordListDistance
 
 class EasySession(Session):
+    @staticmethod
+    def from_name():
+        return Session.from_name('EasySession')
+
     def __init__(self, name='EasySession'):
         Session.__init__(self, name, {
             'artist': pairup(

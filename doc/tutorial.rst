@@ -41,7 +41,7 @@ frontpage. But let's go through it more detailed this time.
 
 The output of this little wonder should be: ::
 
-    ('Vogelfrey'  , 'Wiegenfest'       , 'Heldentod'      , 'folk metal')   ,
+    ('Vogelfrey'  , 'Wiegenfest'       , 'Heldentod'      , 'folk metal'),
     ('Debauchery' , 'Continue to Kill' , 'Apostle of War' , 'brutal death')
 
 We can somewhat explain this, since the only thing those songs have in common 
@@ -135,15 +135,81 @@ But well, let's look at the higlighted lines:
 Part 2: Creating a session
 --------------------------
 
+.. todo:: make a more complicated example.
+
+.. code-block:: python
+
+   # Session loading
+   # Session Creating, minimal attribute mask, keys
+   # use MY_DATABASE
+   # feed some history
+
+.. note::
+
+    **Later parts will only give you a sneak-peek into the most importannt features.**
+
 Part 3: Loading a session
 -------------------------
 .. _4:
 
-Part 4: Mapping your songs to munin's internal songs.
------------------------------------------------------
+A Session can always be saved with it's ``save`` method. Currently the saving is
+very simple in the respect that recursively all objects in the session are
+pickled and written to disk. The resulting pickle file is additionally zipped.
+You only pass the directory where to save the Session - if you do not specify
+one *XDG_CACHE_HOME* is used (which is, in most cases *~/.cache/*).
+
+But how can be load that thing again? 
+
+Well, if you chose to pass no path use ``Session.from_name()``, if you didn't
+specify the full path with ``Session.from_archive_path()``.
+These *staticmethods* will unpickle the session object from disk. You can use
+this idiom: ::
+
+    >>> session = Session.from_name('moosecat') or create_session('moosecat')
+
+
+Part 4: Mapping your songs to munin's internal songs
+----------------------------------------------------
+
+Okay, I lied to you. ``session.mapping`` is no ordinary dict... it's a
+bidict_! Assuming we have a mapping like in our first example we can do
+something like this: ::
+
+    >>> session.mapping[0]  # get the database idx from the uid 0 
+    >>> session.mapping[:0] # get the uid from the database idx 0 
+    >>> session.mapping[0:] # same as the first.
+
+.. _bidict: https://pypi.python.org/pypi/bidict
 
 Part 5: Getting recommendations
 -------------------------------
+
+There are different methods to get recommendations that differ in details:
+
+* ``recommendations_from_seed(song, N)``
+
+    Get N recommendations from a certain song.
+    There are some more details in Part 8_.
+
+* ``recommendations_from_graph(N)``
+
+    Like above, but try to choose a good seed song in this order:
+
+        1) Get the song from the rule with the globally best rating.
+        2) Get the song with the highest playcount.
+        3) If all that fails a random song is chosen.
+
+    The resulting seed song is given to ``recommendations_from_seed``.
+
+* ``recommendations_from_attributes(subset, N)``
+
+    This finds a seed song by a subset of attributes. Take this as example: ::
+
+        >>> recommendations_from_attributes({'genre': 'death metal'})
+
+    This works by first finding a suitalbe seed song with this subset of
+    required values (you can even pass more than one key, i.e. restricting the
+    artist!) and passing the resulting seed song to ``recommendations_from_seed``.
 
 Part 6: Feeding the History
 ---------------------------
