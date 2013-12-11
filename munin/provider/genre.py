@@ -431,7 +431,7 @@ class GenreTreeProvider(Provider):
         for sub_genre in prepare_genre_list(input_value):
             words = prepare_single_genre(sub_genre)
             result += self._build_func(self._root, words)
-        return tuple(result)
+        return tuple(result) or None
 
     def reverse(self, output_values):
         """Translate the paths in output_values back to genre strings.

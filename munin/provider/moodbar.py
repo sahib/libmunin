@@ -239,7 +239,7 @@ class MoodbarMoodFileProvider(MoodbarProvider):
             vector = read_moodbar_values(mood_file_path)
             return MoodbarProvider.do_process(self, vector)
         except OSError:
-            return ()
+            return None
 
 
 class MoodbarAudioFileProvider(MoodbarMoodFileProvider):
@@ -253,7 +253,7 @@ class MoodbarAudioFileProvider(MoodbarMoodFileProvider):
         mood_file_path = audio_file_path + '.mood'
         if not os.path.exists(mood_file_path):
             if compute_moodbar_for_file(audio_file_path, mood_file_path):
-                return ()
+                return None
         return MoodbarMoodFileProvider.do_process(self, mood_file_path)
 
 

@@ -109,6 +109,8 @@ class Distance(SessionMapping):
 ###########################################################################
 
 from munin.distance.genre import GenreTreeDistance
+from munin.distance.moodbar import MoodbarDistance
+from munin.distance.bpm import BPMDistance
 
 ###########################################################################
 #                               Unit tests                                #
