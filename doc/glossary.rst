@@ -14,8 +14,11 @@ Glossary
     Distance
 
         A distance is the similarity of two songs or attributes **a** and **b**
-        expressed in a number between 0.0 and 1.0. The Distance is calculated by
-        the :term:`DistanceFunction`.
+        expressed in a number between 0.0 and 1.0, where 1.0 means maximal
+        unsimilarity. Imagining a point space, two points are identical when
+        their geometric distance is 0.0.
+        
+        The Distance is calculated by the :term:`DistanceFunction`.
 
     DistanceFunction
 
@@ -27,7 +30,8 @@ Glossary
         These results are weighted, so that e.g. ``genre`` gets a higher
         precedence, and summed up to one number.
 
-        The following must be true for a valid **DF**:
+        The following must be true for a valid **DF**, when :math:`D` is the
+        database:
    
             :math:`D(i, j) = D(j, i) \forall i,j \in D`
 

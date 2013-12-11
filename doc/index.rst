@@ -1,6 +1,6 @@
 .. title is not shown in flask theme:
 
-libmununin docs
+libmunin manual
 ===============
 
 Introduction

@@ -119,19 +119,14 @@ class Song(SessionMapping, Hashable):
         return Distance(self._session, distance_dict)
 
     def distance_add(self, other, distance):
-        '''Add a relation to ``other_song`` with a certain distance.
-
-        .. warning::
-
-            This function has linear complexity since it needs to find the
-            worst element in case of a deletion.
+        '''Add a relation to ``other`` with a certain distance.
 
         :param other: The song to add a relation to. Will also add a
                      relation in other_song to self with same Distance.
         :type other: :class:`munin.song.Song`
         :param distance: The Distance to add to the "edge".
         :type distance: :class:`munin.distance.Distance`
-        :returns: *False* if the song was not added because of a bad distance.
+        :returns: *False* if the song was not added because of a worse distance.
                   *True* in any other case.
         '''
         if other is self:
@@ -233,7 +228,7 @@ class Song(SessionMapping, Hashable):
     def disconnect(self):
         '''Deletes all edges to other songs and tries to fill the resulting hole.
 
-        Filling the hole that may be created is by comparing it's neighbors
+        Filling the hole that may be created is done by comparing it's neighbors
         with each other and adding new distances.
         '''
         # Step 1: Find new distances:

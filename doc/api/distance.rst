@@ -95,9 +95,7 @@ We have a base-class for distance calculation there:
 
     :class:`munin.distance.DistanceFunction`
 
-From this many subclasses in the `munin/distance/` directory are inherited.
-Usually we have a certain `Provider` and a `DistanceFunction` that knows how to
-compare those values produced by the concrete `Provider.`
+From this many subclasses in the `munin.distance.` submodules are inherited.
 
 .. note:: **DistanceFunction** use two list of values as input. Even for single
    values.
@@ -112,18 +110,14 @@ List of concrete DistanceFunctions
 
     distances/*
 
-===========
+.. note:: 
 
-Example: 
-
-.. code-block:: python
-
-   pass
-   
-.. todo:: Write a decent example
+   If no DistanceFunction is given, a default will be used which will sort both
+   input list, zip them and compare each item with `==`. The number of matching
+   items is then divided through the maximum length of both lists.
 
 ===========
- 
+
 Reference
 ---------
 
