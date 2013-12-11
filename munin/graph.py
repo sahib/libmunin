@@ -63,7 +63,6 @@ def neighbors_from_song_sorted(graph, song, n=0):
         # But this way we do not e.g sort the whole 32k list for depth=4 just for one song.
         group_list = list(islice(group, n))
         if len(group_list) > 1:
-            # TODO: Go understand this :)
             group_list.sort(key=lambda tup: tup[0]['song'].distance_get(tup[2]['song']))
 
         # Now hand the new iteration results further.

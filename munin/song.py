@@ -146,13 +146,11 @@ class Song(SessionMapping, Hashable):
             # and why we do not care.
             sdd[other] = odd[self] = distance
             return True
-        # TODO: Check if heapq has a reason here.
         elif distance.distance <= self._max_distance:
             # Check if we still have room left
             if len(sdd) >= self._max_neighbors:
                 # Find the worst song in the dictionary
                 idx = 1
-                # TODO: test if reverse necessary
                 for worst_song in self._pop_list:
                     if worst_song in sdd:
                         break
