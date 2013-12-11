@@ -363,7 +363,7 @@ if __name__ == '__main__':
             self._session = Session('session_test', {
                 'genre': (_DummyProvider(), None, 0.2),
                 'artist': (_DummyProvider(), None, 0.3)
-            }, path='/tmp')
+            })
 
         def test_basics(self):
             # TODO: See if all with statements are exception safe
@@ -393,7 +393,7 @@ if __name__ == '__main__':
         session = Session('session_test', {
             'genre': (dprov, dfunc, 0.2),
             'artist': (dprov, dfunc, 0.3)
-        }, path='/tmp')
+        })
 
         import math
 
