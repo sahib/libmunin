@@ -18,10 +18,8 @@ Various utilities that you might enjoy while using libmunin.
 
 **Itertools recipes:**
 
-Copied from the standard documentation:
+Copied from the standard documentation: http://docs.python.org/3/library/itertools.html#itertools-recipes
 
-    http://docs.python.org/3/library/itertools.html
+    .. autofunction:: munin.helper.roundrobin
 
-        .. autofunction:: munin.helper.roundrobin
-
-        .. autofunction:: munin.helper.grouper
+    .. autofunction:: munin.helper.grouper
