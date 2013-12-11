@@ -1,4 +1,4 @@
-#q!/usr/bin/env python
+#!/usr/bin/env python
 # encoding: utf-8
 
 """:class:`Session` is the main entrance to using libmunin.

@@ -217,25 +217,13 @@ def recommendations_from_graph(database, graph, rule_index, n=20):
 
 if __name__ == '__main__':
     import unittest
-    import igraph
-
-    from munin.song import Song
-    from munin.session import Session
     from itertools import combinations
 
-    # Mock the distance class
-    class DistanceDummy:
-        def __init__(self, d):
-            self.distance = d
+    import igraph
 
-        def __eq__(self, other):
-            return self.distance == other.distance
-
-        def __lt__(self, other):
-            return self.distance > other.distance
-
-        def __repr__(self):
-            return str(self.distance)
+    from munin.testing import DistanceDummy
+    from munin.song import Song
+    from munin.session import Session
 
     class TestNeighborsFrom(unittest.TestCase):
         def setUp(self):
