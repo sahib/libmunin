@@ -3,17 +3,25 @@ Helper Utilities
 
 Various utilities that you might enjoy while using libmunin.
 
-.. automodule:: munin.helper
+.. autoclass:: munin.helper.AudioFileWalker
    :members:
 
-Internal Utilities
-------------------
+-----
 
-Besides, there are some internal utils, that may be of interest to you.
-There is no API-Stability guaranteed for those.
+.. autofunction:: munin.helper.pairup
 
--------
+-----
 
-.. automodule:: munin.utils
-   :members:
+.. autofunction:: munin.helper.float_cmp
 
+-----
+
+**Itertools recipes:**
+
+Copied from the standard documentation:
+
+    http://docs.python.org/3/library/itertools.html
+
+        .. autofunction:: munin.helper.roundrobin
+
+        .. autofunction:: munin.helper.grouper

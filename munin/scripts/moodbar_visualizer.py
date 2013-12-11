@@ -2,7 +2,7 @@
 from collections import deque
 
 # Interal:
-from munin.utils import grouper
+from munin.helper import grouper
 
 # External:
 from cairo import PDFSurface, Context

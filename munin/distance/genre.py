@@ -4,7 +4,7 @@
 
 from itertools import product
 from munin.distance import DistanceFunction
-from munin.utils import float_cmp
+from munin.helper import float_cmp
 
 
 class GenreTreeDistance(DistanceFunction):

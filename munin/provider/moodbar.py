@@ -15,7 +15,7 @@ except ImportError:
     DEVNULL = open(os.devnull, 'w')
 
 # Internal:
-from munin.utils import grouper
+from munin.helper import grouper
 from munin.provider import Provider
 
 # External:

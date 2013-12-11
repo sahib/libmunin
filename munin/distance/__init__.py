@@ -6,7 +6,7 @@ import logging
 import abc
 
 # Internal:
-from munin.utils import SessionMapping, float_cmp
+from munin.helper import SessionMapping, float_cmp
 
 LOGGER = logging.getLogger(__name__)
 

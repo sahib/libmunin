@@ -10,7 +10,7 @@ LOGGER = getLogger(__name__)
 
 # Internal:
 from munin.distance import Distance
-from munin.utils import SessionMapping
+from munin.helper import SessionMapping
 
 # External:
 from blist import sortedlist

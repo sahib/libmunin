@@ -12,7 +12,7 @@ from math import ceil
 import random
 
 # Internal:
-from munin.utils import roundrobin
+from munin.helper import roundrobin
 
 
 def neighbors_from_song(graph, song, n=0):

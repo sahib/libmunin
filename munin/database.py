@@ -13,7 +13,7 @@ LOGGER = logging.getLogger(__name__)
 
 # Internal:
 from munin.song import Song
-from munin.utils import sliding_window, centering_window
+from munin.helper import sliding_window, centering_window
 from munin.history import ListenHistory, RuleIndex
 
 # External:
@@ -145,10 +145,10 @@ class Database:
 
         This involves three iterations:
 
-            * :func:`munin.utils.sliding_window`
+            * :func:`munin.helper.sliding_window`
               Window over the List (overlapping with * window_size/step_size).
-            * :func:`munin.utils.centering_window` with `parallel=True`.
-            * :func:`munin.utils.centering_window` with `parallel=True`.
+            * :func:`munin.helper.centering_window` with `parallel=True`.
+            * :func:`munin.helper.centering_window` with `parallel=True`.
 
         :param mean_counter: A RunningMean counter to sample the initial mean/sd
         :param window_size: The max. size of the window in which combinations are taken.
