@@ -1,6 +1,41 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+"""
+Overview
+========
+
+This provider is able to analyze an audio file path in order to find the
+average beats-per-minute rate.
+
+**Usage Example:**
+
+.. code-block:: python
+
+    >>> from munin.provider import BPMProvider
+    >>> p = BPMProvider()
+    >>> p.do_process('/tmp/some_file.mp3')
+    (123.456, )  # beats per minute
+
+The potential Information you can get from this is: Songs of different genre
+often have differente tempi, therefore are less similar. This is no rule of course.
+
+**Problems to consider:**
+
+    * Noisy Live-data often gets high BPM counts
+    * Speed-Metal (as an example) ranges in the same
+
+**Prerequisites:**
+
+To function properly this poorly implemented provider needs two external utils:
+
+    * http://sox.sourceforge.net/
+    * http://www.pogo.org.uk/~mark/bpm-tools/
+
+Reference
+=========
+"""
+
 
 import subprocess
 import pipes
@@ -21,9 +56,6 @@ BPM_COMMAND = "sox -v 1.0 {path} -t raw -r 44100 -e float -c 1 - | bpm -m 60 -x 
 
 class BPMProvider(Provider):
     """A Beats-per-minute provider.
-
-    This provider is able to analyze an audio file path in order to find the
-    average beats-per-minute rate.
 
     Currently, this is stupidly implemented as a call to an external util:
 

@@ -2,19 +2,46 @@
 # encoding: utf-8
 
 
+'''
+Overview
+--------
+
+The Distance Function in this Module works with the following providers:
+
+    * :class:`munin.provider.moodbar.MoodbarProvider`
+    * :class:`munin.provider.moodbar.MoodbarMoodFileProvider`
+    * :class:`munin.provider.moodbar.MoodbarAudioFileProvider`
+
+**Technical Details:**
+
+The individual attributes are weighted and computes as following:
+
++-------------------+---------+---------------------------------------------------------------+
+|  Name             | Weight  | Formula                                                       |
++===================+=========+===============================================================+
+| *diffsum*         |   0.135 | ``abs(v1 - v2) / 50``                                         |
++-------------------+---------+---------------------------------------------------------------+
+| *histogram*       |   0.135 | ``1.0 - sum(a - b for a, b in lefts, rights) / 5 * 255``      |
++-------------------+---------+---------------------------------------------------------------+
+| *dominant colors* |   0.63  | ``len(common) / max(len(lefts), len(rights))``                |
++-------------------+---------+---------------------------------------------------------------+
+| *blackness*       |   0.05  | ``abs(v1 - v2) / 50``                                         |
++-------------------+---------+---------------------------------------------------------------+
+| *average min/max* |   0.05  | ``abs(v1 - v2) / 255``                                        |
++-------------------+---------+---------------------------------------------------------------+
+|                   |   1.0   |                                                               |
++-------------------+---------+---------------------------------------------------------------+
+
+Reference
+---------
+'''
+
 from munin.distance import DistanceFunction
 from math import sqrt
 
 
 class MoodbarDistance(DistanceFunction):
-    """Distance Function that compares two MoodbarDescriptions.
-
-    This DistanceFunction works with the following providers:
-
-        * :class:`munin.provider.moodbar.MoodbarProvider`
-        * :class:`munin.provider.moodbar.MoodbarMoodFileProvider`
-        * :class:`munin.provider.moodbar.MoodbarAudioFileProvider`
-    """
+    """Distance Function that compares two MoodbarDescriptions."""
     def do_compute(self, lefts, rights):
         """Compute the distance between two moodbar desc
 

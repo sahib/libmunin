@@ -52,10 +52,20 @@ Table of Contents
 **Developer Section**
 
 .. toctree::
-    :glob:
     :maxdepth: 1
 
-    api/*
+    api/session_and_database
+    api/distance
+    api/provider
+    api/song
+    api/history
+    api/helper
+
+**Internals**
+
+.. toctree::
+    :maxdepth: 1
+
     todo
     logbuch
 

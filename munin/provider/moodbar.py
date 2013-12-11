@@ -1,6 +1,78 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+"""
+Overview
+========
+
+A moodbar is a color representation of an audio file, where the red represents
+the low frequencies, green the mids and blue the high ones.
+
+Per audio file 1000 RGB Triples are sampled.
+
+Sometimes individual instruments can be recognized by their color, the combination
+of E-Guitar and Drums are often found to be turquoise.
+
+Since the moodbar does not really represent the mood information it should
+be rather called ``freqbar``. But it was decided to stay with the authors
+naming choice.
+
+You can find more information here:
+
+    * http://en.wikipedia.org/wiki/Moodbar
+
+For this provider to work properly you need the moodbar utility installed:
+
+    * http://pwsp.net/~qbob/moodbar-0.1.2.tar.gz
+
+There are 3 different providers in this module:
+
+    * :class:`munin.provider.moodbar.MoodbarProvider`
+    * :class:`munin.provider.moodbar.MoodbarMoodFileProvider`
+    * :class:`munin.provider.moodbar.MoodbarAudioFileProvider`
+
+**Usage Example:**
+
+.. code-block:: python
+
+    >>> from munin.provider import MoodbarAudioFileProvider
+    >>> p = MoodbarAudioFileProvider()
+    >>> p.do_process('/tmp/some_file.mp3')
+    MoodbarDescription<{
+        'red': {
+            'histogram': [302, 12, 58, 177, 441, 10]
+            'diffsum':   44
+        },
+        'green': {
+            'histogram': [220, 72, 32, 203, 462, 11]
+            'diffsum':   33
+        },
+        'blue': {
+            'histogram': [303, 24, 130, 290, 239, 14]
+            'diffsum':   32
+        },
+        'average_minimum': 126,
+        'average_maximum': 161,
+        'dominant_colors': [
+            (187, 238, 238),
+            (  0,  34,   0),
+            (204, 204, 170),
+            (204, 238, 221),
+            (  0,  51,   0),
+            (204, 221, 187),
+            (  0,  34,  17),
+            (204, 238, 238),
+            (221, 204, 170),
+            (  0,  51,  17)
+        ]
+    }>
+
+
+Reference
+=========
+"""
+
+
 # Stdlib:
 import os
 
@@ -34,30 +106,32 @@ MoodbarDescription = namedtuple('MoodbarDescription', [
 ])
 
 MoodbarDescription.__repr__ = lambda self: """\
-Red:
-    Histogram: {hist_r}
-    Diffsum:   {diff_r}
-
-Green:
-    Histogram: {hist_g}
-    Diffsum:   {diff_g}
-
-Blue:
-    Histogram: {hist_b}
-    Diffsum:   {diff_b}
-
-Average Minimum: {avg_min}
-Average Maximum: {avg_max}
-Dominant colors:
-
-    {dominant_colors}
+MoodbarDescription<{{
+    'red': {{
+        'histogram': {hist_r}
+        'diffsum':   {diff_r}
+    }},
+    'green': {{
+        'histogram': {hist_g}
+        'diffsum':   {diff_g}
+    }},
+    'blue': {{
+        'histogram': {hist_b}
+        'diffsum':   {diff_b}
+    }},
+    'average_minimum': {avg_min},
+    'average_maximum': {avg_max},
+    'dominant_colors': [
+        {dominant_colors}
+    ]
+}}>
 """.format(
     hist_r=self.channels[0].histogram, diff_r=self.channels[0].diffsum,
     hist_g=self.channels[1].histogram, diff_g=self.channels[1].diffsum,
     hist_b=self.channels[2].histogram, diff_b=self.channels[2].diffsum,
     avg_min=self.average_min,
     avg_max=self.average_max,
-    dominant_colors='\n    '.join(
+    dominant_colors=',\n        '.join(
         ['({:>3d}, {:>3d}, {:>3d})'.format(r, g, b) for r, g, b in self.dominant_colors]
     )
 )

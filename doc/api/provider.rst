@@ -1,7 +1,7 @@
 .. _provider_chapter:
 
-Direct Provider and Indirect Providers
-======================================
+What are Providers?
+===================
 
 Introduction
 ------------
@@ -16,6 +16,8 @@ List of concrete Providers
  
 Reference
 ---------
+
+Here is the superclass of all providers:
 
 .. automodule:: munin.provider
     :members:

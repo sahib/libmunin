@@ -99,11 +99,6 @@ From this many subclasses in the `munin/distance/` directory are inherited.
 Usually we have a certain `Provider` and a `DistanceFunction` that knows how to
 compare those values produced by the concrete `Provider.`
 
-All `DistanceFunction` must apply to the following conditions:
-
-* :math:`D(i, j) = D(j, i) \forall i,j \in D`
-* :math:`D(i, i) = 0.0 \forall i \in D`
-
 .. note:: **DistanceFunction** use two list of values as input. Even for single
    values.
 
