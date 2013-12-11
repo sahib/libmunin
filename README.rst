@@ -26,6 +26,10 @@ Installation
 .. image:: https://badge.fury.io/py/libmunin.png
     :target: http://badge.fury.io/py/libmunin
 
+.. image:: https://pypip.in/d/libmunin/badge.png
+    :target: https://crate.io/packages/$REPO/
+    :alt: Number of PyPI downloads
+
 Required externam programs
 --------------------------
 
