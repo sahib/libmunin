@@ -23,6 +23,9 @@ Installation
 .. image:: https://travis-ci.org/sahib/libmunin.png?branch=master   
     :target: https://travis-ci.org/sahib/libmunin
 
+.. image:: https://badge.fury.io/py/libmunin.png
+    :target: http://badge.fury.io/py/libmunin
+
 Required externam programs
 --------------------------
 
