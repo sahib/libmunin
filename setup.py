@@ -1,5 +1,6 @@
 from setuptools import setup
 from pip.req import parse_requirements
+from munin import __version__, __url__
 
 
 print("""Please make sure to have these third party tools installed:
@@ -14,10 +15,10 @@ install_reqs = parse_requirements('pip_requirements.txt')
 
 setup(
     name='libmunin',
-    version='0.1.1-git',
+    version=__version__,
     description='Fancy library for music recommendations, based on datamining algorithms',
     long_description=open('README.rst').read(),
-    url='http://libmunin-api.readthedocs.org/en/latest/index.html',
+    url=__url__,
     author='Christopher Pahl',
     author_email='sahib@online.de',
     license='GPLv3',

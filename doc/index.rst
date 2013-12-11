@@ -54,6 +54,8 @@ Table of Contents
 .. toctree::
     :maxdepth: 1
 
+    tutorial
+
     api/session_and_database
     api/distance
     api/provider
@@ -104,7 +106,7 @@ Minimal Example
                  'genre': genre
              })] = idx
 
-    for munin_song in session.recommend_from_song(session.lookup(0), 2):
+    for munin_song in session.recommend_from_seed(0, 2):
         print(MY_DATABASE[munin_song.uid])
 
     # -> Prints 2nd and 4th song, because of the similar genre.
