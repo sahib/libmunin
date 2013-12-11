@@ -6,7 +6,7 @@ libmununin docs
 Introduction
 ------------
 
-**libmunin** is a versatile python library that can do music recommendations
+*libmunin* is a versatile python library that can do music recommendations
 based on datamining algorithms. You give it your music collection, some time
 to learn in the background and in return it will give you some clever
 recommendations.
@@ -19,6 +19,11 @@ If you wonder what ravens have to do with this: Go to wikipedia_.
     | *and bring information to the god Odin.*
 
 .. _wikipedia: http://en.wikipedia.org/wiki/Huginn_and_Muninn
+
+.. warning::
+
+    This library is under heavy developement and therefore far away from being
+    usable. It probably won't work, and if it does it might eat your kittens. 
 
 Key Features
 ------------
