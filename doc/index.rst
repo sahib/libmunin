@@ -71,12 +71,6 @@ Table of Contents
     todo
     logbuch
 
-**User Section**
-
-.. toctree::
-
-    cmdline
-
 **Indices and tables**
 
 * :ref:`modindex`

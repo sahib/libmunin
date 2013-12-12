@@ -46,8 +46,46 @@ Glossary
 
     Mask
 
-        Every :term:`Session` requires a Mapping where the possible keys 
-        are defined that a single song may have. The **AM** stores this
-        information as dictionary, the keys being the names of the possible
-        attributes and the values being a tuple, conisting of the Provider for
-        this Attribute, a fitting Distance Function and a weight.
+        Every :term:`Session` requires a Mapping where the possible keys are
+        defined that a single song may have. The **AM** stores this information
+        as dictionary, the keys being the names of the possible attributes and
+        the values being a tuple, conisting of the :term:`Provider` for this
+        :term:`Attribute`, a fitting Distance Function and a weight.
+
+    Attribute
+
+        An *Attribute* is a key in the :term:`Mask` to which a :term:`Provider`,
+        a :term:`DistanceFunction` and a certain weight is attached. The name of
+        the *Attribute* will be used in :term:`Song` s to reference the
+        individual values.
+
+    Provider 
+
+        Normalizes a Value by certain characteristics. The resulting value
+        should be optimized for comparasion by areturn :term:`DistanceFunction`.
+
+    Rule
+        
+        A *Rule* associates certain songs, or one single song with other songs
+        or another single song. The strenght of the association is given by the
+        *rating* of the rule, which is technically calculated as: ::
+
+            (1.0 - KulczynskiMeasure) * ImbalanceRatio
+
+    Recommendation
+
+        A *Recommendation* is a :term:`Song` that is outputted as a request by
+        the user. The outputed :term:`Song` s should have a low :term:`Distance` 
+        to the previously listened or to the seed song.
+
+    Graph 
+
+        The *Graph* models the relation between all :term:`Song` in the
+        database. Each song has, in the best case, the most similar :term:`Song` s
+        to it as neighbors. Since this would require calculating the
+        :term:`Distance` from one song to all others, which in turn requires
+        quadratic complexity. Therefore an approximation of the *Graph* is built 
+        that might contain small errors.
+
+        .. todo:: Implement rebuild_stupid
+
