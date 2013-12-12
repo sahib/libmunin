@@ -251,29 +251,50 @@ class Database:
         # Filter duplicate edge pairs.
         self._graph.add_edges(set(edge_set))
 
-    def rebuild(self, window_size=60, step_size=20, refine_passes=25):
+    def rebuild_stupid(self):
+        """(Re)build the graph by calculating the combination of all songs.
+
+        This is a *very* expensive operation which takes quadratic time and
+        only should be ever used for a small amount of songs where accuracy
+        matters even more thant time.
+        """
+        for song_a, song_b in combinations(self._song_list, 2):
+            distance = Song.distance_compute(song_a, song_b)
+            Song.distance_add(song_a, song_b, distance)
+
+    def rebuild(self, window_size=60, step_size=20, refine_passes=25, stupid_threshold=400):
         """Rebuild all distances and the associated graph.
 
         This will be triggered for you automatically after a transaction.
+
+        :param int window_size: The size of the sliding window in the base iteration.
+        :param int step_size: The amount to move the window per iteration.
+        :param int refine_passes: How often step #2 should be repeated.
+        :param int stupid_threshold: If less songs than this just brute forcely calculate all combations of songs.
         """
-        # Average and Standard Deviation Counter:
-        mean_counter = igraph.statistics.RunningMean()
+        if len(self) < stupid_threshold:
+            LOGGER.debug('+ Step #1 + 2: Brute Force calculation due to few songs')
+            self.rebuild_stupid()
+        else:
+            # Average and Standard Deviation Counter:
+            mean_counter = igraph.statistics.RunningMean()
 
-        LOGGER.debug('+ Step #1: Calculating base distance (sliding window)')
-        self._rebuild_step_base(
+            LOGGER.debug('+ Step #1: Calculating base distance (sliding window)')
+            self._rebuild_step_base(
+                    mean_counter,
+                    window_size=window_size,
+                    step_size=step_size
+            )
+
+            LOGGER.debug('|-- Mean Distane: {:f} (sd: {:f})'.format(mean_counter.mean, mean_counter.sd))
+            LOGGER.debug('+ Step #2: Applying refinement:', end='')
+            self._rebuild_step_refine(
                 mean_counter,
-                window_size=window_size,
-                step_size=step_size
-        )
+                num_passes=refine_passes
+            )
 
-        LOGGER.debug('|-- Mean Distane: {:f} (sd: {:f})'.format(mean_counter.mean, mean_counter.sd))
-        LOGGER.debug('+ Step #2: Applying refinement:', end='')
-        self._rebuild_step_refine(
-            mean_counter,
-            num_passes=refine_passes
-        )
+            LOGGER.debug('|-- Mean Distane: {:f} (sd: {:f})'.format(mean_counter.mean, mean_counter.sd))
 
-        LOGGER.debug('|-- Mean Distane: {:f} (sd: {:f})'.format(mean_counter.mean, mean_counter.sd))
         LOGGER.debug('+ Step #3: Building Graph')
         self._rebuild_step_build_graph()
         self._reset_history()
@@ -422,7 +443,7 @@ if __name__ == '__main__':
         import math
 
         with session.transaction():
-            N = 500
+            N = 800
             for i in range(int(N / 2) + 1):
                 session.add({
                     'genre': 1.0 - i / N,
