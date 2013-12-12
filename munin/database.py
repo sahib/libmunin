@@ -41,12 +41,12 @@ class Database:
         self._session = session
         self._song_list = []
         self._graph = igraph.Graph()
-        self._revoked_uids = set()
 
         # TODO: Provide config options
         self._reset_history()
 
     def _reset_history(self):
+        self._revoked_uids = set()
         self._listen_history = ListenHistory()
         self._rule_index = RuleIndex()
         self._playcounts = Counter()
@@ -358,6 +358,8 @@ class Database:
         edge_set = set()
         for neighbor in song.neighbors():
             edge_set.add((song.uid, neighbor.uid))
+
+        # Note: we do *NOT* delete the vertex here, as we reuuse it later.
 
         self._graph.delete_edges(edge_set)
 

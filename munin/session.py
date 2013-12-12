@@ -330,12 +330,43 @@ class Session:
         self.database.feed_history(song)
 
     def add(self, value_mapping):
+        """Add a song with the values in the ``value_mapping``.
+
+        This function should be always called like this to trigger a rebuild:
+
+        .. code-block:: python
+
+            >>> with session.transaction():
+            ...     session.add({'genre': 'death metal', ...})
+
+        :param dict value_mapping: A mapping :term:`Attribute` : Value.
+        :raises KeyError: If an unknown :term:`Attribute` was used.
+        :returns: The *UID* of the newly added song.
+        """
         return self.database.add(value_mapping)
 
     def insert(self, value_mapping):
+        """Insert a song without triggering a rebuild.
+
+        This function should be always called like this to trigger a cleanup of the graph:
+
+        .. code-block:: python
+
+            >>> with session.transaction():
+            ...     session.add({'genre': 'death metal', ...})
+
+        The rest is the same as with :meth:`add`.
+        """
         return self.database.insert(value_mapping)
 
     def remove(self, song):
+        """Remove a single song (or *UID*) from the Graph.
+
+        This function will try to close the hole. If :meth:`insert`
+        is called afterwards the *UID* of the deleted song will be re-used.
+
+        :returns: The *UID* of the deleted song.
+        """
         song = song_or_uid(self.database, song)
         return self.database.remove(song.uid)
 
@@ -384,7 +415,7 @@ class Session:
         This means checking if unsorted distances can be found (which should not happend)
         and checking if unidirectional edges can be found (which get deleted).
 
-        You should this contextmanager when calling :func:`insert_song` or :func:`remove_song`.
+        You should this contextmanager when calling :meth:`insert` or :meth:`remove`.
         """
         try:
             yield

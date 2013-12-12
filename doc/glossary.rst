@@ -86,6 +86,3 @@ Glossary
         :term:`Distance` from one song to all others, which in turn requires
         quadratic complexity. Therefore an approximation of the *Graph* is built 
         that might contain small errors.
-
-        .. todo:: Implement rebuild_stupid
-
