@@ -18,7 +18,8 @@ from blist import sortedlist
 
 class Song(SessionMapping, Hashable):
     # Note: Use __slots__ (sys.getsizeof will report even more memory, but pympler less)
-    __slots__ = ('_dist_dict', '_pop_list', '_max_distance', '_max_neighbors', '_hash', '_confidence', 'uid')
+    __slots__ = ('_dist_dict', '_pop_list', '_max_distance', '_max_neighbors',
+                 '_hash', '_confidence', 'uid', '_worst_cache')
     """
     **Overview**
 
@@ -59,12 +60,8 @@ class Song(SessionMapping, Hashable):
                 default_value=default_value
         )
         self._dist_dict = OrderedDict()
-
-        # make lookup local:
-        d = self._dist_dict
-
-        # Make sure bad and nonexisting songs goes to the end:
-        self._pop_list = sortedlist(key=lambda x: ~d[x])
+        self._worst_cache = None
+        self._pop_list = sortedlist(key=lambda e: self._dist_dict[e])
 
         # Settings:
         self._max_neighbors = max_neighbors
@@ -94,7 +91,7 @@ class Song(SessionMapping, Hashable):
 
     def neighbors(self):
         """Like :func:`distance_iter`, but only return the neighbor song, not the distance"""
-        return self._dist_dist.keys()
+        return self._dist_dict.keys()
 
     def distance_compute(self, other_song):
         """Compute the distance to another song.
@@ -132,16 +129,23 @@ class Song(SessionMapping, Hashable):
         if other is self:
             return False
 
+        if self._worst_cache is not None and self._worst_cache < distance:
+            return False
+
+        if distance.distance > self._max_distance:
+            return False
+
         sdd, odd = self._dist_dict, other._dist_dict
         if other in sdd:
             if sdd[other] < distance:
                 return False  # Reject
 
             # Explain why this could damage worst song detection.
-            # and why we do not care.
+            # and why we do not care. (might change sorting)
+            self._worst_cache = None
             sdd[other] = odd[self] = distance
             return True
-        elif distance.distance <= self._max_distance:
+        else:
             # Check if we still have room left
             if len(sdd) >= self._max_neighbors:
                 # Find the worst song in the dictionary
@@ -154,6 +158,7 @@ class Song(SessionMapping, Hashable):
                 if sdd[worst_song] < distance:
                     # we could prune pop_list here too,
                     # but it showed that one operation only is more effective.
+                    self._worst_cache = sdd[worst_song]
                     return False
 
                 # delete the worst one to make place,
@@ -161,16 +166,18 @@ class Song(SessionMapping, Hashable):
                 # we create unidir edges here on purpose.
                 del sdd[worst_song]
                 del self._pop_list[idx + 1:]
-        else:
-            return False
 
         # Add the new element:
         sdd[other] = odd[self] = distance
         self._pop_list.add(other)
         other._pop_list.add(self)
+
+        # Might be something different now:
+        self._worst_cache = None
         return True
 
     def distance_finalize(self):
+        """Delete all invalid edges and neighbors of this song"""
         to_delete = deque()
         for other in self._dist_dict:
             dist_a, dist_b = self.distance_get(other), other.distance_get(self)
@@ -236,7 +243,7 @@ class Song(SessionMapping, Hashable):
         for neighbor in neighbors:
             neighbor._max_distance += 1
 
-        for neigh_a, neigh_b in combinations(neighbors):
+        for neigh_a, neigh_b in combinations(neighbors, 2):
             distance = Song.distance_compute(neigh_a, neigh_b)
             Song.distance_add(neigh_a, neigh_b, distance)
 
@@ -244,9 +251,9 @@ class Song(SessionMapping, Hashable):
             neighbor._max_distance -= 1
 
         # Step 2: Delete the connection to the self:
-        for neigbor in neighbors:
+        for neighbor in neighbors:
             del self._dist_dict[neighbor]
-            del neigbor._dist_dict[self]
+            del neighbor._dist_dict[self]
 
         # Clear the old sortedlist, while we're on it..
         del self._pop_list[:]
@@ -324,15 +331,10 @@ if __name__ == '__main__':
                 euler = lambda x: math.fmod(math.e ** x, 1.0)
                 N = 40
                 for i in range(N):
-                    self._session.database.add({
+                    self._session.add({
                         'genre': euler(i + 1),
                         'artist': euler(N - i + 1)
                     })
-
-            # for song in self._session.database:
-            #     print(song.uid)
-            #     for ind_ngb in set(song.distance_indirect_iter(1.0)):
-            #         print('    ', ind_ngb.uid)
 
         def test_song_add(self):
             song_one = Song(self._session, {
@@ -342,12 +344,15 @@ if __name__ == '__main__':
 
             N = 100
 
-            for off in (0, 1.0):
+            for off in (False, True):
                 for i in range(N):
+                    v = i / N
+                    if off:
+                        v = 1.0 - v
                     song_one.distance_add(Song(self._session, {
                         'genre': str(i),
                         'artist': str(i)
-                    }, max_neighbors=5), DistanceDummy(off - i / N))
+                    }, max_neighbors=5), DistanceDummy(v))
 
                 self.assertEqual(len(list(song_one.distance_iter())), 5)
 
@@ -361,14 +366,18 @@ if __name__ == '__main__':
                 'artist': 'Gustl'
             })
 
-            song_one.distance_add(song_two, DistanceDummy(0.7))
-            song_one.distance_add(song_one, DistanceDummy(421))  # this should be clamped to 1
+            song_one.uid = 'base1'
+            song_two.uid = 'base2'
+
+            self.assertTrue(song_one.distance_add(song_two, DistanceDummy(0.7)))
+            self.assertTrue(song_two.distance_add(song_one, DistanceDummy(0.1)))
             self.assertEqual(song_one.distance_get(song_one), DistanceDummy(0.0))
-            self.assertEqual(song_one.distance_get(song_two), DistanceDummy(0.7))
+            self.assertEqual(song_two.distance_get(song_two), DistanceDummy(0.0))
+            self.assertEqual(song_one.distance_get(song_two), DistanceDummy(0.1))
 
             # Check if max_distance works correctly
             prev_len = song_one.distance_len()
-            song_one.distance_add(song_two, DistanceDummy(1.0))
+            self.assertTrue(not song_one.distance_add(song_two, DistanceDummy(1.0)))
             self.assertEqual(song_one.distance_len(), prev_len)
 
             # Test "only keep the best songs"
@@ -377,17 +386,42 @@ if __name__ == '__main__':
                 'artist': 0
             })
 
-            N = 200
-            for idx in range(1, N + 1):
+            N = 20
+            for idx in range(N):
                 song = Song(self._session, {
-                    'genre': str(idx - 1),
-                    'artist': str(idx - 1)
+                    'genre': str(idx),
+                    'artist': str(idx)
                 })
-                song_base.distance_add(song, DistanceDummy((idx - 1) / N))
+                song.uid = idx
+                song_base.distance_add(song, DistanceDummy(idx / N))
 
             values = list(song_base.distance_iter())
-            # TODO
-            # self.assertAlmostEqual(values[+0][1].distance, (N - 1) / N)
-            # self.assertAlmostEqual(values[-1][1].distance, 0.5)
+            self.assertAlmostEqual(values[+0][1].distance, 0.0)
+            self.assertAlmostEqual(values[-1][1].distance, (N / 2 - 1) / N)
+
+        def test_disconnect(self):
+            def star():
+                for v in ['c', 'l', 'r', 't', 'd']:
+                    s = Song(self._session, {'genre': [0], 'artist': [0]})
+                    s.uid = v
+                    yield s
+
+            c, l, r, t, d = star()
+            self.assertTrue(c.distance_add(l, DistanceDummy(0.5)))
+            self.assertTrue(c.distance_add(r, DistanceDummy(0.5)))
+            self.assertTrue(c.distance_add(t, DistanceDummy(0.5)))
+            self.assertTrue(c.distance_add(d, DistanceDummy(0.5)))
+
+            c.disconnect()
+
+            self.assertTrue(c.distance_get(l) is None)
+            self.assertTrue(c.distance_get(r) is None)
+            self.assertTrue(c.distance_get(t) is None)
+            self.assertTrue(c.distance_get(d) is None)
+
+            for a, b in combinations((l, r, t, d), 2):
+                self.assertTrue(a.distance_get(b))
+                self.assertAlmostEqual(a.distance_get(b).distance, 0.0)
+
 
     unittest.main()

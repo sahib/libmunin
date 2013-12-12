@@ -137,7 +137,7 @@ class Database:
         visual_style['vertex_label_color'] = [hsv_to_rgb(1 - v, 0.5, 1.0) for v in colors]
         visual_style['vertex_size'] = [42] * len(self._graph.vs)
         visual_style['layout'] = self._graph.layout('fr')
-        visual_style['bbox'] = (2500, 2500)
+        visual_style['bbox'] = (250, 250)
         igraph.plot(self._graph, **visual_style)
 
     def _rebuild_step_base(self, mean_counter, window_size=60, step_size=20):
@@ -317,7 +317,10 @@ class Database:
         )
 
         new_song.uid = self._current_uid()
-        self._song_list.append(new_song)
+        if new_song.uid >= len(self._song_list):
+            self._song_list.append(new_song)
+        else:
+            self._song_list[new_song.uid] = new_song
         return new_song.uid
 
     def fix_graph(self):
@@ -331,12 +334,16 @@ class Database:
                     LOGGER.critical('!! warning: unsorted elements: !({} < {})'.format(dist, last))
                 last = dist
 
-    def insert(self, value_dict, star_threshold=0.75):
+    def insert(self, value_dict, star_threshold=0.75, iterstep_threshold=50):
         prev_len = len(self._song_list)
         new_song = self._song_list[self.add(value_dict)]
         next_len = len(self._song_list)
         is_added = not (prev_len == next_len)
-        iterstep = max(1, math.log(max(next_len, 1)))
+
+        if len(self) < iterstep_threshold:
+            iterstep = 1
+        else:
+            iterstep = round(max(1, math.log(max(next_len, 1))))
 
         # Step 1: Find samples with similar songs (similar to the base step)
         distances = deque()
@@ -373,7 +380,8 @@ class Database:
         if len(self._song_list) <= uid:
             raise ValueError('Invalid UID #{}'.format(uid))
 
-        song = self._song_list[uid] = None
+        song = self._song_list[uid]
+        self._song_list[uid] = None
         self._revoked_uids.add(uid)
 
         edge_set = set()
@@ -411,9 +419,8 @@ if __name__ == '__main__':
             })
 
         def test_basics(self):
-            # TODO: See if all with statements are exception safe
             with self._session.transaction():
-                N = 200
+                N = 20
                 for i in range(N):
                     self._session.database.add({
                         'genre': i / N,
@@ -425,6 +432,28 @@ if __name__ == '__main__':
                 self._session.database.add({
                     'not_in_session': 42
                 })
+
+        def test_insert_remove_song(self):
+            songs = []
+            with self._session.transaction():
+                for idx, v in enumerate(['l', 'r', 't', 'd']):
+                    songs.append(self._session.add({'genre': [0], 'artist': [0]}))
+
+            # self._session.database.plot()
+            with self._session.fix_graph():
+                self._session.insert({'genre': [0], 'artist': [0]})
+            # self._session.database.plot()
+
+            for song in self._session.database:
+                for other in self._session.database:
+                    if self is not other:
+                        self.assertAlmostEqual(song.distance_get(other).distance, 0.0)
+
+            self._session.remove(4)
+            # self._session.database.plot()
+            with self._session.fix_graph():
+                self._session.insert({'genre': [0], 'artist': [0]})
+            # self._session.database.plot()
 
     def main():
         from munin.distance import DistanceFunction
@@ -450,7 +479,7 @@ if __name__ == '__main__':
                     'artist': 1.0 - i / N
                 })
                 # Pseudo-Random, but deterministic:
-                euler = lambda x: math.fmod(math.e ** x, 1.0)
+                # euler = lambda x: math.fmod(math.e ** x, 1.0)
                 # session.database.add({
                 #     'genre': euler((i + 1) % 30),
                 #     'artist': euler((N - i + 1) % 30)
