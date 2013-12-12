@@ -310,7 +310,6 @@ class Session:
         :param n: Deliver so many recommendations (at max.)
         :returns: An iterator that yields recommend songs.
         """
-        song = song_or_uid(self.database, song)
         return munin.graph.recommendations_from_attributes(
                 subset,
                 self.database,
@@ -324,7 +323,7 @@ class Session:
 
         For example you can search by a certain genre by calling it like this: ::
 
-            >>> recommendations_from_attribute({'genre', 'death metal'}, ...)
+            >>> recommendations_from_attributes({'genre', 'death metal'}, ...)
 
         The value passed must match fully, no fuzzy matching is performed.
 

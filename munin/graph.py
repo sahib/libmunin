@@ -159,7 +159,7 @@ def _recommendations_from_song(graph, rule_index, song, n=20):
 
 def recommendations_from_attributes(subset, database, graph, rule_index, n=20):
     try:
-        chosen_song = next(database.find_matching_attributes(keys, values))
+        chosen_song = next(database.find_matching_attributes(subset))
         return recommendations_from_song(graph, rule_index, chosen_song, n=n)
     except StopIteration:
         return iter([])

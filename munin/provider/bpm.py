@@ -41,6 +41,9 @@ import subprocess
 import pipes
 import os
 
+import logging
+LOGGER = logging.getLogger(__name__)
+
 # Fix for Python 3.2
 try:
     from subprocess import DEVNULL
@@ -81,7 +84,7 @@ class BPMProvider(Provider):
 
             return (converted, )
         except subprocess.CalledProcessError as err:
-            logging.debug('"{cmd}" failed with {e}'.format(cmd=err.cmd, e=err.returncode))
+            LOGGER.debug('"{cmd}" failed with {e}'.format(cmd=err.cmd, e=err.returncode))
         except UnicodeDecodeError:
             pass
 
