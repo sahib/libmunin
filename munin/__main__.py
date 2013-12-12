@@ -1,87 +1,89 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+from munin.helper import pairup
 from munin.session import Session
-from munin.provider import GenreTreeProvider
-from munin.distance import GenreTreeDistance
+from munin.distance import GenreTreeDistance, WordlistDistance
+from munin.provider import \
+        GenreTreeProvider, \
+        WordlistProvider,  \
+        Provider,          \
+        StemProvider
 
 
-# Part 1: Creating a session
-# Part 2: Loading a session
-# Part 3: Mapping your songs to munin's internal songs.
-# Part 4: Getting recommendations
-# Part 5: Feeding the History
-# Part 6: Adding/Removing single songs
-# Part 7: Accessing rules
-# Part 8: Data-Retrieval Helpers (scripts)
-# Part 9: EasySession and AyncSession
+MY_DATABASE = [(
+        'Devildriver',                # Artist
+        'Before the Hangmans Noose',  # Title
+        'metal'                       # Genre
+    ), (
+        'Das Niveau',
+        'Beim Pissen gemeuchelt',
+        'folk'
+    ), (
+        'We Butter the Bread with Butter',
+        'Extrem',
+        'metal'
+)]
 
 
-# - Methods should take uid or songs -- done
-# - session.database.rule_index -- done
-# - AudioFileWalker -- done
-# - Delete Songs -> delete according rules? Nope, nur beim rebuild. -- done
-# - recommend_from_seed() -- done
-# - recommend() -- done
-
-
-# Session:
-#
-#     add / add
-#     insert_song / remove_song
-#     feed_history
-#     attribute_mask
-#     config
-#     recommend_global()
-#     recommend_from_seed()
-
-
-# Well, let's just use fake data. You should load here your actual database!
-MY_DATABASE = [
-    ('metal', 'Devildriver', 'Before the Hangmans Noose'),
-    ('folk', 'Das Niveau', 'Beim Pissen gemeuchelt'),
-    ('metal', 'We Butter the Bread with Butter', 'Extrem')
-]
-
-
-# Part 1:
-# This will be always called "on the first run".
-def create_new_session():
+def create_session(name):
     session = Session(
-        name=__name__,
+        name='demo',
         attribute_mask={
-            # Each line goes like this:
-            # 'the-key-you-want-have-in-your-song': (Provider, DistanceFunction, Weighting)
-            'genre': (GenreTreeProvider, GenreTreeDistance, 0.5),
-            'title': (StemProvider, WordlistDistance, 0.1),
-            'artist': (None, None, 0.1)
+            # Each entry goes like this:
+            'Genre': pairup(
+                # Pratice: Go lookup what this Providers does.
+                GenreTreeProvider(),
+                # Practice: Same for the DistanceFunction.
+                GenreTreeDistance(),
+                # This has the highest rating of the three attributes:
+                8
+            ),
+            'Title': pairup(
+                # We can also compose Provider, so that the left one
+                # gets the input value, and the right one the value
+                # the left one processed.
+                # In this case we first split the title in words,
+                # then we stem each word.
+                WordlistProvider() | StemProvider(),
+                WordlistDistance(),
+                1
+            ),
+            'Artist': pairup(
+                # If no Provider (None) is given the value is forwarded as-is.
+                # Here we just use the default provider, but enable
+                # compression. Values are saved once and are givean an ID.
+                # Duplicate items get the same ID always.
+                # You can trade off memory vs. speed with this.
+                Provider(compress=True),
+                # If not DistanceFunctions is given, all values are
+                # compare with __eq__ - which might give bad results.
+                None,
+                1
+            )
         }
     )
 
-    # Now we have an empty session. We somehow need to get the songs into it...
+    # As in our first example we fill the session:
     with session.transaction():
-        for idx, (genre, artist, title) in enumerate(MY_DATABASE):
-            # session.add returns the newly created munin song
-            # Each session has a mapping field, which is simply a dictionary.
-            # This dictionary can be used to remember the relation between
-            # munin's songs and the song in our own database.
-            # Plus: it gets saved when dumping the session to a file.
-            # Note: The usage of mapping is in your own responsibility.
+        for idx, (artist, title, genre) in enumerate(MY_DATABASE):
+            # Notice how we use the uppercase keys like above:
             session.mapping[session.add({
-                'genre': genre,
-                'title': title,
-                'artist': artist,
+                'Genre': genre,
+                'Title': title,
+                'Artist': artist,
             })] = idx
 
     return session
 
 
-# Part 4:
-def print_recommendations(session):
+def print_recommendations(session, n=5):
     # A generator that yields at max 20 songs.
-    recom_generator = session.recommendations(n=20)
+    recom_generator = session.recommendations_from_graph(n=n)
     for munin_song in recom_generator:
         print('Normalized Values')
+
+        # Let's take
         for attribute, normalized_value in munin_song.items():
             print('    {:>20s}: {}'.format(attribute, normalized_value))
 
@@ -90,33 +92,24 @@ def print_recommendations(session):
 
 
 if __name__ == '__main__':
-    # Part 2:
     # Perhaps we already had an prior session?
-    session = Session.from_name(__name__) or create_new_session()
+    session = Session.from_name('demo') or create_session('demo')
 
-    print_recommendations(session)
+    # Let's add some history:
+    for munin_uid in [0, 2, 0, 0, 2]:
+        session.feed_history(munin_uid)
 
-    # Part 5:
-    # Let's say we listened the first song twice, the last song once:
-    session.database.feed_history(session.database.lookup(0))
-    session.database.feed_history(session.database.lookup(0))
-    session.database.feed_history(session.database.lookup(2))
+    print(session.playcounts())  # {0: 3, 1: 0, 2: 2}
 
+    print_recommendations(session)  # Prints last and second song.
+
+    # Let's insert a new song that will be in the graph on the next run:
     with session.fixing():
-        new_uid = session.database.insert_song({
+        session.mappin[session.insert({
             'genre': 'pop',
             'title': 'Pokerface',
             'artist': 'Lady Gaga',
-        })
+        })] = len(MY_DATABASE)
 
-    # Part 7:
-    for rule in session.database.rule_index:
-        print(rule)
-
-    for rule in session.database.rule_index.lookup(0):
-        print(rule)
-
-    # Part 8:
-    from munin.scripts import AudioFileWalker
-    for audio_path in AudioFileWalker('~/hd/music'):
-        pass
+    # Save it under ~/.cache/libmunin/demo
+    session.save()

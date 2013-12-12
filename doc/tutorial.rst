@@ -135,18 +135,81 @@ But well, let's look at the higlighted lines:
 Part 2: Creating a session
 --------------------------
 
-.. todo:: make a more complicated example.
+A Session needs to know how the data looks like you feed it. ``EasySession``
+does this by assuming some sane defaults, but you can always configure every
+last bit of how you want *libmunin* to eat your data.
+
+.. todo:: Rename AttributeMask to Mask.. cleaner.
+
+You do this by specifying an *AttriuteMask* where you carefully select a pairs of
+providers (thing that preproces values) and distancefunctions (things that
+calculate the similarity or *distance* of those preprocessed values ). Apart
+from that you give a weighting of that attribute, telling us how important that
+attribute is. (*Tip:* If you expect an attribute to not always be filled, i.e.
+for lyrics, do not overweight it, since we "punish" unfilled attributes). 
+
+The *AttributeMask* looks like this: 
 
 .. code-block:: python
 
-   # Session loading
-   # Session Creating, minimal attribute mask, keys
-   # use MY_DATABASE
-   # feed some history
+
+    {
+        'keyname': (
+            # Let's assume we instanced this before
+            some_provider_instance,
+            # Distance Functions need to know their provider:
+            SomeDistanceFunction(provider_instance),
+            # The importance of this attribute as a float of your choice
+            # libmunin will only use relative weights.
+            weight
+        ),
+        # ...
+    }
+
+But instancing providers beforehand is tedious, therefore we have a cleaner
+version: 
+
+.. code-block:: python
+   :emphasize-lines: 4
+
+    {
+        # Use the pairup function from munin.helpers
+        # to set the Provider to the DistanceFunction automatically.
+        'keyname': pairup(
+            SomeProvider(),
+            DistanceFunction(),
+            weight
+        ),
+        # ...
+    }
+
+Here's a full example of how this plays together:
+
+.. literalinclude:: ../munin/__main__.py
+
+
+The output in the first run is: 
+
+.. code-block:: bash
+
+   TODO
+
+And in the second run: 
+
+.. code-block:: bash
+
+   TODO
+
+
+.. seealso:: 
+
+   * :ref:`provider_chapter` for a list of available Provider and whay they do.
+   * :ref:`distance_chapter` for a list of available DistanceFunction and what they do.
+
 
 .. note::
 
-    **Later parts will only give you a sneak-peek into the most importannt features.**
+    **Later parts of this turorial will only give you a sneak-peek into the most importannt features.**
 
 Part 3: Loading a session
 -------------------------

@@ -1,3 +1,5 @@
+.. _distance_chapter:
+
 Distances and Distance Calculation
 ==================================
 
