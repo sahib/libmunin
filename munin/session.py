@@ -104,7 +104,7 @@ class Session:
 
         :param name: The name of the session. Used to load it again from disk.
         :param mask: The attribute mask. See :term:`Mask`
-        :param config: A dictionary with config values. See :class`DEFAULT_CONFIG` for available keys.
+        :param config: A dictionary with config values. See :class:`DefaultConfig` for available keys.
         """
         self._config = config or DEFAULT_CONFIG
         self._name = name

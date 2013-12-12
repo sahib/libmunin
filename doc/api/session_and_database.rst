@@ -1,5 +1,5 @@
-Sqession and Database Management
-================================
+Session and Database Management
+===============================
 
 Session
 -------
