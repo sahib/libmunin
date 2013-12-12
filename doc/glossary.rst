@@ -44,7 +44,7 @@ Glossary
         A Session is the usage of *libmunin* over the time on one music
         collection. It can be saved to disk and later resumed.
 
-    AttributeMask
+    Mask
 
         Every :term:`Session` requires a Mapping where the possible keys 
         are defined that a single song may have. The **AM** stores this

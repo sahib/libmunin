@@ -99,25 +99,25 @@ The sole purpose of this class is to save a bit of typing.
 
 class Session:
     """Main API to *libmunin* and caching layer."""
-    def __init__(self, name, attribute_mask, config=None):
+    def __init__(self, name, mask, config=None):
         """Create a new session:
 
         :param name: The name of the session. Used to load it again from disk.
-        :param attribute_mask: The attribute mask. See :term:`AttributeMask`
+        :param mask: The attribute mask. See :term:`Mask`
         :param config: A dictionary with config values. See :class`DEFAULT_CONFIG` for available keys.
         """
         self._config = config or DEFAULT_CONFIG
         self._name = name
 
         # Make access to the attribute mask more efficient
-        self._attribute_mask = copy(attribute_mask)
-        self._attribute_list = sorted(attribute_mask)
+        self._mask = copy(mask)
+        self._attribute_list = sorted(mask)
         self._listidx_to_key = {k: i for i, k in enumerate(self._attribute_list)}
 
         # Lookup tables for those attributes (fast access is crucial here)
         def make_index(idx, default_func):
             index = {}
-            for key, descr in self._attribute_mask.items():
+            for key, descr in self._mask.items():
                 if descr[idx] is not None:
                     index[key] = descr[idx]
                 else:
@@ -141,7 +141,7 @@ class Session:
         )
 
         # Sum of the individual weights, pre-calculated once.
-        self._weight_sum = sum((descr[2] for descr in attribute_mask.values()))
+        self._weight_sum = sum((descr[2] for descr in mask.values()))
 
         # Create the associated database.
         self._database = Database(self)
@@ -179,14 +179,14 @@ class Session:
     # Make this only gettable, so we can distribute the reference
     # around all session objects.
     @property
-    def attribute_mask(self):
+    def mask(self):
         'Returns a copy of the attribute mask (as passed in)'
-        return copy(self._attribute_mask)
+        return copy(self._mask)
 
     @property
     def mask_length(self):
         'Returns the length of the attribte mask (number of keys)'
-        return len(self._attribute_mask)
+        return len(self._mask)
 
     def key_at_index(self, idx):
         'Retrieve the key of the attribute mask at index ``idx``'
@@ -212,7 +212,7 @@ class Session:
         'This is in Session for performance reasons'
         dist_sum = 0.0
 
-        for key, (_, _, weight) in self._attribute_mask.items():
+        for key, (_, _, weight) in self._mask.items():
             try:
                 dist_sum += dist_dict[key] * weight
             except KeyError:
@@ -421,7 +421,7 @@ if __name__ == '__main__':
             new_session = Session.from_archive_path(path)
             self.assertTrue(os.path.isdir(path[:-3]))
             self.assertEqual(
-                    new_session.attribute_mask,
+                    new_session.mask,
                     {'genre': (None, None, 0.2), 'artist': (None, None, 0.3)}
             )
 

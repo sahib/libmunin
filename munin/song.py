@@ -26,7 +26,7 @@ class Song(SessionMapping, Hashable):
 
     The keys will depend on the attribute mask in the session.
     The values will be passed as value_dict to the constructor.
-    Keys that are no in value_dict, but in the attribute_mask (therefore valid)
+    Keys that are no in value_dict, but in the mask (therefore valid)
     will return the default_value passed (usually that is None).
 
     Internally a list is used to store the values, leaving the keys in the
@@ -52,7 +52,7 @@ class Song(SessionMapping, Hashable):
                              filter 1.0 distances)
         :type max_distance: float
         """
-        # Make sure the list is as long as the attribute_mask
+        # Make sure the list is as long as the mask
         SessionMapping.__init__(
                 self, session,
                 input_dict=value_dict,

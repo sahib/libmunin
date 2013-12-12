@@ -139,8 +139,6 @@ A Session needs to know how the data looks like you feed it. ``EasySession``
 does this by assuming some sane defaults, but you can always configure every
 last bit of how you want *libmunin* to eat your data.
 
-.. todo:: Rename AttributeMask to Mask.. cleaner.
-
 You do this by specifying an *AttriuteMask* where you carefully select a pairs of
 providers (thing that preproces values) and distancefunctions (things that
 calculate the similarity or *distance* of those preprocessed values ). Apart
@@ -148,7 +146,7 @@ from that you give a weighting of that attribute, telling us how important that
 attribute is. (*Tip:* If you expect an attribute to not always be filled, i.e.
 for lyrics, do not overweight it, since we "punish" unfilled attributes). 
 
-The *AttributeMask* looks like this: 
+The *Mask* looks like this: 
 
 .. code-block:: python
 

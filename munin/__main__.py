@@ -29,7 +29,7 @@ MY_DATABASE = [(
 def create_session(name):
     session = Session(
         name='demo',
-        attribute_mask={
+        mask={
             # Each entry goes like this:
             'Genre': pairup(
                 # Pratice: Go lookup what this Providers does.

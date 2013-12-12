@@ -13,7 +13,7 @@ Contains method that help the user of the library finding the date he needs.
     * :func:`song_or_uid` - function that delivers the song for uids or just
                             returns the song if passed in.
 
-    * :func:`pairup` - Easy AttributeMask building.
+    * :func:`pairup` - Easy Mask building.
 
 Reference
 ---------
@@ -187,7 +187,7 @@ class SessionMapping(Mapping):
     __slots__ = ('_store', '_session')
 
     def __init__(self, session, input_dict, default_value=None):
-        # Make sure the list is as long as the attribute_mask
+        # Make sure the list is as long as the mask
         self._store = [default_value] * session.mask_length
         self._session = session
 
