@@ -82,7 +82,6 @@ class Provider:
 #                             Import Aliases                              #
 ###########################################################################
 
-# TODO: Circular imports
 from munin.provider.genre import GenreTreeProvider
 from munin.provider.composite import CompositeProvider
 from munin.provider.stem import LancasterStemProvider, SnowballStemProvider

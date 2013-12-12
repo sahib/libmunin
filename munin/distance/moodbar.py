@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 
-'''
+"""
 Overview
 --------
 
@@ -34,7 +34,7 @@ The individual attributes are weighted and computes as following:
 
 Reference
 ---------
-'''
+"""
 
 from munin.distance import DistanceFunction
 from math import sqrt

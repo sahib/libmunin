@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-'''
+"""
 Overview
 ========
 
@@ -21,7 +21,7 @@ The Distance as calculated as: ::
 
 Reference
 =========
-'''
+"""
 
 
 from munin.distance import DistanceFunction

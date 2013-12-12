@@ -311,9 +311,13 @@ class Database:
                 last = dist
 
     def insert(self, value_dict, star_threshold=0.75):
+        prev_len = len(self._song_list)
         new_song = self._song_list[self.add(value_dict)]
-        iterstep = max(1, math.log(len(self._song_list) or 1))
+        next_len = len(self._song_list)
+        is_added = not (prev_len == next_len)
+        iterstep = max(1, math.log(max(next_len, 1)))
 
+        # Step 1: Find samples with similar songs (similar to the base step)
         distances = deque()
         for song in self._song_list[::iterstep]:
             if song is not None:
@@ -321,14 +325,27 @@ class Database:
                 distances.append((song, distance))
                 new_song.distance_add(song, distance)
 
+        # Step 2: Short refinement step
         for song, distance in distances:
             if distance.distance > star_threshold:
                 for neighbor in song.neighbors():
                     distance = new_song.distance_compute(neighbor)
                     new_song.distance_add(neighbor, distance)
 
-        # TODO: add new vertex to graph
+        # Step 3: Modify the graph accordingly
+        if is_added:
+            # Add a new vertex:
+            self._graph.add_vertex(song=new_song)
+        else:
+            # Update the old vertex:
+            self._graph.vs[new_song.uid]['song'] = new_song
 
+        # Step 4: Add the edges:
+        edge_set = set()
+        for new_neighbor in new_song.neighbors():
+            edge_set.add((new_song.uid, new_neighbor.uid))
+
+        self._graph.add_edges(edge_set)
         return new_song.uid
 
     def remove(self, uid):
@@ -338,7 +355,12 @@ class Database:
         song = self._song_list[uid] = None
         self._revoked_uids.add(uid)
 
-        # TODO: remove vertex to graph
+        edge_set = set()
+        for neighbor in song.neighbors():
+            edge_set.add((song.uid, neighbor.uid))
+
+        self._graph.delete_edges(edge_set)
+
         # Patch the hole:
         song.disconnect()
 

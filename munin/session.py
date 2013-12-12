@@ -243,7 +243,6 @@ class Session:
         :returns: A cached session.
         :rtype: :class:`Session`
         """
-        # TODO: test if zip makes any sense
         base_path, _ = os.path.splitext(full_path)
         with tarfile.open(full_path, 'r:*') as tar:
             tar.extractall(base_path)

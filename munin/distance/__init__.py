@@ -32,7 +32,6 @@ class DistanceFunction:
         """
         self._provider = provider
 
-    # TODO: ' -> "; " -> """
     def __call__(self, list_a, list_b):
         'Shortcut for :func:`compute`'
         return self.compute(list_a, list_b)
