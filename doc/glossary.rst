@@ -68,9 +68,9 @@ Glossary
         
         A *Rule* associates certain songs, or one single song with other songs
         or another single song. The strenght of the association is given by the
-        *rating* of the rule, which is technically calculated as: ::
+        *rating* of the rule, which is technically calculated as: 
 
-            (1.0 - KulczynskiMeasure) * ImbalanceRatio
+            :math:`(1.0 - Kulczynski) \cdot Imbalance`
 
     Recommendation
 
