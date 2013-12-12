@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-""":class:`Session` is the main entrance to using libmunin.
+"""
+Overview
+--------
+
+:class:`Session` is the main entrance to using libmunin.
 
 It implements a caching layer around the lower level API, being able to
 save a usage-*Session* for later re-use. The session data will be saved packed
@@ -10,6 +14,9 @@ on disk as a .gzip archive.
 Apart from this it holds the **Attribute Mask** - in simple words:
 the part where you tell libmunin what data you have to offer and how
 you want to configure the processing of it.
+
+Reference
+---------
 """
 
 # Standard:
@@ -287,8 +294,22 @@ class Session:
     #                             Recommendations                             #
     ###########################################################################
 
-    # TODO: Missing docstrings
     def recommend_from_attributes(self, subset, number=20):
+        """Give 'n' recommendations based on 'song'.
+
+        - Will lookup rules for song.
+        - If no rules found, a breadth first search starting with song is performed.
+        - Otherwise, breadth first from songs mentioned in the rules are done.
+
+        :param graph: The graph to breadth first search on.
+        :type graph: :class:`igraph.Graph`
+        :param rule_index: Rule database.
+        :type rule_index: :class:`munin.history.RuleIndex`
+        :param song: Song to base recommendations on.
+        :type song: :class:`munin.song.Song`
+        :param n: Deliver so many recommendations (at max.)
+        :returns: An iterator that yields recommend songs.
+        """
         song = song_or_uid(self.database, song)
         return munin.graph.recommendations_from_attributes(
                 subset,
@@ -299,6 +320,16 @@ class Session:
         )
 
     def recommend_from_seed(self, song, number=20):
+        """Recommend songs based on a certain attribute.
+
+        For example you can search by a certain genre by calling it like this: ::
+
+            >>> recommendations_from_attribute({'genre', 'death metal'}, ...)
+
+        The value passed must match fully, no fuzzy matching is performed.
+
+        :returns: Recommendations like the others or None if no suitable song found.
+        """
         song = song_or_uid(self.database, song)
         return munin.graph.recommendations_from_song(
                 self.database._graph,
@@ -307,7 +338,16 @@ class Session:
                 number
         )
 
-    def recommend_from_graph(self, number=20):
+    def recommend_from_heuristic(self, number=20):
+        """Find n recommendations solely from the graph.
+
+        This will try to find a good rule, that indicates a user's
+        favourite song, and will call :func:`recommendations_from_song` on it.
+        If no rules are known, the most played song will be chosen.
+        If there is none, a random song is picked.
+
+        .. seealso: :func:`recommendations_from_song`
+        """
         return munin.graph.recommendations_from_graph(
                 self.database,
                 self.database._graph,

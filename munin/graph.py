@@ -99,22 +99,6 @@ def common_neighbors(graph, song_a, song_b, n=10):
 
 
 def recommendations_from_song(graph, rule_index, song, n=20):
-    """Give 'n' recommendations based on 'song'.
-
-    - Will lookup rules for song.
-    - If no rules found, a breadth first search starting with song is
-      performed.
-    - Otherwise, breadth first from songs mentioned in the rules are done.
-
-    :param graph: The graph to breadth first search on.
-    :type graph: :class:`igraph.Graph`
-    :param rule_index: Rule database.
-    :type rule_index: :class:`munin.history.RuleIndex`
-    :param song: Song to base recommendations on.
-    :type song: :class:`munin.song.Song`
-    :param n: Deliver so many recommendations (at max.)
-    :returns: An iterator that yields recommend songs.
-    """
     # Shortcuts:
     if n is 0:
         return iter([])
@@ -174,16 +158,6 @@ def _recommendations_from_song(graph, rule_index, song, n=20):
 
 
 def recommendations_from_attributes(subset, database, graph, rule_index, n=20):
-    """Recommend songs based on a certain attribute.
-
-    For example you can search by a certain genre by calling it like this: ::
-
-        >>> recommendations_from_attribute({'genre', 'death metal'}, ...)
-
-    The value passed must match fully, no fuzzy matching is performed.
-
-    :returns: Recommendations like the others or None if no suitable song found.
-    """
     try:
         chosen_song = next(database.find_matching_attributes(keys, values))
         return recommendations_from_song(graph, rule_index, chosen_song, n=n)
@@ -191,16 +165,7 @@ def recommendations_from_attributes(subset, database, graph, rule_index, n=20):
         return iter([])
 
 
-def recommendations_from_graph(database, graph, rule_index, n=20):
-    """Find n recommendations solely from the graph.
-
-    This will try to find a good rule, that indicates a user's
-    favourite song, and will call :func:`recommendations_from_song` on it.
-    If no rules are known, the most played song will be chosen.
-    If there is none, a random song is picked.
-
-    .. seealso: :func:`recommendations_from_song`
-    """
+def recommendations_from_heuristic(database, graph, rule_index, n=20):
     try:
         # Get the best rule from the index
         best_rule = next(iter(rule_index))

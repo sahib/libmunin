@@ -252,7 +252,7 @@ There are different methods to get recommendations that differ in details:
     Get N recommendations from a certain song.
     There are some more details in Part 8_.
 
-* ``recommendations_from_graph(N)``
+* ``recommendations_from_heuristic(N)``
 
     Like above, but try to choose a good seed song in this order:
 

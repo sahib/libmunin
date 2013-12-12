@@ -4,8 +4,8 @@ Session and Database Management
 Session
 -------
 
-.. autoclass:: munin.session.Session
-    :members:
+.. automodule:: munin.session
+    :members: Session
 
 Database
 --------

@@ -28,8 +28,8 @@ class Database:
 
         You can do the following tasks with it:
 
-        * Add songs to the database (:func:`add`, :func:`add`)
-        * Trigger updates (:func:`rebuild`, :func:`transaction`)
+        * Trigger updates (:func:`rebuild`)
+        * Get a plot of the graph for debuggin purpose.
         * Iterative over the database (``for song in database``).
         * Get a song by it's uid. (``database[song.uid]``)
 
