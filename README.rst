@@ -22,13 +22,19 @@ Installation
 
 .. image:: https://travis-ci.org/sahib/libmunin.png?branch=master   
     :target: https://travis-ci.org/sahib/libmunin
+    :alt: Travis Page
 
 .. image:: https://badge.fury.io/py/libmunin.png
     :target: http://badge.fury.io/py/libmunin
+    :alt: PyPI package link
 
 .. image:: https://pypip.in/d/libmunin/badge.png
-    :target: https://crate.io/packages/$REPO/
+    :target: https://crate.io/packages/libmunin
     :alt: Number of PyPI downloads
+
+.. image:: https://d2weczhvl823v0.cloudfront.net/sahib/libmunin/trend.png
+    :target: https://bitdeli.com/free
+    :alt: Bitdeli Badge
 
 Required externam programs
 --------------------------

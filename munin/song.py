@@ -34,8 +34,6 @@ class Song(SessionMapping, Hashable):
     Session objects - for many instances this saves a considerable amount
     of memory.
 
-    .. todo:: Make some numbers up to prove this :-)
-
     **Reference**
     """
     def __init__(self, session, value_dict, max_neighbors=10, max_distance=0.999, default_value=None):
@@ -55,9 +53,9 @@ class Song(SessionMapping, Hashable):
         """
         # Make sure the list is as long as the mask
         SessionMapping.__init__(
-                self, session,
-                input_dict=value_dict,
-                default_value=default_value
+            self, session,
+            input_dict=value_dict,
+            default_value=default_value
         )
         self._dist_dict = OrderedDict()
         self._worst_cache = None
@@ -80,9 +78,9 @@ class Song(SessionMapping, Hashable):
 
     def __repr__(self):
         return '<Song(uid={uid} values={val}, distances={dst})>'.format(
-                val=self._store,
-                uid=self.uid,
-                dst=['{}: {}'.format(song.uid, dist) for song, dist in self._dist_dict.items()]
+            val=self._store,
+            uid=self.uid,
+            dst=['{}: {}'.format(song.uid, dist) for song, dist in self._dist_dict.items()]
         )
 
     ############################

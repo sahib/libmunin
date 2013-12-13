@@ -107,7 +107,7 @@ class Database:
         except KeyError:
             raise KeyError('key "{k}" is not in attribute mask'.format(k=key))
 
-    def plot(self):
+    def plot(self, width=1000, height=1000):
         """Plot the current graph for debugging purpose.
 
         Will try to open an installed image viewer.
@@ -137,7 +137,7 @@ class Database:
         visual_style['vertex_label_color'] = [hsv_to_rgb(1 - v, 0.5, 1.0) for v in colors]
         visual_style['vertex_size'] = [42] * len(self._graph.vs)
         visual_style['layout'] = self._graph.layout('fr')
-        visual_style['bbox'] = (250, 250)
+        visual_style['bbox'] = (width, height)
         igraph.plot(self._graph, **visual_style)
 
     def _rebuild_step_base(self, mean_counter, window_size=60, step_size=20):
@@ -439,10 +439,10 @@ if __name__ == '__main__':
                 for idx, v in enumerate(['l', 'r', 't', 'd']):
                     songs.append(self._session.add({'genre': [0], 'artist': [0]}))
 
-            # self._session.database.plot()
+            # self._session.database.plot(250, 250)
             with self._session.fix_graph():
                 self._session.insert({'genre': [0], 'artist': [0]})
-            # self._session.database.plot()
+            # self._session.database.plot(250, 250)
 
             for song in self._session.database:
                 for other in self._session.database:
@@ -450,10 +450,10 @@ if __name__ == '__main__':
                         self.assertAlmostEqual(song.distance_get(other).distance, 0.0)
 
             self._session.remove(4)
-            # self._session.database.plot()
+            # self._session.database.plot(250, 250)
             with self._session.fix_graph():
                 self._session.insert({'genre': [0], 'artist': [0]})
-            # self._session.database.plot()
+            # self._session.database.plot(250, 250)
 
     def main():
         from munin.distance import DistanceFunction
@@ -479,14 +479,14 @@ if __name__ == '__main__':
                     'artist': 1.0 - i / N
                 })
                 # Pseudo-Random, but deterministic:
-                # euler = lambda x: math.fmod(math.e ** x, 1.0)
-                # session.database.add({
-                #     'genre': euler((i + 1) % 30),
-                #     'artist': euler((N - i + 1) % 30)
-                # })
+                euler = lambda x: math.fmod(math.e ** x, 1.0)
+                session.database.add({
+                    'genre': euler((i + 1) % 30),
+                    'artist': euler((N - i + 1) % 30)
+                })
 
         LOGGER.debug('+ Step #4: Layouting and Plotting')
-        session.database.plot()
+        # session.database.plot()
 
     if '--cli' in sys.argv:
         main()

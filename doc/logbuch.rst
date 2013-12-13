@@ -590,3 +590,16 @@ Anonsten funktionier die Moodbar Analyse einigermaßen gut (*): ::
       
         * http://www.musicplasma.com/
         * https://bbs.archlinux.org/viewtopic.php?id=174049
+
+10 Dezember 2013
+----------------
+
+**Randnotizen:**
+
+    * Da eine normalisierte Datenbank oft hilfreich ist mit libmunin:
+
+        http://beets.radbox.org/
+
+    * Es gibt mehr als einen aktiv entwickelten MPD Server:
+
+        http://www.mopidy.com/

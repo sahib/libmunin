@@ -377,7 +377,7 @@ class RuleIndex:
             >>> with rule_index.begin_add_many():
             ...    rule_index.insert_rule(...)
 
-        Calls :func:`drop_invalid` after some time.
+        Calls :func:`drop_invalid` after being done.
         """
         try:
             yield
