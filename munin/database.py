@@ -455,6 +455,54 @@ if __name__ == '__main__':
                 self._session.insert({'genre': [0], 'artist': [0]})
             # self._session.database.plot(250, 250)
 
+        def test_find_matching_attributes(self):
+            from munin.provider import GenreTreeProvider
+            from munin.distance import GenreTreeDistance
+            from munin.helper import pairup
+
+            session = Session('session_find_test', {
+                'genre': pairup(GenreTreeProvider(), GenreTreeDistance(), 5),
+                'artist': pairup(None, None, 1)
+            })
+            session.add({
+                'artist': 'Berta',
+                'genre': 'death metal'
+            })
+            session.add({
+                'artist': 'Hans',
+                'genre': 'metal'
+            })
+            session.add({
+                'artist': 'Berta',
+                'genre': 'pop'
+            })
+
+            found = list(session.find_matching_attributes({'genre': 'metal'}))
+            self.assertEqual(len(found), 1)
+            self.assertEqual(found[0], session[1])
+
+            found = list(session.find_matching_attributes(
+                {'genre': 'metal', 'artist': 'Berta'}
+            ))
+            self.assertEqual(len(found), 0)
+
+            found = list(session.find_matching_attributes(
+                {'genre': 'metal', 'artist': 'Hans'}
+            ))
+            self.assertEqual(len(found), 1)
+            self.assertEqual(found[0], session[1])
+
+            found = list(session.find_matching_attributes(
+                {'genre': 'pop', 'artist': 'Berta'}
+            ))
+            self.assertEqual(len(found), 1)
+            self.assertEqual(found[0], session[2])
+
+            found = list(session.find_matching_attributes({'artist': 'Berta'}))
+            self.assertEqual(len(found), 2)
+            self.assertEqual(found[0], session[0])
+            self.assertEqual(found[1], session[2])
+
     def main():
         from munin.distance import DistanceFunction
 

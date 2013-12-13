@@ -311,11 +311,11 @@ class Session:
         :returns: An iterator that yields recommend songs.
         """
         return munin.graph.recommendations_from_attributes(
-                subset,
-                self.database,
-                self.database._graph,
-                self.database.rule_index,
-                number
+            subset,
+            self.database,
+            self.database._graph,
+            self.database.rule_index,
+            number
         )
 
     def recommend_from_seed(self, song, number=20):
@@ -331,10 +331,10 @@ class Session:
         """
         song = song_or_uid(self.database, song)
         return munin.graph.recommendations_from_song(
-                self.database._graph,
-                self.database.rule_index,
-                song,
-                number
+            self.database._graph,
+            self.database.rule_index,
+            song,
+            number
         )
 
     def recommend_from_heuristic(self, number=20):
@@ -348,10 +348,35 @@ class Session:
         .. seealso: :func:`recommendations_from_song`
         """
         return munin.graph.recommendations_from_graph(
-                self.database,
-                self.database._graph,
-                self.database.rule_index,
-                number
+            self.database,
+            self.database._graph,
+            self.database.rule_index,
+            number
+        )
+
+    def explain_recommendation(self, seed_song, recommendation, max_reasons=3):
+        """Explain the recommendation you got.
+
+        **Usage Example:**
+
+            >>> explain_recommendation(seed_song, recommendation)
+            (~0.4, [
+                ('genre', 0.1),    # Very similar common attribute
+                ('moodbar', 0.2),  # Quite similar
+                ('lyrics', 0.5)    # Well, that's okay.
+            ])
+
+        :param seed_song: The seed song used.
+                          For ``_heuristic`` and ``_attribute`` this is the first song.
+        :param recommendation: The recommendation you want to have explained.
+        :param max_reasons: How many reasons to yield at a maximum.
+        :retruns: Tuple of the total distance to each other and a list of pairs 
+                  that consist of (attribute_name: subdistance_float)
+        """
+        return munin.graph.explain_recommendation(
+            seed_song,
+            recommendation,
+            max_reasons
         )
 
     ###########################################################################

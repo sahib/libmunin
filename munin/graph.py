@@ -180,6 +180,11 @@ def recommendations_from_heuristic(database, graph, rule_index, n=20):
     return recommendations_from_song(graph, rule_index, chosen_song, n=n)
 
 
+def explain_recommendation(seed_song, recommendation, max_reasons=3):
+    distance = seed_song.distance_compute(recommendation)
+    return (distance, sorted(distance.items(), key=lambda tup: [1])[:max_reasons])
+
+
 if __name__ == '__main__':
     import unittest
     from itertools import combinations

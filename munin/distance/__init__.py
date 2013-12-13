@@ -20,7 +20,7 @@ class DistanceFunction:
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, provider):
+    def __init__(self, provider=None):
         """This class is supposed to be overriden, but can also be used
         as fallback.
 
@@ -37,7 +37,7 @@ class DistanceFunction:
         return self.compute(list_a, list_b)
 
     def compute(self, lefts, rights):
-        if self._provider.compress:
+        if self._provider is not None and self._provider.compress:
             lefts = self._provider._lookup(lefts)
             rights = self._provider._lookup(rights)
 
