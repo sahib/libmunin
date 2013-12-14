@@ -603,3 +603,7 @@ Anonsten funktionier die Moodbar Analyse einigermaßen gut (*): ::
     * Es gibt mehr als einen aktiv entwickelten MPD Server:
 
         http://www.mopidy.com/
+
+    * Manchmal entstehen hübsche blümchen:
+
+        http://i.imgur.com/Bhg6OGg.png

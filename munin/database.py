@@ -407,15 +407,11 @@ if __name__ == '__main__':
     from munin.session import Session
     from munin.provider import Provider
 
-    class _DummyProvider(Provider):
-        def process(self, input_value):
-            return (input_value, )
-
     class DatabaseTests(unittest.TestCase):
         def setUp(self):
             self._session = Session('session_test', {
-                'genre': (_DummyProvider(), None, 0.2),
-                'artist': (_DummyProvider(), None, 0.3)
+                'genre': (None, None, 0.2),
+                'artist': (None, None, 0.3)
             })
 
         def test_basics(self):
@@ -504,37 +500,36 @@ if __name__ == '__main__':
             self.assertEqual(found[1], session[2])
 
     def main():
+        from munin.testing import DummyDistanceFunction
         from munin.distance import DistanceFunction
 
-        class _DummyDistance(DistanceFunction):
+        class _DummyDistanceFunction(DistanceFunction):
             def compute(self, list_a, list_b):
                 return abs(list_a[0] - list_b[0])
 
-        dprov = _DummyProvider()
-        dfunc = _DummyDistance(dprov)
         session = Session('session_test', {
-            'genre': (dprov, dfunc, 0.2),
-            'artist': (dprov, dfunc, 0.3)
+            'genre': (None, _DummyDistanceFunction(), 0.2),
+            'artist': (None, _DummyDistanceFunction(), 0.3)
         })
 
         import math
 
         with session.transaction():
-            N = 800
+            N = 200
             for i in range(int(N / 2) + 1):
                 session.add({
                     'genre': 1.0 - i / N,
                     'artist': 1.0 - i / N
                 })
                 # Pseudo-Random, but deterministic:
-                euler = lambda x: math.fmod(math.e ** x, 1.0)
-                session.database.add({
-                    'genre': euler((i + 1) % 30),
-                    'artist': euler((N - i + 1) % 30)
-                })
+                # euler = lambda x: math.fmod(math.e ** x, 1.0)
+                # session.database.add({
+                #     'genre': euler((i + 1) % 30),
+                #     'artist': euler((N - i + 1) % 30)
+                # })
 
         LOGGER.debug('+ Step #4: Layouting and Plotting')
-        # session.database.plot()
+        session.database.plot()
 
     if '--cli' in sys.argv:
         main()

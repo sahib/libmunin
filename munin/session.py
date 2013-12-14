@@ -75,7 +75,7 @@ def get_cache_path(extra_name=None):
 
 
 DEFAULT_CONFIG = {
-    'max_neighbors': 5,
+    'max_neighbors': 10,
     'max_distance': 0.999,
 }
 
@@ -295,20 +295,16 @@ class Session:
     ###########################################################################
 
     def recommend_from_attributes(self, subset, number=20):
-        """Give 'n' recommendations based on 'song'.
+        """Find n recommendations solely from intelligent guessing.
 
-        - Will lookup rules for song.
-        - If no rules found, a breadth first search starting with song is performed.
-        - Otherwise, breadth first from songs mentioned in the rules are done.
+        This will try to find a good rule, that indicates a user's
+        favourite song, and will call :func:`recommendations_from_seed` on it.
+        If no rules are known, the most played song will be chosen.
+        If there is none, a random song is picked.
 
-        :param graph: The graph to breadth first search on.
-        :type graph: :class:`igraph.Graph`
-        :param rule_index: Rule database.
-        :type rule_index: :class:`munin.history.RuleIndex`
-        :param song: Song to base recommendations on.
-        :type song: :class:`munin.song.Song`
-        :param n: Deliver so many recommendations (at max.)
-        :returns: An iterator that yields recommend songs.
+        The first song in the recommendations yielded is the seed song.
+
+        .. seealso: :func:`recommendations_from_seed`
         """
         return munin.graph.recommendations_from_attributes(
             subset,
@@ -330,27 +326,35 @@ class Session:
         :returns: Recommendations like the others or None if no suitable song found.
         """
         song = song_or_uid(self.database, song)
-        return munin.graph.recommendations_from_song(
+        return munin.graph.recommendations_from_seed(
             self.database._graph,
-            self.database.rule_index,
+            self.rule_index,
             song,
             number
         )
 
     def recommend_from_heuristic(self, number=20):
-        """Find n recommendations solely from the graph.
+        """Give 'n' recommendations based on 'song'.
 
-        This will try to find a good rule, that indicates a user's
-        favourite song, and will call :func:`recommendations_from_song` on it.
-        If no rules are known, the most played song will be chosen.
-        If there is none, a random song is picked.
+        - Will lookup rules for song.
+        - If no rules found, a breadth first search starting with song is performed.
+        - Otherwise, breadth first from songs mentioned in the rules are done.
 
-        .. seealso: :func:`recommendations_from_song`
+        The first song in the recommendations yielded is the seed song.
+
+        :param graph: The graph to breadth first search on.
+        :type graph: :class:`igraph.Graph`
+        :param rule_index: Rule database.
+        :type rule_index: :class:`munin.history.RuleIndex`
+        :param song: Song to base recommendations on.
+        :type song: :class:`munin.song.Song`
+        :param n: Deliver so many recommendations (at max.)
+        :returns: An iterator that yields recommend songs.
         """
         return munin.graph.recommendations_from_graph(
             self.database,
             self.database._graph,
-            self.database.rule_index,
+            self.rule_index,
             number
         )
 
@@ -370,7 +374,7 @@ class Session:
                           For ``_heuristic`` and ``_attribute`` this is the first song.
         :param recommendation: The recommendation you want to have explained.
         :param max_reasons: How many reasons to yield at a maximum.
-        :retruns: Tuple of the total distance to each other and a list of pairs 
+        :retruns: Tuple of the total distance to each other and a list of pairs
                   that consist of (attribute_name: subdistance_float)
         """
         return munin.graph.explain_recommendation(
