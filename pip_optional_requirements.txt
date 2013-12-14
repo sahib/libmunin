@@ -10,3 +10,6 @@ plyr
 # Optional Deps:
 #: colorlog
 colorlog
+
+#: igraph
+python-igraph

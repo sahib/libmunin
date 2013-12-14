@@ -164,23 +164,9 @@ def grouper(iterable, n, fillvalue=None):
     return zip_longest(*args, fillvalue=fillvalue)
 
 
-def roundrobin(*iterables):
-    "roundrobin('ABC', 'D', 'EF') --> A D E B F C"
-    # Recipe credited to George Sakkis
-    pending = len(iterables)
-    nexts = cycle(iter(it).__next__ for it in iterables)
-    while pending:
-        try:
-            for next in nexts:
-                yield next()
-        except StopIteration:
-            pending -= 1
-            nexts = cycle(islice(nexts, pending))
-
 ###########################################################################
 #                             SessionMapping                              #
 ###########################################################################
-
 
 class SessionMapping(Mapping):
     # Note: Use __slots__ (sys.getsizeof will report even more memory, but # pympler less)

@@ -16,9 +16,6 @@ from munin.song import Song
 from munin.helper import sliding_window, centering_window
 from munin.history import ListenHistory, RuleIndex
 
-# External:
-import igraph
-
 
 class Database:
     'Class managing Database concerns.'
@@ -40,7 +37,6 @@ class Database:
         """
         self._session = session
         self._song_list = []
-        self._graph = igraph.Graph()
 
         # TODO: Provide config options
         self._reset_history()
@@ -107,23 +103,50 @@ class Database:
         except KeyError:
             raise KeyError('key "{k}" is not in attribute mask'.format(k=key))
 
+    # TODO: Clean this clusterfuck up
     def plot(self, width=1000, height=1000):
         """Plot the current graph for debugging purpose.
 
         Will try to open an installed image viewer.
         """
+        try:
+            import igraph
+        except ImportError:
+            print('-- You need igraph and python-igraph installed for this.')
+            return
+
+        graph = igraph.Graph(directed=False)
+        for song in self:
+            graph.add_vertex(song=song)
+
+        # Gather all edges in one container
+        # (this speeds up adding edges)
+        edge_set = deque()
+        for song_a in self:
+            for song_b, _ in song_a.distance_iter():
+                if song_a.distance_get(song_b) is None or song_b.distance_get(song_a) is None:
+                    continue
+
+                # Make Edge Deduplication work:
+                if song_a.uid < song_b.uid:
+                    edge_set.append((song_b.uid, song_a.uid))
+                else:
+                    edge_set.append((song_a.uid, song_b.uid))
+
+        # Filter duplicate edge pairs.
+        graph.add_edges(set(edge_set))
+
         visual_style = {}
-        visual_style['vertex_label'] = [str(vx['song'].uid) for vx in self._graph.vs]
+        visual_style['vertex_label'] = [str(vx['song'].uid) for vx in graph.vs]
 
         def color_from_distance(distance):
             return '#' + '01234567890ABCDEF'[int(distance * 16)] * 2 + '0000'
 
         def edge_color_list():
-            vs = self._graph.vs
             edge_colors, edge_widths = deque(), deque()
 
-            for edge in self._graph.es:
-                a, b = vs[edge.source]['song'], vs[edge.target]['song']
+            for edge in graph.es:
+                a, b = graph.vs[edge.source]['song'], graph.vs[edge.target]['song']
                 distance = a.distance_get(b)
                 if distance is not None:
                     edge_colors.append(color_from_distance(distance.distance))
@@ -132,13 +155,13 @@ class Database:
             return list(edge_colors), list(edge_widths)
 
         visual_style['edge_color'], visual_style['edge_width'] = edge_color_list()
-        colors = self._graph.eigenvector_centrality(directed=False)
+        colors = graph.eigenvector_centrality(directed=False)
         visual_style['vertex_color'] = [hsv_to_rgb(v, 1.0, 1.0) for v in colors]
         visual_style['vertex_label_color'] = [hsv_to_rgb(1 - v, 0.5, 1.0) for v in colors]
-        visual_style['vertex_size'] = [42] * len(self._graph.vs)
-        visual_style['layout'] = self._graph.layout('fr')
+        visual_style['vertex_size'] = [42] * len(graph.vs)
+        visual_style['layout'] = graph.layout('fr')
         visual_style['bbox'] = (width, height)
-        igraph.plot(self._graph, **visual_style)
+        igraph.plot(graph, **visual_style)
 
     def _rebuild_step_base(self, mean_counter, window_size=60, step_size=20):
         """Do the Base Iterations.
@@ -219,38 +242,6 @@ class Database:
                 break
         LOGGER.debug('Did {}x (of max. {}) refinement steps.'.format(n_iteration, num_passes))
 
-    def _rebuild_step_build_graph(self):
-        """Built an actual igraph.Graph from the songlist.
-
-        This is done by iteration over the songlist and gathering all
-        deduplicated edges.
-
-        The resulting graph will be stored in self._graph and will have
-        len(self._song_list) vertices.
-        """
-        # Create the actual graph:
-        self._graph = igraph.Graph(directed=False)
-
-        for song in self:
-            self._graph.add_vertex(song=song)
-
-        # Gather all edges in one container
-        # (this speeds up adding edges)
-        edge_set = deque()
-        for song_a in self:
-            for song_b, _ in song_a.distance_iter():
-                if song_a.distance_get(song_b) is None or song_b.distance_get(song_a) is None:
-                    continue
-
-                # Make Edge Deduplication work:
-                if song_a.uid < song_b.uid:
-                    edge_set.append((song_b.uid, song_a.uid))
-                else:
-                    edge_set.append((song_a.uid, song_b.uid))
-
-        # Filter duplicate edge pairs.
-        self._graph.add_edges(set(edge_set))
-
     def rebuild_stupid(self):
         """(Re)build the graph by calculating the combination of all songs.
 
@@ -281,9 +272,9 @@ class Database:
 
             LOGGER.debug('+ Step #1: Calculating base distance (sliding window)')
             self._rebuild_step_base(
-                    mean_counter,
-                    window_size=window_size,
-                    step_size=step_size
+                mean_counter,
+                window_size=window_size,
+                step_size=step_size
             )
 
             LOGGER.debug('|-- Mean Distane: {:f} (sd: {:f})'.format(mean_counter.mean, mean_counter.sd))
@@ -295,8 +286,6 @@ class Database:
 
             LOGGER.debug('|-- Mean Distane: {:f} (sd: {:f})'.format(mean_counter.mean, mean_counter.sd))
 
-        LOGGER.debug('+ Step #3: Building Graph')
-        self._rebuild_step_build_graph()
         self._reset_history()
 
     def add(self, value_dict):
@@ -338,7 +327,6 @@ class Database:
         prev_len = len(self._song_list)
         new_song = self._song_list[self.add(value_dict)]
         next_len = len(self._song_list)
-        is_added = not (prev_len == next_len)
 
         if len(self) < iterstep_threshold:
             iterstep = 1
@@ -360,20 +348,6 @@ class Database:
                     distance = new_song.distance_compute(neighbor)
                     new_song.distance_add(neighbor, distance)
 
-        # Step 3: Modify the graph accordingly
-        if is_added:
-            # Add a new vertex:
-            self._graph.add_vertex(song=new_song)
-        else:
-            # Update the old vertex:
-            self._graph.vs[new_song.uid]['song'] = new_song
-
-        # Step 4: Add the edges:
-        edge_set = set()
-        for new_neighbor in new_song.neighbors():
-            edge_set.add((new_song.uid, new_neighbor.uid))
-
-        self._graph.add_edges(edge_set)
         return new_song.uid
 
     def remove(self, uid):
@@ -387,10 +361,6 @@ class Database:
         edge_set = set()
         for neighbor in song.neighbors():
             edge_set.add((song.uid, neighbor.uid))
-
-        # Note: we do *NOT* delete the vertex here, as we reuuse it later.
-
-        self._graph.delete_edges(edge_set)
 
         # Patch the hole:
         song.disconnect()
@@ -523,7 +493,7 @@ if __name__ == '__main__':
                 #     'artist': euler((N - i + 1) % 30)
                 # })
 
-        LOGGER.debug('+ Step #4: Layouting and Plotting')
+        LOGGER.debug('+ Step #3: Layouting and Plotting')
         session.database.plot()
 
     if '--cli' in sys.argv:

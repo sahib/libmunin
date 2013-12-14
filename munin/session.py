@@ -309,7 +309,6 @@ class Session:
         return munin.graph.recommendations_from_attributes(
             subset,
             self.database,
-            self.database._graph,
             self.database.rule_index,
             number
         )
@@ -327,7 +326,7 @@ class Session:
         """
         song = song_or_uid(self.database, song)
         return munin.graph.recommendations_from_seed(
-            self.database._graph,
+            self.database,
             self.rule_index,
             song,
             number
@@ -353,7 +352,6 @@ class Session:
         """
         return munin.graph.recommendations_from_graph(
             self.database,
-            self.database._graph,
             self.rule_index,
             number
         )
@@ -489,10 +487,6 @@ class Session:
             yield
         finally:
             self.database.fix_graph()
-
-    @property
-    def graph(self):
-        return self.database._graph
 
     @property
     def rule_index(self):

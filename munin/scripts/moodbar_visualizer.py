@@ -1,5 +1,5 @@
 #Stdlib:
-from collections import deque
+from collections import deque, defaultdict
 
 # Interal:
 from munin.helper import grouper
@@ -7,7 +7,21 @@ from munin.helper import grouper
 # External:
 from cairo import PDFSurface, Context
 from gi.repository import Pango, PangoCairo
-from numpy import histogram
+
+
+def histogram(channel, bin_width=51):
+    """Calculate a histogram (i.e. a binned counter of elements) of an iterable.
+
+    :param channel: The channel to consider.
+    :param bin_width: The width of each bin (255 / bin_width == 0!)
+    :returns: a list of binned values (len = 255 / bin_width)
+    """
+    counter = defaultdict(int)
+    for value in channel:
+        counter[(value // bin_width) * bin_width] += 1
+
+    return [counter[key] for key in sorted(counter.keys())]
+
 
 
 def draw_moodbar(ctx, rgb, w, h):
@@ -60,7 +74,7 @@ def draw_moodbar(ctx, rgb, w, h):
 
         block_size = 15
         own_step = width / 255
-        hist, _ = histogram([int(point[row] * 255) for point in rgb], bins=(255 / block_size))
+        hist = histogram([int(point[row] * 255) for point in rgb], 255 / block_size)
 
         # max_value = 255
         max_value = max(hist)

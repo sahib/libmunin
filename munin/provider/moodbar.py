@@ -76,7 +76,7 @@ Reference
 # Stdlib:
 import os
 
-from collections import Counter, namedtuple
+from collections import Counter, namedtuple, defaultdict
 from operator import itemgetter
 
 # Fix for Python 3.2
@@ -90,9 +90,6 @@ except ImportError:
 from munin.helper import grouper
 from munin.provider import Provider
 
-# External:
-from igraph.statistics import Histogram
-
 
 MoodbarChannel = namedtuple('MoodbarChannel', [
     'histogram', 'diffsum'
@@ -100,9 +97,9 @@ MoodbarChannel = namedtuple('MoodbarChannel', [
 
 
 MoodbarDescription = namedtuple('MoodbarDescription', [
-        'channels',
-        'average_max', 'average_min',
-        'dominant_colors', 'blackness'
+    'channels',
+    'average_max', 'average_min',
+    'dominant_colors', 'blackness'
 ])
 
 MoodbarDescription.__repr__ = lambda self: """\
@@ -152,8 +149,8 @@ def compute_moodbar_for_file(audio_file, output_file, print_output=False):
         stdout, stderr = None, None
 
     return subprocess.call(
-            ['moodbar', audio_file, '-o', output_file],
-            stdout=stdout, stderr=stderr
+        ['moodbar', audio_file, '-o', output_file],
+        stdout=stdout, stderr=stderr
     )
 
 
@@ -193,8 +190,11 @@ def histogram(channel, bin_width=51):
     :param bin_width: The width of each bin (255 / bin_width == 0!)
     :returns: a list of binned values (len = 255 / bin_width)
     """
-    hist = Histogram(bin_width=bin_width, data=channel)
-    return [value for s, e, value in hist.bins()]
+    counter = defaultdict(int)
+    for value in channel:
+        counter[(value // bin_width) * bin_width] += 1
+
+    return [counter[key] for key in sorted(counter.keys())]
 
 
 def extract(vector, chan_idx):
@@ -242,6 +242,8 @@ def process_moodbar(vector, samples=25):
     # Extract the separate channels:
     chan_r, chan_g, chan_b = (extract(vector, chan) for chan in range(3))
     hist_r, hist_g, hist_b = histogram(chan_r), histogram(chan_g), histogram(chan_b)
+
+    print(hist_r, hist_g, hist_b)
 
     # Find the most dominant colors, our most important attribute:
     dominant_colors, blackness = find_dominant_colors(vector, samples)

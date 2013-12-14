@@ -7,9 +7,6 @@
 PyStemmer
 #: bidict
 bidict
-#: igraph.statistics
-#: igraph
-python-igraph
 #: blist
 blist
 #: pymining
