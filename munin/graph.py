@@ -5,7 +5,7 @@
 Methods to traverse the igraph graph in order to do recommendations.
 """
 # Stdlib:
-from itertools import chain, islice, groupby
+from itertools import chain, islice, groupby, zip_longest
 from collections import deque
 from math import ceil
 
@@ -28,7 +28,6 @@ def neighbors_from_song(graph, song, n=0):
     """
     # Give us a new breadth first iterator:
     breadth_first = graph.bfsiter(song.uid, advanced=True)
-    # print(list(graph.bfsiter(song.uid, advanced=True)))
 
     # Take n items from it and only fetch the song/depth from each item
     song_iter = (vertex['song'] for vertex, depth, _ in breadth_first)
@@ -52,27 +51,27 @@ def neighbors_from_song_sorted(graph, song, n=0):
     """
     # Give us a new breadth first iterator:
     breadth_first = graph.bfsiter(song.uid, advanced=True)
-    if n is 0:
-        # Just fake many, many items, and hope we never reach that.
-        n = 10e100
-
-    print(len(list(graph.bfsiter(song.uid, advanced=True))))
 
     # Sorted by depth, one group at a time:
     for depth, group in groupby(breadth_first, lambda tup: tup[1]):
         # Sort the group by it's distances to to the new song and it's parent:
         # Note: We truncate to n here, which may not give perfectly sorted results.
         # But this way we do not e.g sort the whole 32k list for depth=4 just for one song.
-        group_list = list(islice(group, n))
+        if n is 0:
+            group_list = list(group)
+        else:
+            group_list = list(islice(group, n))
+
         if len(group_list) > 1:
             group_list.sort(key=lambda tup: tup[0]['song'].distance_get(tup[2]['song']))
 
         # Now hand the new iteration results further.
         for vertex, *_ in group_list:
             yield vertex['song']
-            if n is 1:
-                raise StopIteration
-            n -= 1
+            if n is not 0:
+                if n is 1:
+                    raise StopIteration
+                n -= 1
 
 
 def common_neighbors(graph, song_a, song_b, n=10):
@@ -112,53 +111,68 @@ def recommendations_from_seed(graph, rule_index, song, n=20):
 
 
 # Generator implementation:
-def _recommendations_from_seed(graph, rule_index, song, n=20):
-    # Find rules, that affect this song:
-    associated = list(rule_index.lookup(song))
+def _recommendations_from_seed(graph, rule_index, seed_song, n=20):
+    # Find rules, that affect this seed_song:
+    associated = list(rule_index.lookup(seed_song))
 
-    print(associated, n)
-
-    # No rules? Just use the song as starting point...
+    # No rules? Just use the seed_song as starting point...
     # One day, we will have rules. Shortcut for now.
     if not associated:
-        print('no rules', n)
-        for song in islice(neighbors_from_song_sorted(graph, song, n=n), 1, n):
-            yield song
+        bfs = neighbors_from_song_sorted(graph, seed_song, n=n + 1)
+        for recom in islice(bfs, 1, n + 1):
+            yield recom
     else:
-        # Create an iterator for each song, in each associated rule:
+        # Create an iterator for each seed_song, in each associated rule:
         breadth_first_iters = deque()
 
-        # We weight the number of songs max. given per iterator by their rating:
+        # We weight the number of songs max. given per iterator by their rating
         sum_rating = sum(rating for *_, rating in associated)
 
         # Now populate the list of breadth first iterators:
         for left, right, *_, rating in associated:
-            # The maximum number that a single song in this rule may deliver
-            # (at least 1 - himself, therefore the ceil)
-            bulk = right if song in left else left
-            max_n = ceil(((rating / sum_rating) * (n / 2)) / len(bulk))
+            # The maximum number that a single seed_song in this rule may
+            # deliver (at least 1 - himself, therefore the ceil)
+            bulk = right if seed_song in left else left
+
+            # Calculate the maximum of numbers a bulk may yield.
+            max_n = ceil(((rating / sum_rating) * (n // 2)) / len(bulk))
+            if n is 0 or n == len(graph.vs):
+                max_n *= 2
+            else:
+                max_n += 1
 
             # We take the songs in the opposite set of the rule:
-            for song in bulk:
-                breadth_first = islice(neighbors_from_song_sorted(graph, song), max_n)
+            for bulk_song in bulk:
+                breadth_first = neighbors_from_song_sorted(graph, bulk_song)
+                breadth_first = islice(breadth_first, max_n)
                 breadth_first_iters.append(breadth_first)
 
         # The result set will be build by half
-        base_half = islice(neighbors_from_song_sorted(graph, song), 1, n / 2 + 1)
-        songs_set = set()
+        base_half = islice(
+            neighbors_from_song_sorted(graph, seed_song),
+            1,
+            n // 2 + 1
+        )
+
+        # Yield the base half first:
+        songs_set = set([seed_song])
+        for recom in base_half:
+            yield recom
+            songs_set.add(recom)
 
         # Now build the final result set by filling one half original songs,
         # and one half songs that were pointed to by rules.
-        for song in chain(base_half, roundrobin(breadth_first_iters)):
-            # We have this already in the result set:
-            if song in songs_set:
-                continue
+        for legion in zip_longest(*breadth_first_iters):
+            for recom in filter(None, legion):
+                # We have this already in the result set:
+                if recom in songs_set:
+                    continue
 
-            songs_set.add(song)
-            yield song
+                songs_set.add(recom)
+                yield recom
 
-            if len(songs_set) >= n:
-                break
+                if len(songs_set) > n:
+                    raise StopIteration
 
 
 def recommendations_from_attributes(subset, database, graph, rule_index, n=20):
@@ -209,7 +223,7 @@ if __name__ == '__main__':
                 'genre': (None, DummyDistanceFunction(), 1.0)
             })
 
-            self.N = 100
+            self.N = 10
             with self._session.transaction():
                 for idx in range(self.N):
                     self._session.add({'genre': self.N - idx})
@@ -219,14 +233,43 @@ if __name__ == '__main__':
         def test_neighbors_sorted(self):
             # Since no rules available, neighbors_from_song_sorted will be called.
             rec = list(self._session.recommend_from_seed(self._session[0], number=self.N))
-            print(len(rec), rec)
-            self.assertTrue(not rec)
-            # self.assertEqual(set(rec), set(iter(self._session)))
-            for song in rec:
-                print(song.uid)
+            self.assertEqual(len(rec), self.N - 1)
+            self.assertEqual([r.uid for r in rec], list(range(1, self.N)))
 
-        def test_neighbors_sorted(self):
-            # self._session.rule_index.insert_rule()
-            pass
+            rec = list(self._session.recommend_from_seed(self._session[0], number=5))
+            self.assertEqual(len(rec), 5)
+            self.assertEqual([r.uid for r in rec], list(range(1, 6)))
+
+        def test_recommend_with_rules(self):
+            # Add two rules,
+            # [0] <-> [100]  [0.75]
+            # [0] <-> [50]   [0.50]
+            self._session.rule_index.insert_rule((
+                [self._session[+0]],
+                [self._session[-1]],
+                self.N // 10,
+                0.75
+            ))
+
+            self._session.rule_index.insert_rule((
+                [self._session[+0]],
+                [self._session[self.N // 2]],
+                self.N // 15,
+                0.50
+            ))
+
+            rec = list(self._session.recommend_from_seed(self._session[0], number=self.N))
+            self.assertEqual(len(rec), self.N - 1)
+            self.assertEqual(
+                [1, 2, 3, 4, 5, 9, 8, 7, 6],
+                [r.uid for r in rec]
+            )
+
+            rec = list(self._session.recommend_from_seed(self._session[0], number=5))
+            self.assertEqual(len(rec), 5)
+            self.assertEqual(
+                [1, 2, 9, 5, 8],
+                [r.uid for r in rec]
+            )
 
     unittest.main()
