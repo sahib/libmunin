@@ -59,7 +59,7 @@ class Song(SessionMapping, Hashable):
         )
         self._dist_dict = OrderedDict()
         self._worst_cache = None
-        self._pop_list = sortedlist(key=lambda e: self._dist_dict[e])
+        self._pop_list = sortedlist(key=lambda e: ~self._dist_dict[e])
 
         # Settings:
         self._max_neighbors = max_neighbors
