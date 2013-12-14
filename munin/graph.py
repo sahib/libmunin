@@ -122,7 +122,7 @@ def _recommendations_from_seed(graph, rule_index, song, n=20):
     # One day, we will have rules. Shortcut for now.
     if not associated:
         print('no rules', n)
-        for song in neighbors_from_song_sorted(graph, song, n=n):
+        for song in islice(neighbors_from_song_sorted(graph, song, n=n), 1, n):
             yield song
     else:
         # Create an iterator for each song, in each associated rule:
@@ -217,20 +217,12 @@ if __name__ == '__main__':
                 for idx in range(self.N):
                     self._session.add({'genre': self.N - idx})
 
-            self._session.database.plot()
+            # self._session.database.plot()
 
-            # edges = set()
-            # for song_a, song_b in combinations(self._songs, 2):
-            #     a, b = song_a.uid, song_b.uid
-            #     Song.distance_add(song_a, song_b, DistanceDummy((a + b) / (2 * self.N)))
-            #     if a < b:
-            #         edges.add((a, b))
-            #     else:
-            #         edges.add((b, a))
-            # self._graph.add_edges(list(edges))
-
-        def test_neighbors(self):
-            # rec = list(neighbors_from_song(self._graph, self._songs[0], n=self.N))
+        def test_neighbors_sorted(self):
+            # Since no rules available, neighbors_from_song_sorted will be
+            # called.
+            print('called?')
             rec = list(self._session.recommend_from_seed(self._session[0], number=self.N))
             print(len(rec), rec)
             self.assertTrue(rec)
