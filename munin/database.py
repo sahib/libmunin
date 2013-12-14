@@ -501,15 +501,10 @@ if __name__ == '__main__':
 
     def main():
         from munin.testing import DummyDistanceFunction
-        from munin.distance import DistanceFunction
-
-        class _DummyDistanceFunction(DistanceFunction):
-            def compute(self, list_a, list_b):
-                return abs(list_a[0] - list_b[0])
 
         session = Session('session_test', {
-            'genre': (None, _DummyDistanceFunction(), 0.2),
-            'artist': (None, _DummyDistanceFunction(), 0.3)
+            'genre': (None, DummyDistanceFunction(), 0.2),
+            'artist': (None, DummyDistanceFunction(), 0.3)
         })
 
         import math

@@ -57,7 +57,7 @@ def append_rule(
         return
 
     # Finally add the rule, after all those tests.
-    rules.append((left, right, support, confidence, kulc, ir, (1.0 - ir) * kulc))
+    rules.append((left, right, support, (1.0 - ir) * kulc))
 
     # Lookup set, so we don't calculate the same rule more than once.
     known_rules.add((left, right))
@@ -87,7 +87,7 @@ def association_rules(data, min_confidence=0.5, min_support=2, min_kulc=0.66, ma
     :param max_ir: Maximum Imbalance Ratio (from 0 to 1, lower is better)
     :type max_ir: float
     :returns: An iterable with rules.
-    :rtype: [(left, right, support, confidence, kulc, ir, rating), ...]
+    :rtype: [(left, right, support, rating), ...]
     """
     visited, rules, known_rules = set(), deque(), set()
 
@@ -107,9 +107,9 @@ def association_rules(data, min_confidence=0.5, min_support=2, min_kulc=0.66, ma
                 # We copy right, so it does not get harmed during iteration:
                 for item in chain(right, [None]):
                     append_rule(
-                            data, visited, rules, known_rules,
-                            support, left, right, min_confidence,
-                            min_kulc, max_ir
+                        data, visited, rules, known_rules,
+                        support, left, right, min_confidence,
+                        min_kulc, max_ir
                     )
                     if item is not None:
                         cap = [item]
@@ -523,11 +523,11 @@ if __name__ == '__main__':
             print()
 
             rules = history.find_rules(itemsets)
-            for left, right, support, confidence, kulc, irat, rating in rules:
-                print('{:>15s} <-> {:<15s} [supp={:> 5d}, conf={:.3f}, kulc={:.5f} irat={:.5f} rating={:.5f}]'.format(
+            for left, right, support, rating in rules:
+                print('{:>15s} <-> {:<15s} [supp={:> 5d}, rating={:.5f}]'.format(
                     str([song.uid for song in left]),
                     str([song.uid for song in right]),
-                    support, confidence, kulc, irat, rating
+                    support, rating
                 ))
 
     unittest.main()

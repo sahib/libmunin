@@ -197,9 +197,6 @@ def explain_recommendation(seed_song, recommendation, max_reasons=3):
 
 if __name__ == '__main__':
     import unittest
-    from itertools import combinations
-
-    import igraph
 
     from munin.testing import DistanceDummy, DummyDistanceFunction
     from munin.song import Song
@@ -220,21 +217,16 @@ if __name__ == '__main__':
             # self._session.database.plot()
 
         def test_neighbors_sorted(self):
-            # Since no rules available, neighbors_from_song_sorted will be
-            # called.
-            print('called?')
+            # Since no rules available, neighbors_from_song_sorted will be called.
             rec = list(self._session.recommend_from_seed(self._session[0], number=self.N))
             print(len(rec), rec)
-            self.assertTrue(rec)
+            self.assertTrue(not rec)
             # self.assertEqual(set(rec), set(iter(self._session)))
             for song in rec:
                 print(song.uid)
 
         def test_neighbors_sorted(self):
-            #rec = list(neighbors_from_song_sorted(self._graph, self._songs[0], n=10))
-            #self.assertEqual(rec[1:], sorted(self._songs[1:], key=lambda s: s.uid, reverse=True))
-            #for song in rec:
-            #    print(song.uid)
+            # self._session.rule_index.insert_rule()
             pass
 
     unittest.main()
