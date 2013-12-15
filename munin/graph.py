@@ -149,8 +149,7 @@ def explain_recommendation(seed_song, recommendation, max_reasons=3):
 if __name__ == '__main__':
     import unittest
 
-    from munin.testing import DistanceDummy, DummyDistanceFunction
-    from munin.song import Song
+    from munin.testing import DummyDistanceFunction
     from munin.session import Session
 
     class TestNeighborsFrom(unittest.TestCase):

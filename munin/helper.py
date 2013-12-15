@@ -20,7 +20,7 @@ Reference
 """
 
 from collections import Mapping
-from itertools import chain, islice, cycle, zip_longest
+from itertools import chain, islice, zip_longest
 
 import math
 import sys

@@ -280,7 +280,6 @@ class Database:
                 last = dist
 
     def insert(self, value_dict, star_threshold=0.75, iterstep_threshold=50):
-        prev_len = len(self._song_list)
         new_song = self._song_list[self.add(value_dict)]
         next_len = len(self._song_list)
 

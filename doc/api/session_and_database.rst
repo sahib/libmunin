@@ -10,8 +10,8 @@ Session
 Database
 --------
 
-.. automodule:: munin.database
-    :members:
+.. autoclass:: munin.database.Database
+    :members: __getitem__, plot, rebuild, rebuild_stupid
 
 
 Default Config

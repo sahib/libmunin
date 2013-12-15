@@ -318,7 +318,7 @@ class Session:
 
         For example you can search by a certain genre by calling it like this: ::
 
-            >>> recommendations_from_attributes({'genre', 'death metal'}, ...)
+            >>> recommend_from_attributes({'genre', 'death metal'}, ...)
 
         The value passed must match fully, no fuzzy matching is performed.
 
