@@ -4,7 +4,6 @@
 # Stdlib:
 from itertools import combinations
 from collections import Counter, deque
-from colorsys import hsv_to_rgb
 
 import math
 import logging
@@ -15,6 +14,8 @@ LOGGER = logging.getLogger(__name__)
 from munin.song import Song
 from munin.helper import sliding_window, centering_window, RunningMean
 from munin.history import ListenHistory, RuleIndex
+
+import munin.plot
 
 
 class Database:
@@ -69,6 +70,17 @@ class Database:
             return self._revoked_uids.pop()
         return len(self._song_list)
 
+    def plot(self, width=1000, height=1000):
+        """Plot the current graph for debugging purpose.
+
+        Will try to open an installed image viewer - does not return an image.
+
+        :param database: The database (and the assoicate graph with it) to plot.
+        :param width: Width of the plotted image in pixel.
+        :param height: Width of the plotted image in pixel.
+        """
+        munin.plot.plot(self, width, height)
+
     def playcount(self, song):
         return self._playcounts.get(song, 0)
 
@@ -102,66 +114,6 @@ class Database:
                     yield song
         except KeyError:
             raise KeyError('key "{k}" is not in attribute mask'.format(k=key))
-
-    # TODO: Clean this clusterfuck up
-    def plot(self, width=1000, height=1000):
-        """Plot the current graph for debugging purpose.
-
-        Will try to open an installed image viewer.
-        """
-        try:
-            import igraph
-        except ImportError:
-            print('-- You need igraph and python-igraph installed for this.')
-            return
-
-        graph = igraph.Graph(directed=False)
-        for song in self:
-            graph.add_vertex(song=song)
-
-        # Gather all edges in one container
-        # (this speeds up adding edges)
-        edge_set = deque()
-        for song_a in self:
-            for song_b, _ in song_a.distance_iter():
-                if song_a.distance_get(song_b) is None or song_b.distance_get(song_a) is None:
-                    continue
-
-                # Make Edge Deduplication work:
-                if song_a.uid < song_b.uid:
-                    edge_set.append((song_b.uid, song_a.uid))
-                else:
-                    edge_set.append((song_a.uid, song_b.uid))
-
-        # Filter duplicate edge pairs.
-        graph.add_edges(set(edge_set))
-
-        visual_style = {}
-        visual_style['vertex_label'] = [str(vx['song'].uid) for vx in graph.vs]
-
-        def color_from_distance(distance):
-            return '#' + '01234567890ABCDEF'[int(distance * 16)] * 2 + '0000'
-
-        def edge_color_list():
-            edge_colors, edge_widths = deque(), deque()
-
-            for edge in graph.es:
-                a, b = graph.vs[edge.source]['song'], graph.vs[edge.target]['song']
-                distance = a.distance_get(b)
-                if distance is not None:
-                    edge_colors.append(color_from_distance(distance.distance))
-                    edge_widths.append((distance.distance + 0.1) * 3)
-
-            return list(edge_colors), list(edge_widths)
-
-        visual_style['edge_color'], visual_style['edge_width'] = edge_color_list()
-        colors = graph.eigenvector_centrality(directed=False)
-        visual_style['vertex_color'] = [hsv_to_rgb(v, 1.0, 1.0) for v in colors]
-        visual_style['vertex_label_color'] = [hsv_to_rgb(1 - v, 0.5, 1.0) for v in colors]
-        visual_style['vertex_size'] = [42] * len(graph.vs)
-        visual_style['layout'] = graph.layout('fr')
-        visual_style['bbox'] = (width, height)
-        igraph.plot(graph, **visual_style)
 
     def _rebuild_step_base(self, mean_counter, window_size=60, step_size=20):
         """Do the Base Iterations.
@@ -496,7 +448,7 @@ if __name__ == '__main__':
         LOGGER.addHandler(ch)
 
         with session.transaction():
-            N = 901
+            N = 100
             for i in range(int(N / 2) + 1):
                 session.add({
                     'genre': 1.0 - i / N,

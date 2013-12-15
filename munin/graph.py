@@ -13,6 +13,11 @@ import random
 
 
 def sorted_breadth_first_search(start, n=0):
+    """Iterator for a sorted (by distance) breadth first search.
+
+    :param n: Number of items to yield at max. If 0, the whole graph is traversed.
+    :returns: An iterator that will yield single songs, including the start song.
+    """
     paths = deque([start])
     visited = set([start])
 

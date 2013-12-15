@@ -75,6 +75,7 @@ Reference
 
 # Stdlib:
 import os
+import shutil
 
 from collections import Counter, namedtuple, defaultdict
 from operator import itemgetter
@@ -132,6 +133,16 @@ MoodbarDescription<{{
         ['({:>3d}, {:>3d}, {:>3d})'.format(r, g, b) for r, g, b in self.dominant_colors]
     )
 )
+
+
+def check_for_moodbar():
+    """Check if all required tools are installed for this Provider.
+
+        - ``moodbar`` (``moodbar`` executable)
+
+    :returns: True if binary was found.
+    """
+    return bool(shutil.which('moodbar'))
 
 
 def compute_moodbar_for_file(audio_file, output_file, print_output=False):

@@ -37,9 +37,10 @@ Reference
 """
 
 
-import subprocess
-import pipes
 import os
+import pipes
+import shutil
+import subprocess
 
 import logging
 LOGGER = logging.getLogger(__name__)
@@ -54,7 +55,19 @@ from munin.provider import Provider
 from munin.helper import float_cmp
 
 
-BPM_COMMAND = "sox -v 1.0 {path} -t raw -r 44100 -e float -c 1 - | bpm -m 60 -x 350"
+def check_for_bpmtools():
+    """Check if all required tools are installed for this Provider.
+
+        - ``bpm-tools`` (``bpm`` executable)
+        - ``sox`` (``sox`` executable)
+
+    :returns: True if both binaries were found.
+    """
+    return shutil.which('bpm') and shutil.which('sox')
+
+
+BPM_COMMAND = \
+    "sox -v 1.0 {path} -t raw -r 44100 -e float -c 1 - | bpm -m 60 -x 350"
 
 
 class BPMProvider(Provider):
