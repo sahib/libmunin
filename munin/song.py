@@ -36,7 +36,7 @@ class Song(SessionMapping, Hashable):
 
     **Reference**
     """
-    def __init__(self, session, value_dict, max_neighbors=5, max_distance=0.99):
+    def __init__(self, session, value_dict, max_neighbors=None, max_distance=None):
         """Creates a Song (a set of attributes) that behaves like a dictionary:
 
         :param session: A Session objective (the session this song belongs to)
@@ -404,14 +404,14 @@ if __name__ == '__main__':
             song_base = Song(self._session, {
                 'genre': 0,
                 'artist': 0
-            })
+            }, max_neighbors=10)
 
             N = 20
             for idx in range(N):
                 song = Song(self._session, {
                     'genre': str(idx),
                     'artist': str(idx)
-                })
+                }, max_neighbors=10)
                 song.uid = idx
                 song_base.distance_add(song, DistanceDummy(idx / N))
 
