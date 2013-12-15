@@ -22,6 +22,7 @@ Reference
 from collections import Mapping
 from itertools import chain, islice, cycle, zip_longest
 
+import math
 import sys
 import os
 
@@ -164,9 +165,29 @@ def grouper(iterable, n, fillvalue=None):
     return zip_longest(*args, fillvalue=fillvalue)
 
 
+class RunningMean:
+    def __init__(self):
+        self.mean = self.rsdv = 0.0
+        self.samples = 1
+
+    def add(self, value):
+        last_diff = value - self.mean
+        self.mean += last_diff / self.samples
+        self.rsdv += last_diff * (value - self.mean)
+        self.samples += 1
+
+    @property
+    def sd(self):
+        if self.samples <= 2:
+            return 0.0
+
+        v = math.sqrt(self.rsdv / (self.samples - 2))
+        return v
+
 ###########################################################################
 #                             SessionMapping                              #
 ###########################################################################
+
 
 class SessionMapping(Mapping):
     # Note: Use __slots__ (sys.getsizeof will report even more memory, but # pympler less)
@@ -236,6 +257,16 @@ if __name__ == '__main__':
                 wnds = [list(w) for w in wnds]
                 ex = [[0, 1, 9, 8], [2, 3, 7, 6], [4, 5]]
                 self.assertEqual(ex, wnds)
+
+            def test_running_mean(self):
+                run = RunningMean()
+                self.assertAlmostEqual(run.mean, 0.0)
+                self.assertAlmostEqual(run.sd, 0.0)
+                run.add(1)
+                run.add(2)
+                run.add(3)
+                self.assertAlmostEqual(run.mean, 2.0)
+                self.assertAlmostEqual(run.sd, 1.0)
 
         unittest.main()
     else:

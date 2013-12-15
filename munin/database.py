@@ -13,7 +13,7 @@ LOGGER = logging.getLogger(__name__)
 
 # Internal:
 from munin.song import Song
-from munin.helper import sliding_window, centering_window
+from munin.helper import sliding_window, centering_window, RunningMean
 from munin.history import ListenHistory, RuleIndex
 
 
@@ -268,7 +268,7 @@ class Database:
             self.rebuild_stupid()
         else:
             # Average and Standard Deviation Counter:
-            mean_counter = igraph.statistics.RunningMean()
+            mean_counter = RunningMean()
 
             LOGGER.debug('+ Step #1: Calculating base distance (sliding window)')
             self._rebuild_step_base(
@@ -277,14 +277,18 @@ class Database:
                 step_size=step_size
             )
 
-            LOGGER.debug('|-- Mean Distane: {:f} (sd: {:f})'.format(mean_counter.mean, mean_counter.sd))
+            LOGGER.debug('|-- Mean Distane: {:f} (sd: {:f})'.format(
+                mean_counter.mean, mean_counter.sd
+            ))
             LOGGER.debug('+ Step #2: Applying refinement:', end='')
             self._rebuild_step_refine(
                 mean_counter,
                 num_passes=refine_passes
             )
 
-            LOGGER.debug('|-- Mean Distane: {:f} (sd: {:f})'.format(mean_counter.mean, mean_counter.sd))
+            LOGGER.debug('|-- Mean Distane: {:f} (sd: {:f})'.format(
+                mean_counter.mean, mean_counter.sd
+            ))
 
         self._reset_history()
 
@@ -478,23 +482,35 @@ if __name__ == '__main__':
         })
 
         import math
+        LOGGER.setLevel(logging.DEBUG)
+
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.DEBUG)
+
+        # add formatter to ch
+        ch.setFormatter(
+            logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+        )
+
+        # add ch to logger
+        LOGGER.addHandler(ch)
 
         with session.transaction():
-            N = 200
+            N = 901
             for i in range(int(N / 2) + 1):
                 session.add({
                     'genre': 1.0 - i / N,
                     'artist': 1.0 - i / N
                 })
                 # Pseudo-Random, but deterministic:
-                # euler = lambda x: math.fmod(math.e ** x, 1.0)
-                # session.database.add({
-                #     'genre': euler((i + 1) % 30),
-                #     'artist': euler((N - i + 1) % 30)
-                # })
+                euler = lambda x: math.fmod(math.e ** x, 1.0)
+                session.database.add({
+                    'genre': euler((i + 1) % 30),
+                    'artist': euler((N - i + 1) % 30)
+                })
 
         LOGGER.debug('+ Step #3: Layouting and Plotting')
-        session.database.plot()
+        session.database.plot(3000, 3000)
 
     if '--cli' in sys.argv:
         main()

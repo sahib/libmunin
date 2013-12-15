@@ -27,4 +27,8 @@ class DistanceDummy:
 class DummyDistanceFunction(DistanceFunction):
     def compute(self, list_a, list_b):
         a, b = list_a[0], list_b[0]
-        return abs(a - b) / (max(a, b) or 1)
+        maxab = max(a, b)
+        if maxab > 1.0:
+            return abs(a - b) / maxab
+        else:
+            return abs(a - b)
