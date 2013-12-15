@@ -12,7 +12,6 @@ from time import time
 
 # External:
 from pymining import itemmining
-from blist import sortedset
 
 ###########################################################################
 #                         Association Rule Mining                         #
@@ -304,7 +303,7 @@ class RuleIndex:
         self._max_rules = maxlen or 2 ** 100
         self._rule_list = OrderedDict()
         self._rule_dict = defaultdict(set)
-        self._rule_pool = sortedset(key=_sort_by_rating)
+        self._rule_pool = set()
         self._rule_cuid = 0
 
     def __contains__(self, rule_tuple):
@@ -312,7 +311,17 @@ class RuleIndex:
         return rule_tuple in self._rule_pool
 
     def __iter__(self):
-        return reversed(self._rule_pool)
+        return iter(sorted(self._rule_list.values(), key=lambda rule: 1.0 - rule[-1]))
+
+    def best(self):
+        """Return the currently best rule (the one with the highest rating)
+
+        :returns: A ruletuple or None if no rule yet in the index.
+        """
+        try:
+            return max(self._rule_list.values(), key=lambda rule: rule[-1])
+        except ValueError:
+            return None
 
     def insert_rules(self, rule_tuples):
         """Convienience function for adding many rules at once.

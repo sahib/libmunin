@@ -124,13 +124,11 @@ def recommendations_from_attributes(subset, database, rule_index, n=20):
 
 
 def recommendations_from_heuristic(database, rule_index, n=20):
-    try:
-        # Get the best rule from the index
-        best_rule = next(iter(rule_index))
-
+    best_rule = rule_index.best()
+    if best_rule is not None:
         # First song of the rules' left side
         chosen_song = best_rule[0][0]
-    except StopIteration:
+    else:
         (chosen_song, count), *_ = database.playcount(n=1)
         if count is 0:
             chosen_song = random.choice(database)
@@ -181,15 +179,15 @@ if __name__ == '__main__':
             # [0] <-> [100]  [0.75]
             # [0] <-> [50]   [0.50]
             self._session.rule_index.insert_rule((
-                [self._session[+0]],
-                [self._session[-1]],
+                frozenset(self._session[+0]),
+                frozenset(self._session[-1]),
                 self.N // 10,
                 0.75
             ))
 
             self._session.rule_index.insert_rule((
-                [self._session[+0]],
-                [self._session[self.N // 2]],
+                frozenset(self._session[+0]),
+                frozenset(self._session[self.N // 2]),
                 self.N // 15,
                 0.50
             ))
