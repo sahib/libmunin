@@ -57,13 +57,16 @@ class Song(SessionMapping, Hashable):
             default_value=None
         )
         self._dist_dict = OrderedDict()
-        self._worst_cache = None
-        self._pop_list = sortedlist(key=lambda e: ~self._dist_dict[e])
+        self._reset_invariants()
 
         # Settings:
         self._max_neighbors = max_neighbors or session.config['max_neighbors']
         self._max_distance = max_distance or session.config['max_distance']
         self.uid = None
+
+    def _reset_invariants(self):
+        self._worst_cache = None
+        self._pop_list = sortedlist(key=lambda e: ~self._dist_dict[e])
 
     #######################
     #  Other convinience  #
@@ -173,20 +176,37 @@ class Song(SessionMapping, Hashable):
         self._worst_cache = None
         return True
 
+    def average_distance(self):
+        return sum(d.distance for d in self._dist_dict.values()) / len(self._dist_dict)
+
     def distance_finalize(self):
-        """Delete all invalid edges and neighbors of this song"""
-        to_delete = deque()
+        """Delete/Fix all invalid edges and neighbors of this song"""
+        to_consider = deque()
         for other in self._dist_dict:
             dist_a, dist_b = self.distance_get(other), other.distance_get(self)
             if dist_a is None:
-                to_delete.append((other, self))
+                to_consider.append((other, self))
             if dist_b is None:
-                to_delete.append((self, other))
+                to_consider.append((self, other))
 
-        for source, target in to_delete:
+        for source, target in to_consider:
+            if not source.full() and not target.full():
+                distance = source.distance_get(target)
+                mean_source = source.average_distance()
+                mean_target = target.average_distance()
+                average_mean = (mean_source + mean_target) / 2
+
+                sum_neigbors = len(source._dist_dict) + len(target._dist_dict)
+                too_empty = sum_neigbors <= self._max_neighbors
+
+                if too_empty or distance.distance < average_mean:
+                    target._dist_dict[other] = distance
+                    continue
+
             del source._dist_dict[target]
 
         self._dist_dict = OrderedDict(sorted(self._dist_dict.items(), key=itemgetter(1)))
+        self._reset_invariants()
 
     def distance_get(self, other_song, default_value=None):
         """Return the distance to the song ``other_song``
@@ -228,6 +248,9 @@ class Song(SessionMapping, Hashable):
                         break
             else:
                 break
+
+    def full(self):
+        return self._max_neighbors == len(self._dist_dict)
 
     def disconnect(self):
         """Deletes all edges to other songs and tries to fill the resulting hole.
