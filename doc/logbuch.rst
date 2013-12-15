@@ -221,6 +221,9 @@ sich nun geeinigt (ich mit mit meinem zweiten ich und christoph):
       Vergleichbarkeit zweier Songs nehmen.
 
 
+**Edit vom 15. Dezember 2013:** Hab den Eintrag heute gelesen. Musste laut
+lachen.
+
 7. November 2013
 ----------------
 
@@ -607,3 +610,6 @@ Anonsten funktionier die Moodbar Analyse einigermaßen gut (*): ::
     * Manchmal entstehen hübsche blümchen:
 
         http://i.imgur.com/Bhg6OGg.png
+
+    * Eine Art Konkurrent ist auch noch *MusicSquare*, finde leider keinen Link
+      dazu. Angeblich solls aber recht bekannt sein und die Demo war recht nett.

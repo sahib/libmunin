@@ -195,7 +195,6 @@ if __name__ == '__main__':
             ))
 
             rec = list(self._session.recommend_from_seed(self._session[0], number=self.N))
-            print([r.uid for r in rec])
             self.assertEqual(len(rec), self.N - 1)
             self.assertEqual(
                 [1, 2, 3, 4, 5, 9, 8, 7, 6],

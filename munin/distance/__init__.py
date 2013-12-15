@@ -135,8 +135,6 @@ if __name__ == '__main__':
             self.assertEqual(b, (2, ))
             self.assertEqual(c, (1, ))
 
-            print(provider._store)
-
             self.assertAlmostEqual(dist.compute(a, b), 1.0)
             self.assertAlmostEqual(dist.compute(a, c), 0.0)
             self.assertAlmostEqual(dist.compute([], []), 1.0)

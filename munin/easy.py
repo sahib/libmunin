@@ -48,32 +48,32 @@ class EasySession(Session):
             'artist': pairup(
                 LancasterStemProvider(compress=True),
                 None,
-                0.1
+                1
             ),
             'album': pairup(
                 LancasterStemProvider(compress=True),
                 None,
-                0.1
+                1
             ),
             'title': pairup(
                 LancasterStemProvider(compress=False),
                 None,
-                0.1
+                1
             ),
             'genre': pairup(
                 GenreTreeProvider(),
                 GenreTreeDistance(),
-                0.2
+                2
             ),
             'moodbar': pairup(
                 MoodbarAudioFileProvider(),
                 MoodbarDistance(),
-                0.5
+                5
             ),
             'lyrics': pairup(
                 WordListProvider(),
                 WordListDistance(),
-                0.3
+                3
             )
         }
 
