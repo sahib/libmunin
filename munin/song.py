@@ -5,6 +5,8 @@
 from collections import Hashable, OrderedDict, deque
 from itertools import combinations
 from operator import itemgetter
+from heapq import heappush, heappop
+
 from logging import getLogger
 LOGGER = getLogger(__name__)
 
@@ -12,10 +14,6 @@ LOGGER = getLogger(__name__)
 from munin.distance import Distance
 from munin.helper import SessionMapping
 
-from heapq import heappush, heappop
-
-# External:
-from blist import sortedlist
 
 
 class Song(SessionMapping, Hashable):
@@ -68,7 +66,6 @@ class Song(SessionMapping, Hashable):
 
     def _reset_invariants(self):
         self._worst_cache = None
-        # self._pop_list = sortedlist(key=lambda e: ~self._dist_dict[e])
         self._pop_list = []
 
     #######################
@@ -141,14 +138,12 @@ class Song(SessionMapping, Hashable):
         sdd, odd = self._dist_dict, other._dist_dict
         if other in sdd:
             if sdd[other] < distance:
-                print('lookup deny')
                 return False  # Reject
 
             # Explain why this could damage worst song detection.
             # and why we do not care. (might change sorting)
             self._worst_cache = None
             sdd[other] = odd[self] = distance
-            print('lookup accept')
             return True
 
         # Check if we still have room left
@@ -162,7 +157,6 @@ class Song(SessionMapping, Hashable):
                 heappop(self._pop_list)
 
             if worst_dist < distance.distance:
-                print('worst deny')
                 # we could prune pop_list here too,
                 # but it showed that one operation only is more effective.
                 # heappush(self._pop_list, (inversion, worst_song))
@@ -172,7 +166,6 @@ class Song(SessionMapping, Hashable):
             # delete the worst one to make place,
             # BUT: do not delete the connection from worst to self
             # we create unidir edges here on purpose.
-            print('worst accept')
             del sdd[worst_song]
             heappop(self._pop_list)
 

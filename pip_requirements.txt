@@ -7,7 +7,5 @@
 PyStemmer
 #: bidict
 bidict
-#: blist
-blist
 #: pymining
 pymining
