@@ -11,7 +11,7 @@ I write it for my bachelor thesis and therefore it's still in developement.
 
 Documentation is build on every commit http://www.readthedocs.org:
 
-    http://libmunin-api.readthedocs.org/en/latest/
+    http://libmunin.readthedocs.org/en/latest/
 
 Tests are run on every commit via http://travis-ci.org:
 
