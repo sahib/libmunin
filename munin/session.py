@@ -77,6 +77,15 @@ def get_cache_path(extra_name=None):
 DEFAULT_CONFIG = {
     'max_neighbors': 5,
     'max_distance': 0.999,
+    'history_max_pkg': 10000,
+    'history_timeout': 1200,
+    'history_pkg_size': 5,
+    'history_max_rules': 100,
+    'rebuild_window_size': 60,
+    'rebuild_step_size': 20,
+    'rebuild_refine_passes': 25,
+    'rebuild_mean_scale': 2,
+    'rebuild_stupid_threshold': 350
 }
 
 
@@ -106,14 +115,14 @@ The sole purpose of this class is to save a bit of typing.
 
 class Session:
     """Main API to *libmunin* and caching layer."""
-    def __init__(self, name, mask, config=None):
+    def __init__(self, name, mask, config=DEFAULT_CONFIG):
         """Create a new session:
 
         :param name: The name of the session. Used to load it again from disk.
         :param mask: The attribute mask. See :term:`Mask`
         :param config: A dictionary with config values. See :class:`DefaultConfig` for available keys.
         """
-        self._config = config or DEFAULT_CONFIG
+        self._config = config
         self._name = name
 
         # Make access to the attribute mask more efficient
@@ -173,11 +182,6 @@ class Session:
     def config(self):
         'Return the config dictionary passed to ``__init__``'
         return self._config
-
-    @property
-    def config_class(self):
-        'Like DefaultConfig, yield a class that has config keys as attributes.'
-        return type('CurrentConfig', (), self._config)
 
     ###############################
     #  Attribute Mask Attributes  #
@@ -517,7 +521,5 @@ if __name__ == '__main__':
                     new_session.mask,
                     {'genre': (None, None, 0.2), 'artist': (None, None, 0.3)}
             )
-
-        # TODO: This needs more testing.
 
     unittest.main()

@@ -234,9 +234,14 @@ class History:
 class ListenHistory(History):
     """A History that holds all recently listened Songs.
     """
-    def __init__(self):
+    def __init__(self, maxlen=10000, max_group_size=5, time_threshold_sec=1200):
         'Sane defaults are chosen for ``History.__init__``'
-        History.__init__(self, maxlen=10000, max_group_size=5)
+        History.__init__(
+            self,
+            maxlen=maxlen,
+            time_threshold_sec=time_threshold_sec,
+            max_group_size=max_group_size
+        )
 
     def frequent_itemsets(self, min_support=2):
         """Mine frequent item sets (FIM) using the RELIM algorithm.
@@ -264,14 +269,6 @@ class ListenHistory(History):
 
         rules = association_rules(itemsets, min_support=min_support, **kwargs)
         return sorted(rules, key=lambda x: x[-1], reverse=True)
-
-
-class RecommendationHistory(History):
-    """A History that holds all recently given recommendations.
-    """
-    def __init__(self):
-        'Sane defaults are chosen for ``History.__init__``'
-        History.__init__(self, maxlen=100)
 
 
 ###########################################################################

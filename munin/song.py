@@ -36,14 +36,13 @@ class Song(SessionMapping, Hashable):
 
     **Reference**
     """
-    def __init__(self, session, value_dict, max_neighbors=10, max_distance=0.999, default_value=None):
+    def __init__(self, session, value_dict, max_neighbors=5, max_distance=0.99):
         """Creates a Song (a set of attributes) that behaves like a dictionary:
 
         :param session: A Session objective (the session this song belongs to)
         :type session: :class:`munin.session.Session`
         :param value_dict: A mapping from the keys to the values you want to set.
         :type value_dict: Mapping
-        :param default_value: The value to be returned for valid but unset keys.
         :param max_neighbors: max. numbers of neighbor-distances to save.
         :type neighbor: positive int
         :param max_distance: The minimal distance for :func:`distance_add` -
@@ -55,15 +54,15 @@ class Song(SessionMapping, Hashable):
         SessionMapping.__init__(
             self, session,
             input_dict=value_dict,
-            default_value=default_value
+            default_value=None
         )
         self._dist_dict = OrderedDict()
         self._worst_cache = None
         self._pop_list = sortedlist(key=lambda e: ~self._dist_dict[e])
 
         # Settings:
-        self._max_neighbors = max_neighbors
-        self._max_distance = max_distance
+        self._max_neighbors = max_neighbors or session.config['max_neighbors']
+        self._max_distance = max_distance or session.config['max_distance']
         self.uid = None
 
     #######################
@@ -420,6 +419,5 @@ if __name__ == '__main__':
             for a, b in combinations((l, r, t, d), 2):
                 self.assertTrue(a.distance_get(b))
                 self.assertAlmostEqual(a.distance_get(b).distance, 0.0)
-
 
     unittest.main()

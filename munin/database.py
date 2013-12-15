@@ -38,14 +38,18 @@ class Database:
         """
         self._session = session
         self._song_list = []
-
-        # TODO: Provide config options
         self._reset_history()
 
     def _reset_history(self):
         self._revoked_uids = set()
-        self._listen_history = ListenHistory()
-        self._rule_index = RuleIndex()
+        self._listen_history = ListenHistory(
+            maxlen=self._session.config['history_max_pkg'],
+            time_threshold_sec=self._session.config['history_timeout'],
+            max_group_size=self._session.config['history_pkg_size']
+        )
+        self._rule_index = RuleIndex(
+            maxlen=self._session.config['history_max_rules']
+        )
         self._playcounts = Counter()
 
     def __iter__(self):
@@ -115,7 +119,7 @@ class Database:
         except KeyError:
             raise KeyError('key "{k}" is not in attribute mask'.format(k=key))
 
-    def _rebuild_step_base(self, mean_counter, window_size=60, step_size=20):
+    def _rebuild_step_base(self, mean_counter, window_size, step_size):
         """Do the Base Iterations.
 
         This involves three iterations:
@@ -129,6 +133,12 @@ class Database:
         :param window_size: The max. size of the window in which combinations are taken.
         :param step_size: The movement of the window per iteration.
         """
+        if window_size is None:
+            window_size = self._session.config['rebuild_window_size']
+
+        if step_size is None:
+            step_size = self._session.config['rebuild_step_size']
+
         # Base Iteration:
         slider = sliding_window(self, window_size, step_size)
         center = centering_window(self, window_size // 2)
@@ -152,7 +162,7 @@ class Database:
                     # Sample the newly calculated distance.
                     mean_counter.add(distance.distance)
 
-    def _rebuild_step_refine(self, mean_counter, num_passes, mean_scale=2):
+    def _rebuild_step_refine(self, mean_counter, num_passes=None, mean_scale=None):
         """Do the refinement step.
 
         .. seealso:: :func:`rebuild`
@@ -160,6 +170,12 @@ class Database:
         :param mean_counter: RunningMean Counter
         :param num_passes: How many times the song list shall be iterated.
         """
+        if num_passes is None:
+            num_passes = self._session.config['rebuild_refine_passes']
+
+        if mean_scale is None:
+            num_passes = self._session.config['rebuild_mean_scale']
+
         # Prebind the functions for performance reasons:
         add = Song.distance_add
         compute = Song.distance_compute
@@ -205,7 +221,7 @@ class Database:
             distance = Song.distance_compute(song_a, song_b)
             Song.distance_add(song_a, song_b, distance)
 
-    def rebuild(self, window_size=60, step_size=20, refine_passes=25, stupid_threshold=400):
+    def rebuild(self, window_size=None, step_size=None, refine_passes=None, stupid_threshold=None):
         """Rebuild all distances and the associated graph.
 
         This will be triggered for you automatically after a transaction.
@@ -215,6 +231,9 @@ class Database:
         :param int refine_passes: How often step #2 should be repeated.
         :param int stupid_threshold: If less songs than this just brute forcely calculate all combations of songs.
         """
+        if stupid_threshold is None:
+            stupid_threshold = self._session.config['rebuild_stupid_threshold']
+
         if len(self) < stupid_threshold:
             LOGGER.debug('+ Step #1 + 2: Brute Force calculation due to few songs')
             self.rebuild_stupid()
@@ -454,11 +473,12 @@ if __name__ == '__main__':
                     'artist': 1.0 - i / N
                 })
                 # Pseudo-Random, but deterministic:
-                euler = lambda x: math.fmod(math.e ** x, 1.0)
-                session.database.add({
-                    'genre': euler((i + 1) % 30),
-                    'artist': euler((N - i + 1) % 30)
-                })
+                if '--euler' in sys.argv:
+                    euler = lambda x: math.fmod(math.e ** x, 1.0)
+                    session.database.add({
+                        'genre': euler((i + 1) % 30),
+                        'artist': euler((N - i + 1) % 30)
+                    })
 
         LOGGER.debug('+ Step #3: Layouting and Plotting')
         session.database.plot(3000, 3000)
