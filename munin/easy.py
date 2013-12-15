@@ -8,6 +8,10 @@ Instead a number of preconfigured number of attributes are selected that
 are know to work well together.
 """
 
+import logging
+LOGGER = logging.getLogger(__name__)
+
+
 from munin.session import Session
 from munin.helper import pairup
 
@@ -15,9 +19,12 @@ from munin.provider import LancasterStemProvider
 from munin.provider import MoodbarAudioFileProvider
 from munin.provider import GenreTreeProvider
 
-# from munin.distance.steam import S
 from munin.distance import MoodbarDistance
 from munin.distance import GenreTreeDistance
+
+# Checking if the attribute shall be used:
+from munin.provider.moodbar import check_for_moodbar
+from munin.provider.bpm import check_for_bpmtools
 
 
 # Providers to write:
@@ -36,8 +43,8 @@ class EasySession(Session):
     def from_name():
         return Session.from_name('EasySession')
 
-    def __init__(self, name='EasySession'):
-        Session.__init__(self, name, {
+    def __init__(self):
+        mask = {
             'artist': pairup(
                 LancasterStemProvider(compress=True),
                 None,
@@ -68,4 +75,14 @@ class EasySession(Session):
                 WordListDistance(),
                 0.3
             )
-        })
+        }
+
+        if not check_for_moodbar():
+            logging.warning('Disabling moodbar attribute, no binary found in PATH.')
+            del mask['moodbar']
+
+        if not check_for_bpmtools():
+            logging.warning("Disabling bpm attribute, no binary found in PATH.")
+            del mask['bpm']
+
+        Session.__init__('EasySession', mask)
