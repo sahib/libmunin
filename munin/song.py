@@ -12,6 +12,8 @@ LOGGER = getLogger(__name__)
 from munin.distance import Distance
 from munin.helper import SessionMapping
 
+from heapq import heappush, heappop
+
 # External:
 from blist import sortedlist
 
@@ -66,7 +68,8 @@ class Song(SessionMapping, Hashable):
 
     def _reset_invariants(self):
         self._worst_cache = None
-        self._pop_list = sortedlist(key=lambda e: ~self._dist_dict[e])
+        # self._pop_list = sortedlist(key=lambda e: ~self._dist_dict[e])
+        self._pop_list = []
 
     #######################
     #  Other convinience  #
@@ -129,7 +132,7 @@ class Song(SessionMapping, Hashable):
         if other is self:
             return False
 
-        if self._worst_cache is not None and self._worst_cache < distance:
+        if self._worst_cache is not None and self._worst_cache < distance.distance:
             return False
 
         if distance.distance > self._max_distance:
@@ -138,39 +141,47 @@ class Song(SessionMapping, Hashable):
         sdd, odd = self._dist_dict, other._dist_dict
         if other in sdd:
             if sdd[other] < distance:
+                print('lookup deny')
                 return False  # Reject
 
             # Explain why this could damage worst song detection.
             # and why we do not care. (might change sorting)
             self._worst_cache = None
             sdd[other] = odd[self] = distance
+            print('lookup accept')
             return True
-        else:
-            # Check if we still have room left
-            if len(sdd) >= self._max_neighbors:
-                # Find the worst song in the dictionary
-                idx = 1
-                for worst_song in self._pop_list:
-                    if worst_song in sdd:
-                        break
-                    idx += 1
 
-                if sdd[worst_song] < distance:
-                    # we could prune pop_list here too,
-                    # but it showed that one operation only is more effective.
-                    self._worst_cache = sdd[worst_song]
-                    return False
+        # Check if we still have room left
+        if len(sdd) >= self._max_neighbors:
+            # Find the worst song in the dictionary
+            while 1:
+                inversion, worst_song = self._pop_list[0]
+                if worst_song in sdd:
+                    worst_dist = 1.0 - inversion
+                    break
+                heappop(self._pop_list)
 
-                # delete the worst one to make place,
-                # BUT: do not delete the connection from worst to self
-                # we create unidir edges here on purpose.
-                del sdd[worst_song]
-                del self._pop_list[idx + 1:]
+            if worst_dist < distance.distance:
+                print('worst deny')
+                # we could prune pop_list here too,
+                # but it showed that one operation only is more effective.
+                # heappush(self._pop_list, (inversion, worst_song))
+                self._worst_cache = worst_dist
+                return False
+
+            # delete the worst one to make place,
+            # BUT: do not delete the connection from worst to self
+            # we create unidir edges here on purpose.
+            print('worst accept')
+            del sdd[worst_song]
+            heappop(self._pop_list)
 
         # Add the new element:
         sdd[other] = odd[self] = distance
-        self._pop_list.add(other)
-        other._pop_list.add(self)
+
+        inversion = ~distance
+        heappush(self._pop_list, (inversion, other))
+        heappush(other._pop_list, (inversion, self))
 
         # Might be something different now:
         self._worst_cache = None

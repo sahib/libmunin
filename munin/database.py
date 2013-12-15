@@ -446,14 +446,7 @@ if __name__ == '__main__':
     def main():
         from munin.testing import DummyDistanceFunction
 
-        session = Session('session_test', {
-            'genre': (None, DummyDistanceFunction(), 0.2),
-            'artist': (None, DummyDistanceFunction(), 0.3)
-        })
-
-        import math
         LOGGER.setLevel(logging.DEBUG)
-
         ch = logging.StreamHandler()
         ch.setLevel(logging.DEBUG)
 
@@ -465,8 +458,16 @@ if __name__ == '__main__':
         # add ch to logger
         LOGGER.addHandler(ch)
 
+
+        session = Session('session_test', {
+            'genre': (None, DummyDistanceFunction(), 0.2),
+            'artist': (None, DummyDistanceFunction(), 0.3)
+        })
+
+        import math
+
         with session.transaction():
-            N = 1000
+            N = 100
             for i in range(int(N / 2) + 1):
                 session.add({
                     'genre': 1.0 - i / N,
