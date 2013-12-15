@@ -174,7 +174,7 @@ class Database:
             num_passes = self._session.config['rebuild_refine_passes']
 
         if mean_scale is None:
-            num_passes = self._session.config['rebuild_mean_scale']
+            mean_scale = self._session.config['rebuild_mean_scale']
 
         # Prebind the functions for performance reasons:
         add = Song.distance_add
@@ -466,7 +466,7 @@ if __name__ == '__main__':
         LOGGER.addHandler(ch)
 
         with session.transaction():
-            N = 100
+            N = 1000
             for i in range(int(N / 2) + 1):
                 session.add({
                     'genre': 1.0 - i / N,
@@ -481,7 +481,8 @@ if __name__ == '__main__':
                     })
 
         LOGGER.debug('+ Step #3: Layouting and Plotting')
-        session.database.plot(3000, 3000)
+        if '--plot' in sys.argv:
+            session.database.plot(3000, 3000)
 
     if '--cli' in sys.argv:
         main()
