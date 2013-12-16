@@ -179,15 +179,15 @@ if __name__ == '__main__':
             # [0] <-> [100]  [0.75]
             # [0] <-> [50]   [0.50]
             self._session.rule_index.insert_rule((
-                frozenset(self._session[+0]),
-                frozenset(self._session[-1]),
+                frozenset([self._session[+0]]),
+                frozenset([self._session[-1]]),
                 self.N // 10,
                 0.75
             ))
 
             self._session.rule_index.insert_rule((
-                frozenset(self._session[+0]),
-                frozenset(self._session[self.N // 2]),
+                frozenset([self._session[+0]]),
+                frozenset([self._session[self.N // 2]]),
                 self.N // 15,
                 0.50
             ))

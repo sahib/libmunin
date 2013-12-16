@@ -49,7 +49,7 @@ def _style(graph, width, height):
         'edge_color': edge_color,
         'edge_width': edge_width,
         'vertex_color': [hsv_to_rgb(v, 1.0, 1.0) for v in colors],
-        'vertex_label_color': [hsv_to_rgb(1 - v, 0.5, 1.0) for v in colors],
+        'vertex_label_color': [hsv_to_rgb(1 - v, 0.2, 0.1) for v in colors],
         'vertex_size': [42] * len(graph.vs),
         'layout': graph.layout('fr'),
         'bbox': (width, height)
