@@ -32,10 +32,6 @@ Installation
     :target: https://crate.io/packages/libmunin
     :alt: Number of PyPI downloads
 
-.. image:: https://d2weczhvl823v0.cloudfront.net/sahib/libmunin/trend.png
-    :target: https://bitdeli.com/free
-    :alt: Bitdeli Badge
-
 Required externam programs
 --------------------------
 
