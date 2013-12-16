@@ -5,7 +5,7 @@
 from collections import Hashable, OrderedDict, deque
 from itertools import combinations
 from operator import itemgetter
-from heapq import heappush, heappop
+from heapq import heappush, heappop, heapify
 
 from logging import getLogger
 LOGGER = getLogger(__name__)
@@ -13,7 +13,6 @@ LOGGER = getLogger(__name__)
 # Internal:
 from munin.distance import Distance
 from munin.helper import SessionMapping
-
 
 
 class Song(SessionMapping, Hashable):
@@ -66,7 +65,8 @@ class Song(SessionMapping, Hashable):
 
     def _reset_invariants(self):
         self._worst_cache = None
-        self._pop_list = []
+        self._pop_list = [(1.0 - dist.distance, song) for song, dist in self._dist_dict.items()]
+        heapify(self._pop_list)
 
     #######################
     #  Other convinience  #
@@ -115,6 +115,8 @@ class Song(SessionMapping, Hashable):
 
         return Distance(self._session, distance_dict)
 
+
+
     def distance_add(self, other, distance):
         """Add a relation to ``other`` with a certain distance.
 
@@ -159,7 +161,6 @@ class Song(SessionMapping, Hashable):
             if worst_dist < distance.distance:
                 # we could prune pop_list here too,
                 # but it showed that one operation only is more effective.
-                # heappush(self._pop_list, (inversion, worst_song))
                 self._worst_cache = worst_dist
                 return False
 
@@ -180,9 +181,6 @@ class Song(SessionMapping, Hashable):
         self._worst_cache = None
         return True
 
-    def average_distance(self):
-        return sum(d.distance for d in self._dist_dict.values()) / len(self._dist_dict)
-
     def distance_finalize(self):
         """Delete/Fix all invalid edges and neighbors of this song"""
         to_consider = deque()
@@ -194,20 +192,17 @@ class Song(SessionMapping, Hashable):
                 to_consider.append((self, other))
 
         for source, target in to_consider:
-            if not source.full() and not target.full():
-                distance = source.distance_get(target)
-                mean_source = source.average_distance()
-                mean_target = target.average_distance()
-                average_mean = (mean_source + mean_target) / 2
-
-                sum_neigbors = len(source._dist_dict) + len(target._dist_dict)
-                too_empty = sum_neigbors <= self._max_neighbors
-
-                if too_empty or distance.distance < average_mean:
-                    target._dist_dict[other] = distance
+            count = 0
+            for other in self.neighbors():
+                dist_a, dist_b = self.distance_get(other), other.distance_get(self)
+                if dist_a is None or dist_b is None:
                     continue
+                count += 1
 
-            del source._dist_dict[target]
+            if count < self._max_neighbors:
+                target._dist_dict[source] = source.distance_get(target)
+            else:
+                del source._dist_dict[target]
 
         self._dist_dict = OrderedDict(sorted(self._dist_dict.items(), key=itemgetter(1)))
         self._reset_invariants()
@@ -252,9 +247,6 @@ class Song(SessionMapping, Hashable):
                         break
             else:
                 break
-
-    def full(self):
-        return self._max_neighbors == len(self._dist_dict)
 
     def disconnect(self):
         """Deletes all edges to other songs and tries to fill the resulting hole.
