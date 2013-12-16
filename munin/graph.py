@@ -41,7 +41,7 @@ def recommendations_from_seed(database, rule_index, song, n=20):
     if n is 0:
         return iter([])
 
-    if n < 5:
+    if n < song._max_neighbors:
         return iter(list(song.distance_iter())[:n])
 
     return _recommendations_from_seed(database, rule_index, song, n=n)
