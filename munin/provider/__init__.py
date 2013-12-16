@@ -47,7 +47,7 @@ class Provider:
 
         Example: ::
 
-            >>> WordListProvider | LancasterStemProvider
+            >>> WordlistProvider | LancasterStemProvider
             CompositeProvider(WordListProvider, LancasterStemProvider)
 
         If you chain together many providers it is recommended to use only one
@@ -93,4 +93,6 @@ from munin.provider.moodbar import \
 from munin.provider.bpm import BPMProvider, BPMCachedProvider
 from munin.provider.wordlist import WordlistProvider
 from munin.provider.normalize import \
-    ArtistNormalizeProvider
+    ArtistNormalizeProvider, \
+    AlbumNormalizeProvider, \
+    TitleNormalizeProvider

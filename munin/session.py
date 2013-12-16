@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#q!/usr/bin/env python
 # encoding: utf-8
 
 """
@@ -124,6 +124,9 @@ class Session:
         """
         self._config = config
         self._name = name
+
+# Publicly readable attribute.
+        self.mapping = {}
 
         # Make access to the attribute mask more efficient
         self._mask = copy(mask)
