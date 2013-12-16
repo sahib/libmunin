@@ -86,8 +86,11 @@ from munin.provider.genre import GenreTreeProvider
 from munin.provider.composite import CompositeProvider
 from munin.provider.stem import LancasterStemProvider, SnowballStemProvider
 from munin.provider.moodbar import \
-        MoodbarProvider, \
-        MoodbarMoodFileProvider, \
-        MoodbarAudioFileProvider
+    MoodbarProvider, \
+    MoodbarMoodFileProvider, \
+    MoodbarAudioFileProvider
 
 from munin.provider.bpm import BPMProvider, BPMCachedProvider
+from munin.provider.wordlist import WordlistProvider
+from munin.provider.normalize import \
+    ArtistNormalizeProvider

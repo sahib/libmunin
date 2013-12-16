@@ -29,13 +29,13 @@ class CompositeProvider(Provider):
 
     If no providers are given this acts like (a slower variant) of Provider.
     """
-    def __init__(self, provider_list, compress=False):
+    def __init__(self, provider_list, **kwargs):
         """Creates a proivder that applies subproviders in a certain order to it's input.
 
         :param provider_list: A ordered list of provider objects.
         """
         self._provider_list = provider_list
-        Provider.__init__(self, compress=compress)
+        Provider.__init__(self, **kwargs)
 
     def reverse(self, output_values):
         """Try to reverse the output_values with all known providers.

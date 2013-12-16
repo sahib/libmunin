@@ -391,7 +391,7 @@ def load_genre_tree(pickle_path):
 
 class GenreTreeProvider(Provider):
     'Normalize a genre by matching it agains precalculated Tree of sub genres'
-    def __init__(self, quality='all', compress=False):
+    def __init__(self, quality='all', **kwargs):
         """Creates a GenreTreeProvider with a certain quality.
 
         A GenreTreeProvider will try to normalize a genre by using a Tree of
@@ -417,7 +417,7 @@ class GenreTreeProvider(Provider):
         :param quality: One of ``all``, ``best_two``  ``single`` [*default:* ``all``]
         :type quality: String
         """
-        Provider.__init__(self, compress=compress)
+        Provider.__init__(self, **kwargs)
         self._root = load_genre_tree(get_cache_path('genre_tree.dump'))
         self._build_func = {
             'all': build_genre_path_all,

@@ -35,12 +35,12 @@ class _BaseStemProvider(Provider):
 
 class LancasterStemProvider(_BaseStemProvider):
     'Stem the input values (either a single word or a list of words)'
-    def __init__(self, compress=False):
+    def __init__(self, **kwargs):
         """This Provider takes no options.
 
         .. note:: LancasterStemmer is known to be more aggressive than PorterStemmer.
         """
-        Provider.__init__(self, compress=compress)
+        Provider.__init__(self, **kwargs)
 
         from nltk.stem import LancasterStemmer
         self._stemmer = LancasterStemmer()
@@ -51,7 +51,7 @@ class SnowballStemProvider(_BaseStemProvider):
     """Stem the input value by the Snowball Stemming Algorithm
     *("PorterStemmer with languages")*
     """
-    def __init__(self, language='english', compress=False):
+    def __init__(self, language='english', **kwargs):
         """
         See here for a full list of languages:
 
@@ -61,7 +61,7 @@ class SnowballStemProvider(_BaseStemProvider):
         :param language: the language for the algorithm to use.
         :type language: str
         """
-        Provider.__init__(self, compress=compress)
+        Provider.__init__(self, **kwargs)
 
         from nltk.stem import SnowballStemmer
         self._stemmer = SnowballStemmer(language)

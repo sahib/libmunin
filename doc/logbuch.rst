@@ -613,3 +613,7 @@ Anonsten funktionier die Moodbar Analyse einigermaßen gut (*): ::
 
     * Eine Art Konkurrent ist auch noch *MusicSquare*, finde leider keinen Link
       dazu. Angeblich solls aber recht bekannt sein und die Demo war recht nett.
+
+    * Interessante Seite vlt. noch:
+
+        http://labrosa.ee.columbia.edu/projects/musicsim/normalization.html

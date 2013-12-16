@@ -110,11 +110,11 @@ class BPMCachedProvider(BPMProvider):
     A .bpm file with the calculated value will be stored along the audio file,
     and the same place will be checked before actually calculating it.
     """
-    def __init__(self, compress=False, cache_invalid=False):
+    def __init__(self, cache_invalid=False, **kwargs):
         """
         :param cache_invalid: Also cache invalid results of failed calculations?
         """
-        Provider.__init__(self, compress=compress)
+        Provider.__init__(self, **kwargs)
         self._cache_invalid = cache_invalid
 
     def do_process(self, audio_path):
