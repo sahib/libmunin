@@ -3,7 +3,10 @@ A Humble Beginner's Manual
 
 You should read this first before proceeding to the more detailled chapters that
 will explain a certain topic, but won't give you an overview on *libmunin's*
-capabillities.
+capabillities. This should give you a quick introduction on what is what and
+where what is when where is not defined. Consfused? Me too. Let's just dive in!
+
+
 
 Part 1: Minimal Example
 -----------------------

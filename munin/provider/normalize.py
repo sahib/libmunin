@@ -69,9 +69,9 @@ class ArtistNormalizeProvider(Provider):
     def __init__(self, **kwargs):
         Provider.__init__(self, **kwargs)
         self._punctuation = re.compile("\W|_")
-        self._split_reasons = frozenset(['feat', 'featuring', '&', 'and'])
+        self._split_reasons = frozenset(['feat', 'featuring', 'and'])
         self._strip_patterns = [re.compile(pattern) for pattern in [
-            '^the\s*', '^a\s*', '\s*of\s*'
+            r'^the\s*', r'^a\s*', r'\s*of\s*'
         ]]
 
     def do_process(self, input_string):
@@ -91,7 +91,7 @@ class ArtistNormalizeProvider(Provider):
 
         for idx, sub_artist in enumerate(sub_artists):
             for pattern in self._strip_patterns:
-                sub_artists[idx] = pattern.sub('', sub_artist)
+                sub_artists[idx] = pattern.sub('', sub_artists[idx])
 
         return tuple(normalize_unicode_glyphs(s.strip()) for s in sub_artists)
 
@@ -117,16 +117,16 @@ class AlbumNormalizeProvider(Provider):
         Provider.__init__(self, **kwargs)
         self._punctuation = re.compile("\W|_")
         self._strip_patterns = [re.compile(pattern) for pattern in [
-            '\s*[\(\[{].*?[}\)\]]',  # Strip everything in brackets ([{
-            '\s*cd\s*[0-9]+'         # remove CD <X> stuff.
+            r'\s*[\(\[{].*?[}\)\]]',  # Strip everything in brackets ([{
+            r'\s*cd\s*[0-9]+'         # remove CD <X> stuff.
         ]]
 
     def do_process(self, input_string):
         step = input_string.lower()
-        step = ' '.join(filter(None, self._punctuation.split(step)))
         for pattern in self._strip_patterns:
             step = pattern.sub('', step)
 
+        step = ' '.join(filter(None, self._punctuation.split(step)))
         return (normalize_unicode_glyphs(step.strip()), )
 
 
@@ -140,12 +140,21 @@ if __name__ == '__main__':
     class TestArtistNormalizeProvider(unittest.TestCase):
         def test_splitting(self):
             prov = ArtistNormalizeProvider()
-            print(prov.do_process('The *** Hello & Berta ###'))
-            print(prov.do_process('The *** Hello & Berta ### featuring Gustl'))
+            self.assertEqual(
+                prov.do_process('The *** Hello and Berta ###'),
+                ('hello', 'berta')
+            )
+            self.assertEqual(
+                prov.do_process('The *** Hello Berta ### featuring Gustl'),
+                ('hello berta', 'gustl')
+            )
 
     class TestAlbumNormalizeProvider(unittest.TestCase):
         def test_splitting(self):
             prov = AlbumNormalizeProvider()
-            print(prov.do_process('The art of getting bugs (live!) CD1'))
+            self.assertEqual(
+                prov.do_process('### The art of getting &bugs (live!) [liver!!] {livest!!!} CD1'),
+                ('the art of getting bugs', )
+            )
 
     unittest.main()
