@@ -22,7 +22,8 @@ from munin.provider import \
     MoodbarAudioFileProvider, \
     GenreTreeProvider, \
     BPMCachedProvider, \
-    StemProvider
+    StemProvider, \
+    WordlistProvider
 
 from munin.distance import \
     MoodbarDistance, \
@@ -74,8 +75,8 @@ class EasySession(Session):
             ),
             # TODO: Keyword Provider should be used here.
             'lyrics': pairup(
-                WordListProvider() | StemProvider(),
-                WordListDistance(),
+                WordlistProvider() | StemProvider(),
+                None,
                 3
             )
         }

@@ -1,3 +1,5 @@
+import sys
+
 from munin.easy import EasySession
 
 
@@ -31,5 +33,6 @@ for munin_song in session.recommend_from_seed(session[1], 3):
     print('    ', MY_DATABASE[munin_song.uid])
 
 
-print('Now rendering a plot of the relation graph...')
-session.database.plot()
+if '--plot' in sys.argv:
+    print('Now rendering a plot of the relation graph...')
+    session.database.plot()
