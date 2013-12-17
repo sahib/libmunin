@@ -29,6 +29,9 @@ import shutil
 import pickle
 import os
 
+import logging
+LOGGER = logging.getLogger(__name__)
+
 # External:
 try:
     from xdg import BaseDirectory
@@ -171,6 +174,12 @@ class Session:
     def __getitem__(self, idx):
         return self.database[idx]
 
+    def __iter__(self):
+        return iter(self.database)
+
+    def __len__(self):
+        return len(self.database)
+
     @property
     def name(self):
         'Return the name you passed to the session'
@@ -258,11 +267,15 @@ class Session:
         :rtype: :class:`Session`
         """
         base_path, _ = os.path.splitext(full_path)
-        with tarfile.open(full_path, 'r:*') as tar:
-            tar.extractall(base_path)
+        try:
+            with tarfile.open(full_path + '.gz', 'r:*') as tar:
+                tar.extractall(base_path)
 
-        with open(os.path.join(base_path, 'session.pickle'), 'rb') as handle:
-            return pickle.load(handle)
+            with open(os.path.join(base_path, 'session.pickle'), 'rb') as handle:
+                return pickle.load(handle)
+        except FileNotFoundError as err:
+            LOGGER.debug('Could not load session: ' + str(err))
+            return None
 
     @staticmethod
     def from_name(session_name):
@@ -289,8 +302,13 @@ class Session:
             rmtree(path, ignore_errors=True)
         os.mkdir(path)
 
+        class VerbosePickler (pickle._Pickler):
+            def save(self, obj):
+                # print('pickling object  {0} of type {1}'.format(obj, type(obj)))
+                pickle._Pickler.save(self, obj)
+
         with open(os.path.join(path, 'session.pickle'), 'wb') as handle:
-            pickle.dump(self, handle)
+            VerbosePickler(handle).dump(self)
 
         with tarfile.open(path + '.gz', 'w:gz') as tar:
             tar.add(path, arcname='')
@@ -357,7 +375,7 @@ class Session:
         :param n: Deliver so many recommendations (at max.)
         :returns: An iterator that yields recommend songs.
         """
-        return munin.graph.recommendations_from_graph(
+        return munin.graph.recommendations_from_heuristic(
             self.database,
             self.rule_index,
             number
@@ -400,7 +418,7 @@ class Session:
 
         :param song: The song to feed in the history.
         """
-        self.database.feed_history(song)
+        self.database.feed_history(song_or_uid(self.database, song))
 
     def add(self, value_mapping):
         """Add a song with the values in the ``value_mapping``.

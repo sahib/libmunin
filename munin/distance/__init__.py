@@ -51,8 +51,7 @@ class DistanceFunction:
     def do_compute(self, list_a, list_b):
         """Compare both lists with eq by default.
 
-        This goes through both lists and counts the matching elements.
-        The lists are sorted in before.
+        This goes through both lists and counts the matching elements at the same index.
 
         :return: Number of matches divivded through the max length of both lists.
         """
@@ -61,7 +60,7 @@ class DistanceFunction:
         if n_max is 0:
             return 1.0
 
-        return 1.0 - sum(a == b for a, b in zip(sorted(list_a), sorted(list_b))) / n_max
+        return 1.0 - sum(a == b for a, b in zip(list_a, list_b)) / n_max
 
 
 ###########################################################################
@@ -107,9 +106,11 @@ class Distance(SessionMapping):
 #                             Import Aliases                              #
 ###########################################################################
 
+from munin.distance.bpm import BPMDistance
 from munin.distance.genre import GenreTreeDistance
 from munin.distance.moodbar import MoodbarDistance
-from munin.distance.bpm import BPMDistance
+from munin.distance.wordlist import WordlistDistance
+from munin.distance.levenshtein import LevenshteinDistance
 
 ###########################################################################
 #                               Unit tests                                #

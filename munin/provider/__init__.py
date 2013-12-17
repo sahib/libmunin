@@ -47,8 +47,8 @@ class Provider:
 
         Example: ::
 
-            >>> WordlistProvider | LancasterStemProvider
-            CompositeProvider(WordListProvider, LancasterStemProvider)
+            >>> WordlistProvider | StemProvider
+            CompositeProvider(WordListProvider, StemProvider)
 
         If you chain together many providers it is recommended to use only one
         CompositeProvider for speed reasons.
@@ -84,7 +84,7 @@ class Provider:
 
 from munin.provider.genre import GenreTreeProvider
 from munin.provider.composite import CompositeProvider
-from munin.provider.stem import LancasterStemProvider, SnowballStemProvider
+from munin.provider.stem import StemProvider, StemProvider
 from munin.provider.moodbar import \
     MoodbarProvider, \
     MoodbarMoodFileProvider, \

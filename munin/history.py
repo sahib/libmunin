@@ -341,6 +341,9 @@ class RuleIndex:
         :param drop_invalid: If True, delete the first element
                              immediately if index is too large.
         """
+        # TODO: Make rule duplication work by considering only left/right
+        # update current rule if rating better.
+
         # Step 0: Check if we already know that item.
         if rule_tuple in self:
             return

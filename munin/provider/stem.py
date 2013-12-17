@@ -12,7 +12,7 @@ if it is an iterable, all elements in this iterable will be stemmed.
 
 **Usage Example:** ::
 
-    >>> p = LancasterStemProvider()
+    >>> p = StemProvider()
     >>> p.process(['Fish', 'fisher', 'fishing'])  # Either a list of words...
     ['fish', 'fish', 'fish']
     >>> p.process('stemming') # Or a single word.
@@ -25,31 +25,14 @@ Reference
 from munin.provider import Provider
 
 
-class _BaseStemProvider(Provider):
-    def process(self, input_value):
-        if isinstance(input_value, str):
-            return [self._stem(input_value)]
-        else:
-            return [self._stem(word) for word in input_value]
+from Stemmer import Stemmer
+STEMMER = Stemmer('english')
 
 
-class LancasterStemProvider(_BaseStemProvider):
-    'Stem the input values (either a single word or a list of words)'
-    def __init__(self, **kwargs):
-        """This Provider takes no options.
+class StemProvider(Provider):
+    """Stem the input values (either a single word or a list of words)
 
-        .. note:: LancasterStemmer is known to be more aggressive than PorterStemmer.
-        """
-        Provider.__init__(self, **kwargs)
-
-        from nltk.stem import LancasterStemmer
-        self._stemmer = LancasterStemmer()
-        self._stem = lambda word: self._stemmer.stem(word)
-
-
-class SnowballStemProvider(_BaseStemProvider):
-    """Stem the input value by the Snowball Stemming Algorithm
-    *("PorterStemmer with languages")*
+    Uses the porter stemmer algorithm.
     """
     def __init__(self, language='english', **kwargs):
         """
@@ -57,15 +40,20 @@ class SnowballStemProvider(_BaseStemProvider):
 
             http://nltk.org/_modules/nltk/stem/snowball.html
 
+        .. note::
 
-        :param language: the language for the algorithm to use.
-        :type language: str
+            This does not depend on nltk, it depends on the ``pystemmer`` package.
+
+        :param language: language to use during stemming, defaults to english.
         """
         Provider.__init__(self, **kwargs)
+        self._stemmer = Stemmer(language)
 
-        from nltk.stem import SnowballStemmer
-        self._stemmer = SnowballStemmer(language)
-        self._stem = lambda word: self._stemmer.stem(word)
+    def do_process(self, input_value):
+        if isinstance(input_value, str):
+            return self._stemmer.stemWord(input_value)
+        else:
+            return self._stemmer.stemWords(input_value)
 
 
 if __name__ == '__main__':
@@ -73,13 +61,11 @@ if __name__ == '__main__':
 
     class StemProviderTests(unittest.TestCase):
         def test_valid(self):
-            for prov in [LancasterStemProvider(), SnowballStemProvider()]:
-                words = ['Fish', 'fisher', 'fishing']
-                # words = ['heaven', 'beatles', 'beatle']
-                print(prov)
-                print([prov.process(word) for word in words])
-                print(prov.process(words))
+            prov = StemProvider()
+            words = ['Fish', 'fisher', 'fishing']
+            # words = ['heaven', 'beatles', 'beatle']
+            print(prov)
+            print([prov.do_process(word) for word in words])
+            print(prov.do_process(words))
 
-    # Disabled for now, since we'd need to import it on TravisCI
-    # and the PyPi package simply does not work for Py3.
-    # unittest.main()
+    unittest.main()

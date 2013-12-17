@@ -15,28 +15,22 @@ LOGGER = logging.getLogger(__name__)
 from munin.session import Session
 from munin.helper import pairup
 
-from munin.provider import LancasterStemProvider
-from munin.provider import MoodbarAudioFileProvider
-from munin.provider import GenreTreeProvider
+from munin.provider import \
+    ArtistNormalizeProvider, \
+    AlbumNormalizeProvider, \
+    TitleNormalizeProvider, \
+    MoodbarAudioFileProvider, \
+    GenreTreeProvider
 
-from munin.distance import MoodbarDistance
-from munin.distance import GenreTreeDistance
+from munin.distance import \
+    MoodbarDistance, \
+    GenreTreeDistance
+
 
 # Checking if the attribute shall be used:
 from munin.provider.moodbar import check_for_moodbar
 from munin.provider.bpm import check_for_bpmtools
 
-
-# Providers to write:
-#    WordlistProvider
-#    BPMProvider
-#    NotInProvider
-#
-# Distance to write:
-#    NotInDistance
-#    StemDistance
-#    BPMDistance
-#    WordListDistance
 
 class EasySession(Session):
     @staticmethod
@@ -46,17 +40,17 @@ class EasySession(Session):
     def __init__(self):
         mask = {
             'artist': pairup(
-                LancasterStemProvider(compress=True),
+                ArtistNormalizeProvider(compress=True),
                 None,
                 1
             ),
             'album': pairup(
-                LancasterStemProvider(compress=True),
+                AlbumNormalizeProvider(compress=True),
                 None,
                 1
             ),
             'title': pairup(
-                LancasterStemProvider(compress=False),
+                TitleNormalizeProvider(compress=False),
                 None,
                 1
             ),
@@ -70,19 +64,20 @@ class EasySession(Session):
                 MoodbarDistance(),
                 5
             ),
-            'lyrics': pairup(
-                WordListProvider(),
-                WordListDistance(),
-                3
-            )
+            # # TODO:
+            # 'lyrics': pairup(
+            #     WordListProvider(),
+            #     WordListDistance(),
+            #     3
+            # )
         }
 
         if not check_for_moodbar():
-            logging.warning('Disabling moodbar attribute, no binary found in PATH.')
+            logging.warning('Disabling moodbar attr, no binary found in PATH.')
             del mask['moodbar']
 
         if not check_for_bpmtools():
-            logging.warning("Disabling bpm attribute, no binary found in PATH.")
+            logging.warning("Disabling bpm attr, no binary found in PATH.")
             del mask['bpm']
 
-        Session.__init__('EasySession', mask)
+        Session.__init__(self, 'EasySession', mask)

@@ -17,6 +17,9 @@ class LevenshteinDistance(DistanceFunction):
         min_dist = 1.0
         for left, right in product(lefts, rights):
             max_both = max(len(left), len(right))
+            if max_both is 0:
+                continue
+
             new_dist = damerau_levenshtein_distance(left, right) / max_both
             min_dist = min(min_dist, new_dist)
 

@@ -15,8 +15,8 @@ Let's start with the pretty minimal example you may have seen already on the
 frontpage. But let's go through it more detailed this time.
 
 .. code-block:: python
-   :linenos:
-   :emphasize-lines: 1,3,11,12,14,21
+    :linenos:
+    :emphasize-lines: 1,3,11,12,14,21
 
     from munin.easy import EasySession
 

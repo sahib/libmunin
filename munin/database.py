@@ -95,11 +95,6 @@ class Database:
             return self._playcounts.most_common(n)
 
     def feed_history(self, song):
-        try:
-            self[song.uid]
-        except IndexError:
-            self.insert(song)
-
         if self._listen_history.feed(song):
             rules = self._listen_history.find_rules()
             self._rule_index.insert_rules(rules)

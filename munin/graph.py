@@ -117,7 +117,7 @@ def recommendations_from_attributes(subset, database, rule_index, n=20):
         chosen_song = next(database.find_matching_attributes(subset))
         return chain(
             [chosen_song],
-            recommendations_from_seed(rule_index, chosen_song, n=n)
+            recommendations_from_seed(database, rule_index, chosen_song, n=n)
         )
     except StopIteration:
         return iter([])
@@ -127,15 +127,17 @@ def recommendations_from_heuristic(database, rule_index, n=20):
     best_rule = rule_index.best()
     if best_rule is not None:
         # First song of the rules' left side
-        chosen_song = best_rule[0][0]
+        chosen_song = next(iter(best_rule[0]))
     else:
-        (chosen_song, count), *_ = database.playcount(n=1)
-        if count is 0:
+        counts = database.playcounts(n=1)
+        if len(counts):
+            (chosen_song, cnt), *_ = counts
+        else:
             chosen_song = random.choice(database)
 
     return chain(
         [chosen_song],
-        recommendations_from_seed(rule_index, chosen_song, n=n)
+        recommendations_from_seed(database, rule_index, chosen_song, n=n)
     )
 
 

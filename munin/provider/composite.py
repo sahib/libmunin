@@ -5,15 +5,15 @@
 **Usage Example:** ::
 
     >>> from munin.provider.composite import CompositeProvider
-    >>> from munin.provider.stem import LancasterStemProvider
+    >>> from munin.provider.stem import StemProvider
     >>> # Create a provider that first matches a genre to the Tree,
     >>> # then stem it with the StemProvider.
     >>> prov = CompositeProvider([
     ...     GenreTreeProvider(quality='all'),
-    ...     LancasterStemProvider()
+    ...     StemProvider()
     ... ])
     >>> # Alternatively:
-    >>> GenreTreeProvider(quality='all') | LancasterStemProvider()
+    >>> GenreTreeProvider(quality='all') | StemProvider()
 
 """
 
