@@ -72,12 +72,12 @@ class EasySession(Session):
                 MoodbarDistance(),
                 5
             ),
-            # # TODO:
-            # 'lyrics': pairup(
-            #     WordListProvider(),
-            #     WordListDistance(),
-            #     3
-            # )
+            # TODO: Keyword Provider should be used here.
+            'lyrics': pairup(
+                WordListProvider() | StemProvider(),
+                WordListDistance(),
+                3
+            )
         }
 
         if not check_for_moodbar():

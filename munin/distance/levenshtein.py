@@ -1,6 +1,20 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+"""
+Overview
+--------
+
+Distance Function that is able to compare two strings using the
+Damerau-Levenshtein-Distance.
+
+For computation the ``pyxdameraulevenshtein`` module is used, which is
+implemented in Cython.
+
+Reference
+---------
+"""
+
 # Stdlib:
 from itertools import product
 
@@ -13,21 +27,14 @@ from pyxdameraulevenshtein import damerau_levenshtein_distance
 
 
 class LevenshteinDistance(DistanceFunction):
+    """Compute the damerau-levenshtein distance of two words.
+
+    **Takes:** two lists of length 1.
+    """
     def do_compute(self, lefts, rights):
-        min_dist = 1.0
-        for left, right in product(lefts, rights):
-            max_both = max(len(left), len(right))
-            if max_both is 0:
-                continue
-
-            new_dist = damerau_levenshtein_distance(left, right) / max_both
-            min_dist = min(min_dist, new_dist)
-
-            # Optimization: Often we get a low value early.
-            if float_cmp(min_dist, 0.0):
-                break
-
-        return min_dist
+        left, right = lefts[0], rights[0]
+        max_both = max(len(left), len(right))
+        return damerau_levenshtein_distance(left, right) / max_both
 
 if __name__ == '__main__':
     import unittest
