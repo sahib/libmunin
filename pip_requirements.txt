@@ -9,3 +9,5 @@ PyStemmer
 bidict
 #: pymining
 pymining
+#: pyxDamerauLevenshtein
+pyxDamerauLevenshtein
