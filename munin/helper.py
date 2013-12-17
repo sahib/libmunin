@@ -78,7 +78,7 @@ def song_or_uid(database, song_or_uid):
 
 
 def pairup(provider, distance_function, weight):
-    """Convienience function for easy attribute mask building.
+    """Convienience function for easy mask building.
 
     Every distance function needs to know the provider that processed the value.
     This is needed to implement the compress functionality. In order to stop you

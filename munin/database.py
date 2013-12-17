@@ -112,7 +112,7 @@ class Database:
                 if all((song[key] in value_set for key in subset.keys())):
                     yield song
         except KeyError:
-            raise KeyError('key "{k}" is not in attribute mask'.format(k=key))
+            raise KeyError('key "{k}" is not in mask'.format(k=key))
 
     def _rebuild_step_base(self, mean_counter, window_size, step_size):
         """Do the Base Iterations.
@@ -267,7 +267,7 @@ class Database:
                 else:
                     value_dict[key] = provider.process(value)
             except KeyError:
-                raise KeyError('key "{k}" is not in attribute mask'.format(k=key))
+                raise KeyError('key "{k}" is not in mask'.format(k=key))
 
         new_song = Song(
             self._session, value_dict,
@@ -363,7 +363,7 @@ if __name__ == '__main__':
                     })
 
         def test_no_match(self):
-            with self.assertRaisesRegex(KeyError, '.*attribute mask.*'):
+            with self.assertRaisesRegex(KeyError, '.*mask.*'):
                 self._session.database.add({
                     'not_in_session': 42
                 })

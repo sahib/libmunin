@@ -186,20 +186,130 @@ version:
 
 Here's a full example of how this plays together:
 
-.. literalinclude:: ../munin/__main__.py
+.. literalinclude:: ../examples/complex.py
 
+
+.. note:: 
+   
+    In the first few runs the program may deliver a slightly random output
+    since ``recommend_from_heuristic`` is used - the only function that is not 
+    deterministic. 
 
 The output in the first run is: 
 
 .. code-block:: bash
 
-   TODO
+   λ ~/dev/libmunin/ master* python examples/complex.py   
+   The database:
+     #0 ('Devildriver', 'Before the Hangmans Noose', 'metal')
+     #1 ('Das Niveau', 'Beim Pissen gemeuchelt', 'folk')
+     #2 ('We Butter the Bread with Butter', 'Extrem', 'metal')
+     #3 ('Lady Gaga', 'Pokerface', 'pop')
+
+   -- No saved session found, loading new.
+   Recommendations to #2:
+     normalized values:
+       Artist : (1,)                
+       Genre  : ((194,),)           
+       Title  : ['Befor', 'the', 'Hangman', 'Noos']
+     original values:
+       Artist : Devildriver
+       Album  : Before the Hangmans Noose
+       Genre  : metal
+
+     normalized values:
+       Artist : (2,)                
+       Genre  : ((119,),)           
+       Title  : ['Beim', 'Pissen', 'gemeuchelt']
+     original values:
+       Artist : Das Niveau
+       Album  : Beim Pissen gemeuchelt
+       Genre  : folk
+
+   Playcounts:
+     #0 was played 3x times
+     #2 was played 2x times
 
 And in the second run: 
 
 .. code-block:: bash
 
-   TODO
+    λ ~/dev/libmunin/ master* python examples/complex.py 
+    The database:
+      #0 ('Devildriver', 'Before the Hangmans Noose', 'metal')
+      #1 ('Das Niveau', 'Beim Pissen gemeuchelt', 'folk')
+      #2 ('We Butter the Bread with Butter', 'Extrem', 'metal')
+      #3 ('Lady Gaga', 'Pokerface', 'pop')
+
+    Recommendations to #0:
+      normalized values:
+        Artist : (3,)                
+        Genre  : ((194,),)           
+        Title  : ['Extrem']          
+      original values:
+        Artist : We Butter the Bread with Butter
+        Album  : Extrem
+        Genre  : metal
+
+      normalized values:
+        Artist : (2,)                
+        Genre  : ((119,),)           
+        Title  : ['Beim', 'Pissen', 'gemeuchelt']
+      original values:
+        Artist : Das Niveau
+        Album  : Beim Pissen gemeuchelt
+        Genre  : folk
+
+      normalized values:
+        Artist : (4,)                
+        Genre  : ((226,),)           
+        Title  : ['Pokerfac']        
+      original values:
+        Artist : Lady Gaga
+        Album  : Pokerface
+        Genre  : pop
+
+    Playcounts:
+      #0 was played 6x times
+      #2 was played 4x times
+   
+In the 4th run we see another difference, libmunin developed an association rule
+from our history!
+
+.. code-block:: bash
+
+    λ ~/dev/libmunin/ master* python examples/complex.py 
+    The database:
+      #0 ('Devildriver', 'Before the Hangmans Noose', 'metal')
+      #1 ('Das Niveau', 'Beim Pissen gemeuchelt', 'folk')
+      #2 ('We Butter the Bread with Butter', 'Extrem', 'metal')
+      #3 ('Lady Gaga', 'Pokerface', 'pop')
+
+    Association Rules:
+             [2] <-> [0]        [supp=    3, rating=0.65625]
+
+    Recommendations to #2:
+      normalized values:
+        Artist : (1,)                
+        Genre  : ((194,),)           
+        Title  : ['Befor', 'the', 'Hangman', 'Noos']
+      original values:
+        Artist : Devildriver
+        Album  : Before the Hangmans Noose
+        Genre  : metal
+
+      normalized values:
+        Artist : (2,)                
+        Genre  : ((119,),)           
+        Title  : ['Beim', 'Pissen', 'gemeuchelt']
+      original values:
+        Artist : Das Niveau
+        Album  : Beim Pissen gemeuchelt
+        Genre  : folk
+
+    Playcounts:
+      #0 was played 15x times
+      #2 was played 10x times
 
 
 .. seealso:: 

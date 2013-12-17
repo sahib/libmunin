@@ -6,6 +6,7 @@ Session
 
 .. automodule:: munin.session
     :members: Session
+    :special-members:
 
 Database
 --------

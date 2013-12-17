@@ -62,6 +62,7 @@ Table of Contents
     api/song
     api/history
     api/helper
+    api/examples
 
 **Internals**
 
@@ -80,14 +81,17 @@ Minimal Example
 ---------------
 
 .. code-block:: python
-   
+    :linenos:
+    :emphasize-lines: 1,3,11,12,14,21
+
     from munin.easy import EasySession
 
     MY_DATABASE = [
-        ('Akrea', 'Lebenslinie', 'Trugbild', 'death metal'),
-        ('Vogelfrey', 'Wiegenfest', 'Heldentod', 'folk metal'),
-        ('Letzte Instanz', 'Götter auf Abruf', 'Salve te', 'folk rock'),
-        ('Debauchery', 'Continue to Kill', 'Apostle of War', 'brutal death')
+        # Artist:            Album:               Title:             Genre:
+        ('Akrea'          , 'Lebenslinie'      , 'Trugbild'       , 'death metal'),
+        ('Vogelfrey'      , 'Wiegenfest'       , 'Heldentod'      , 'folk metal'),
+        ('Letzte Instanz' , 'Götter auf Abruf' , 'Salve te'       , 'folk rock'),
+        ('Debauchery'     , 'Continue to Kill' , 'Apostle of War' , 'brutal death')
     ]
 
     session = EasySession()
@@ -100,7 +104,13 @@ Minimal Example
                  'genre': genre
              })] = idx
 
-    for munin_song in session.recommend_from_seed(0, 2):
+    for munin_song in session.recommend_from_seed(session[0], 2):
         print(MY_DATABASE[munin_song.uid])
 
-    # -> Prints 2nd and 4th song, because of the similar genre.
+
+*Output:*
+
+.. code-block:: python
+
+    ('Vogelfrey'  , 'Wiegenfest'       , 'Heldentod'      , 'folk metal'),
+    ('Debauchery' , 'Continue to Kill' , 'Apostle of War' , 'brutal death')

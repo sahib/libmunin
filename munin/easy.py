@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 """
-A "easy" version of the Session object where you do not have to set the attribute mask yourself.
+A "easy" version of the Session object where you do not have to set the mask yourself.
 
 Instead a number of preconfigured number of attributes are selected that
 are know to work well together.
@@ -20,11 +20,14 @@ from munin.provider import \
     AlbumNormalizeProvider, \
     TitleNormalizeProvider, \
     MoodbarAudioFileProvider, \
-    GenreTreeProvider
+    GenreTreeProvider, \
+    BPMCachedProvider, \
+    StemProvider
 
 from munin.distance import \
     MoodbarDistance, \
-    GenreTreeDistance
+    GenreTreeDistance, \
+    BPMDistance
 
 
 # Checking if the attribute shall be used:
@@ -50,7 +53,7 @@ class EasySession(Session):
                 1
             ),
             'title': pairup(
-                TitleNormalizeProvider(compress=False),
+                TitleNormalizeProvider(compress=False) | StemProvider(),
                 None,
                 1
             ),
@@ -58,6 +61,11 @@ class EasySession(Session):
                 GenreTreeProvider(),
                 GenreTreeDistance(),
                 2
+            ),
+            'bpm': pairup(
+                BPMCachedProvider(),
+                BPMDistance(),
+                3
             ),
             'moodbar': pairup(
                 MoodbarAudioFileProvider(),

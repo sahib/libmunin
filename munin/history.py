@@ -303,18 +303,50 @@ class RuleIndex:
         self._max_rules = maxlen or 2 ** 100
         self._rule_list = OrderedDict()
         self._rule_dict = defaultdict(set)
-        self._rule_pool = set()
         self._rule_cuid = 0
 
-    def __contains__(self, rule_tuple):
-        'Check if a rule tuple is in the index.'
-        return rule_tuple in self._rule_pool
-
     def __iter__(self):
+        """Iterate over all rules in a sorted way.
+
+        Requires O(n log n). This could be optimized.
+        """
         return iter(sorted(self._rule_list.values(), key=lambda rule: 1.0 - rule[-1]))
+
+    def __contains__(self, rule_tuple):
+        'Check if a rule tuple is in the index. Only considers songs in it.'
+        return bool(self.locate(rule_tuple))
+
+    def _locate(self, rule_tuple):
+        """Locate the the first rule_tuple and rule_uid with same left/right.
+
+        :returns: a tuple of (rule_uid, rule_tuple)
+        """
+        first_song = next(iter(rule_tuple[0]))
+        lefts, rights, *_ = rule_tuple
+        candidate_ids = set()
+
+        # Locate all rules that contain a song in the input rule
+        for uid in self._rule_dict.get(first_song, ()):
+            if uid in self._rule_list:
+                candidate_ids.add(uid)
+
+        # Check those for left/right idendity (instead of checking all rules)
+        for uid in candidate_ids:
+            stored_tuple = self._rule_list[uid]
+            stored_lefts, stored_rights, *_ = stored_tuple
+
+            if lefts == stored_lefts and rights == stored_rights:
+                return uid, stored_tuple
+
+            if rights == stored_lefts and lefts == stored_rights:
+                return uid, stored_tuple
+
+        return None, None
 
     def best(self):
         """Return the currently best rule (the one with the highest rating)
+
+        Requires linear complexity. This could be optimized.
 
         :returns: A ruletuple or None if no rule yet in the index.
         """
@@ -341,11 +373,12 @@ class RuleIndex:
         :param drop_invalid: If True, delete the first element
                              immediately if index is too large.
         """
-        # TODO: Make rule duplication work by considering only left/right
-        # update current rule if rating better.
-
         # Step 0: Check if we already know that item.
-        if rule_tuple in self:
+        stored_uid, stored_rule = self._locate(rule_tuple)
+
+        # Update if the rating is better:
+        if stored_rule is not None and rule_tuple[-1] > stored_rule[-1]:
+            self._rule_list[stored_uid] = rule_tuple
             return
 
         # Step 1: Add the affected songs to the index:
@@ -355,13 +388,11 @@ class RuleIndex:
 
         # Step 2: Remember this rule, so we can look it up later.
         self._rule_list[self._rule_cuid] = rule_tuple
-        self._rule_pool.add(rule_tuple)
         self._rule_cuid += 1
 
         # Step 3: Prune the index, if too big.
         if len(self._rule_list) > self._max_rules:
             fst_uid, fst_rule = self._rule_list.popitem(last=False)
-            self._rule_pool.remove(fst_rule)
             if drop_invalid:
                 for uid_set in self._rule_dict.values():
                     uid_set.discard(fst_uid)
@@ -409,10 +440,6 @@ class RuleIndex:
                 if not uid in self._rule_list:
                     uid_set.remove(uid)
 
-        # Make sure the pool reflects the current state:
-        self._rule_pool.clear()
-        self._rule_pool.update(self._rule_list.values())
-
 ###########################################################################
 #                               Unit Tests                                #
 ###########################################################################
@@ -452,7 +479,7 @@ if __name__ == '__main__':
                     self.assertTrue('one' in left or 'one' in right)
 
                 # Check the number of items in the index:
-                self.assertEqual(len(self._idx._rule_pool), 10)
+                self.assertEqual(len(self._idx._rule_list), 10)
                 self.assertEqual(len(self._idx._rule_dict), 4)
                 for value in self._idx._rule_dict.values():
                     if setting is False:

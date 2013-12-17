@@ -47,8 +47,8 @@ class Provider:
 
         Example: ::
 
-            >>> WordlistProvider | StemProvider
-            CompositeProvider(WordListProvider, StemProvider)
+            >>> WordlistProvider() | StemProvider()
+            CompositeProvider(WordListProvider_instance, StemProvider_instance)
 
         If you chain together many providers it is recommended to use only one
         CompositeProvider for speed reasons.

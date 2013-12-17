@@ -11,7 +11,7 @@ It implements a caching layer around the lower level API, being able to
 save a usage-*Session* for later re-use. The session data will be saved packed
 on disk as a .gzip archive.
 
-Apart from this it holds the **Attribute Mask** - in simple words:
+Apart from this it holds the **Mask** - in simple words:
 the part where you tell libmunin what data you have to offer and how
 you want to configure the processing of it.
 
@@ -122,16 +122,16 @@ class Session:
         """Create a new session:
 
         :param name: The name of the session. Used to load it again from disk.
-        :param mask: The attribute mask. See :term:`Mask`
+        :param mask: The mask. See :term:`Mask`
         :param config: A dictionary with config values. See :class:`DefaultConfig` for available keys.
         """
         self._config = config
         self._name = name
 
-# Publicly readable attribute.
+        # Publicly readable attribute.
         self.mapping = {}
 
-        # Make access to the attribute mask more efficient
+        # Make access to the mask more efficient
         self._mask = copy(mask)
         self._attribute_list = sorted(mask)
         self._listidx_to_key = {k: i for i, k in enumerate(self._attribute_list)}
@@ -172,12 +172,22 @@ class Session:
         self.mapping = bidict()
 
     def __getitem__(self, idx):
+        """Return the song with a certain uid.
+
+        :raises KeyError: On invalid uid.
+        :returns: a song object which has the same uid attribute.
+        """
         return self.database[idx]
 
     def __iter__(self):
+        """Iterate over all songs in the database
+
+        This is a proxy to Database.__iter__
+        """
         return iter(self.database)
 
     def __len__(self):
+        """Get the number of songs currently in the database"""
         return len(self.database)
 
     @property
@@ -203,7 +213,7 @@ class Session:
     # around all session objects.
     @property
     def mask(self):
-        'Returns a copy of the attribute mask (as passed in)'
+        'Returns a copy of the mask (as passed in)'
         return copy(self._mask)
 
     @property
@@ -212,7 +222,7 @@ class Session:
         return len(self._mask)
 
     def key_at_index(self, idx):
-        'Retrieve the key of the attribute mask at index ``idx``'
+        'Retrieve the key of the mask at index ``idx``'
         return self._attribute_list[idx]
 
     def index_for_key(self, key):
@@ -268,12 +278,12 @@ class Session:
         """
         base_path, _ = os.path.splitext(full_path)
         try:
-            with tarfile.open(full_path + '.gz', 'r:*') as tar:
+            with tarfile.open(full_path, 'r:*') as tar:
                 tar.extractall(base_path)
 
             with open(os.path.join(base_path, 'session.pickle'), 'rb') as handle:
                 return pickle.load(handle)
-        except FileNotFoundError as err:
+        except OSError as err:
             LOGGER.debug('Could not load session: ' + str(err))
             return None
 
@@ -287,7 +297,7 @@ class Session:
         :returns: A cached session.
         :rtype: :class:`Session`
         """
-        return Session.from_archive_path(get_cache_path(session_name))
+        return Session.from_archive_path(get_cache_path(session_name) + '.gz')
 
     def save(self, path=None, compress=True):
         """Save the session (and all caches) to disk.
@@ -527,20 +537,17 @@ if __name__ == '__main__':
 
     class SessionTests(unittest.TestCase):
         def setUp(self):
-            self._session = Session('session_test', {
+            self._mask = {
                 'genre': (None, None, 0.2),
                 'artist': (None, None, 0.3)
-            })
+            }
+            self._session = Session('session_test', self._mask)
 
         def test_writeout(self):
             self._session.save('/tmp')
             path = '/tmp/session_test.gz'
             self.assertTrue(os.path.isfile(path))
             new_session = Session.from_archive_path(path)
-            self.assertTrue(os.path.isdir(path[:-3]))
-            self.assertEqual(
-                    new_session.mask,
-                    {'genre': (None, None, 0.2), 'artist': (None, None, 0.3)}
-            )
+            self.assertEqual(new_session.mask, self._mask)
 
     unittest.main()

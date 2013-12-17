@@ -24,7 +24,7 @@ class Song(SessionMapping, Hashable):
 
     A song is a readonly mapping of keys to values (like a readonly dict).
 
-    The keys will depend on the attribute mask in the session.
+    The keys will depend on the mask in the session.
     The values will be passed as value_dict to the constructor.
     Keys that are no in value_dict, but in the mask (therefore valid)
     will return the default_value passed (usually that is None).
