@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-
+# Stdlib:
 from itertools import product
+
+# Internal:
 from munin.distance import DistanceFunction
 from munin.helper import float_cmp
 
