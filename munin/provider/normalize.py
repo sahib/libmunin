@@ -136,25 +136,30 @@ TitleNormalizeProvider = AlbumNormalizeProvider
 
 if __name__ == '__main__':
     import unittest
+    import sys
 
-    class TestArtistNormalizeProvider(unittest.TestCase):
-        def test_splitting(self):
-            prov = ArtistNormalizeProvider()
-            self.assertEqual(
-                prov.do_process('The *** Hello and Berta ###'),
-                ('hello', 'berta')
-            )
-            self.assertEqual(
-                prov.do_process('The *** Hello Berta ### featuring Gustl'),
-                ('hello berta', 'gustl')
-            )
+    if '--cli' in sys.argv:
+        prov = ArtistNormalizeProvider()
+        print(prov.do_process(sys.argv[2]))
+    else:
+        class TestArtistNormalizeProvider(unittest.TestCase):
+            def test_splitting(self):
+                prov = ArtistNormalizeProvider()
+                self.assertEqual(
+                    prov.do_process('The *** Hello and Berta ###'),
+                    ('hello', 'berta')
+                )
+                self.assertEqual(
+                    prov.do_process('The *** Hello Berta ### featuring Gustl'),
+                    ('hello berta', 'gustl')
+                )
 
-    class TestAlbumNormalizeProvider(unittest.TestCase):
-        def test_splitting(self):
-            prov = AlbumNormalizeProvider()
-            self.assertEqual(
-                prov.do_process('### The art of getting &bugs (live!) [liver!!] {livest!!!} CD1'),
-                ('the art of getting bugs', )
-            )
+        class TestAlbumNormalizeProvider(unittest.TestCase):
+            def test_splitting(self):
+                prov = AlbumNormalizeProvider()
+                self.assertEqual(
+                    prov.do_process('### The art of getting &bugs (live!) [liver!!] {livest!!!} CD1'),
+                    ('the art of getting bugs', )
+                )
 
-    unittest.main()
+        unittest.main()
