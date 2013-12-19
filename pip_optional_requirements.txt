@@ -11,5 +11,10 @@ plyr
 #: colorlog
 colorlog
 
+# For plotting graphs
 #: igraph
 python-igraph
+
+# For more accurate language detection for small snippeys
+#: pyenchant
+pyenchant
