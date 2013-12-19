@@ -20,10 +20,29 @@ import unicodedata
 
 # Internal:
 from munin.provider import Provider
+import munin.stopwords
+
+# External
+import guess_language
+guess_language.use_enchant(True)
 
 
 def normalize_unicode_glyphs(string):
     return unicodedata.normalize('NFKC', string)
+
+
+def strip_stopwords(words):
+    text = ' '.join(words)
+    language_code = guess_language.guess_language(text)
+    print(language_code)
+    if language_code == 'UNKNOWN':
+        return words
+
+    stopwords = munin.stopwords.load_stopwords(language_code)
+    if not stopwords:
+        return words
+
+    return filter(lambda w: w not in stopwords, words)
 
 
 class NormalizeProvider(Provider):
@@ -126,9 +145,9 @@ class AlbumNormalizeProvider(Provider):
         for pattern in self._strip_patterns:
             step = pattern.sub('', step)
 
-        step = filter(None, self._punctuation.split(step))
-        step = ' '.join(filter(lambda s: len(s) > 3, step))
-        return (normalize_unicode_glyphs(step.strip()), )
+        step = list(filter(None, self._punctuation.split(step)))
+        step = list(strip_stopwords(step))
+        return (normalize_unicode_glyphs(' '.join(step).strip()), )
 
 
 # For now they do the same:
@@ -140,7 +159,7 @@ if __name__ == '__main__':
     import sys
 
     if '--cli' in sys.argv:
-        prov = ArtistNormalizeProvider()
+        prov = TitleNormalizeProvider()
         print(prov.do_process(sys.argv[2]))
     else:
         class TestArtistNormalizeProvider(unittest.TestCase):
@@ -160,7 +179,7 @@ if __name__ == '__main__':
                 prov = AlbumNormalizeProvider()
                 self.assertEqual(
                     prov.do_process('### The art of getting &bugs (live!) [liver!!] {livest!!!} CD1'),
-                    ('the art of getting bugs', )
+                    ('art getting bugs', )
                 )
 
         unittest.main()
