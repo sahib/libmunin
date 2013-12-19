@@ -1,9 +1,3 @@
-# Implementation of RAKE - Rapid Automtic Keyword Exraction algorithm as
-# described in: Rose, S., D. Engel, N. Cramer, and W. Cowley (2010).  Automatic
-# keyword extraction from indi-vidual documents.  In M. W. Berry and J. Kogan
-# (Eds.), Text Mining: Applications and Theory.unknown: John Wiley and Sons,
-# Ltd.
-
 import re
 import operator
 
@@ -11,72 +5,72 @@ from collections import deque, Counter, OrderedDict
 from itertools import combinations
 
 
-def isnum(string):
-    try:
-        float(string)
-        return True
-    except ValueError:
-        return False
-
-
 def load_stopwords(stopWordFile):
     with open(stopWordFile) as handle:
-        return [word.strip() for word in handle]
+        return frozenset([word.strip() for word in handle])
 
 
-def separate_words(text, minWordReturnSize):
+def separate_words(text):
     words = deque()
     for word in filter(None, re.split('[^\w+-/]', text)):
         word = word.strip().lower()
-        #leave numbers in phrase, but don't count as words, since they tend to
-        # invlate scores of their phrases
-        if len(word) > minWordReturnSize and not isnum(word):
+        # Leave numbers in the phrase, but do not count them as words.
+        try:
+            float(word)
+        except ValueError:
             words.append(word)
     return words
 
 
 def split_sentences(text):
-    # TODO: add \n for lyrics
-    return re.split('[.!?,;:\n\t\\-\\"\\(\\)\\\'\u2019\u2013]', text)
+    return re.split('[.!?,;:\t\\-\\"\\(\\)\\\'\u2019\u2013]', text)
 
 
-def generate_candidate_keywords(sentenceList, path):
-    stopwordregexlist = ['\\b' + word + '\\b' for word in load_stopwords(path)]
-    stopwordpattern = re.compile('|'.join(stopwordregexlist), re.IGNORECASE)
-
-    phrases = deque()
-    for sentence in sentenceList:
-        for phrase in stopwordpattern.split(sentence.strip()):
-            phrase = phrase.strip().lower()
+def phrase_iter(sentence, stopwords):
+    phrase = deque()
+    for word in separate_words(sentence):
+        if word in stopwords:
             if phrase:
-                phrases.append(phrase)
+                yield phrase
+            phrase = deque()
+            continue
+        phrase.append(word)
+
+
+def extract_phrases(sentences):
+    phrases = deque()
+
+    # TODO: detect language
+    stopwords = load_stopwords('SmartStoplist.txt')
+
+    for sentence in sentences:
+        phrases += phrase_iter(sentence.strip(), stopwords)
     return phrases
 
 
-def calculate_word_scores(phrases):
+def word_scores(phrases):
     freqs, degrees = Counter(), Counter()
 
     for phrase in phrases:
-        words = separate_words(phrase, 0)
-        degree = len(words) - 1
-        for word in words:
+        degree = len(phrase) - 1
+        for word in phrase:
             freqs[word] += 1
             degrees[word] += degree
 
     # Calculate Word scores = deg(w) / freq(w)
-    score = Counter()
-    for word, freq in freqs.items():
-        degrees[word] = degrees[word] + freq
-        score[word] = degrees[word] / freq
-    return score
+    return {word: (degrees[word] + freq) / freq for word, freq in freqs.items()}
 
 
-def generate_candidate_keywordscores(phrases, wordscore):
-    candidates = Counter()
+def candidate_keywordscores(phrases, wordscore):
+    candidates = {}
     for phrase in phrases:
-        words = separate_words(phrase, 0)
-        candidates[phrase] = sum(wordscore[word] for word in words)
-    return candidates
+        candidates[frozenset(phrase)] = sum(wordscore[word] for word in phrase)
+
+    return OrderedDict(sorted(
+        candidates.items(),
+        key=operator.itemgetter(1),
+        reverse=True
+    ))
 
 
 def filter_subsets(keywords):
@@ -91,26 +85,21 @@ def filter_subsets(keywords):
         print('deleting', sub_keywords)
         del keywords[sub_keywords]
 
+    return keywords
+
+
+def extract_keywords(text):
+    sentences = split_sentences(text)
+    phrases = extract_phrases(sentences)
+    scores = word_scores(phrases)
+    keywords = candidate_keywordscores(phrases, scores)
+    return filter_subsets(keywords)
+
+
 if __name__ == '__main__':
     import sys
     text = sys.stdin.read()
 
-    sentenceList = split_sentences(text)
-    phrases = generate_candidate_keywords(sentenceList, "SmartStoplist.txt")
-    wordscores = calculate_word_scores(phrases)
-    candidates = generate_candidate_keywordscores(phrases, wordscores)
-    sorted_keywords = sorted(
-        candidates.items(),
-        key=operator.itemgetter(1),
-        reverse=True
-    )
-
-    keywords_map = OrderedDict()
-    for idx, (keywords, rating) in enumerate(sorted_keywords):
-        words = separate_words(keywords, 0)
-        keywords_map[frozenset(words)] = rating
-
-    filter_subsets(keywords_map)
-
+    keywords_map = extract_keywords(text)
     for keywords, rating in keywords_map.items():
         print('{:2.3f}: {}'.format(rating, keywords))
