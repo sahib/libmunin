@@ -1,152 +1,116 @@
-# Implementation of RAKE - Rapid Automtic Keyword Exraction algorithm
-# as described in:
-# Rose, S., D. Engel, N. Cramer, and W. Cowley (2010).
-# Automatic keyword extraction from indi-vidual documents.
-# In M. W. Berry and J. Kogan (Eds.), Text Mining: Applications and Theory.unknown: John Wiley and Sons, Ltd.
+# Implementation of RAKE - Rapid Automtic Keyword Exraction algorithm as
+# described in: Rose, S., D. Engel, N. Cramer, and W. Cowley (2010).  Automatic
+# keyword extraction from indi-vidual documents.  In M. W. Berry and J. Kogan
+# (Eds.), Text Mining: Applications and Theory.unknown: John Wiley and Sons,
+# Ltd.
 
 import re
 import operator
-import math
 
-debug = False
-test = True
+from collections import deque, Counter, OrderedDict
+from itertools import combinations
 
 
-def isnum(s):
+def isnum(string):
     try:
-        float(s) if '.' in s else int(s)
+        float(string)
         return True
     except ValueError:
         return False
 
 
-# Utility function to load stop words from a file and return as a list of words
-# @param stopWordFile Path and file name of a file containing stop words.
-# @return list A list of stop words.
-def loadStopWords(stopWordFile):
-    stopWords = []
-    for line in open(stopWordFile):
-        if (line.strip()[0:1] != "#"):
-            for word in line.split():  # in case more than one per line
-                stopWords.append(word)
-    return stopWords
+def load_stopwords(stopWordFile):
+    with open(stopWordFile) as handle:
+        return [word.strip() for word in handle]
 
 
-# Utility function to return a list of all words that are have a length greater
-# than a specified number of characters.  @param text The text that must be
-# split in to words.  @param minWordReturnSize The minimum no of characters a
-# word must have to be included.
-def separatewords(text, minWordReturnSize):
-    splitter = re.compile('[^a-zA-Z0-9_\\+\\-/]')
-    words = []
-    for singleWord in splitter.split(text):
-        currWord = singleWord.strip().lower()
-        #leave numbers in phrase, but don't count as words, since they tend to invlate scores of their phrases
-        if len(currWord) > minWordReturnSize and currWord != '' and not isnum(currWord):
-            words.append(currWord)
+def separate_words(text, minWordReturnSize):
+    words = deque()
+    for word in filter(None, re.split('[^\w+-/]', text)):
+        word = word.strip().lower()
+        #leave numbers in phrase, but don't count as words, since they tend to
+        # invlate scores of their phrases
+        if len(word) > minWordReturnSize and not isnum(word):
+            words.append(word)
     return words
 
 
-# Utility function to return a list of sentences.
-# @param text The text that must be split in to sentences.
-def splitSentences(text):
-    sentenceDelimiters = re.compile('[.!?,;:\t\\-\\"\\(\\)\\\'\u2019\u2013]')
-    sentenceList = sentenceDelimiters.split(text)
-    return sentenceList
+def split_sentences(text):
+    # TODO: add \n for lyrics
+    return re.split('[.!?,;:\n\t\\-\\"\\(\\)\\\'\u2019\u2013]', text)
 
 
-def buildStopwordRegExPattern(pathtostopwordsfile):
-    stopwordlist = loadStopWords(pathtostopwordsfile)
-    stopwordregexlist = []
-    for wrd in stopwordlist:
-        wrdregex = '\\b' + wrd + '\\b'
-        stopwordregexlist.append(wrdregex)
+def generate_candidate_keywords(sentenceList, path):
+    stopwordregexlist = ['\\b' + word + '\\b' for word in load_stopwords(path)]
     stopwordpattern = re.compile('|'.join(stopwordregexlist), re.IGNORECASE)
-    return stopwordpattern
 
-
-def generateCandidateKeywords(sentenceList, stopwordpattern):
-    phraseList = []
-    for s in sentenceList:
-        tmp = re.sub(stopwordpattern, '|', s.strip())
-        phrases = tmp.split("|")
-        for phrase in phrases:
+    phrases = deque()
+    for sentence in sentenceList:
+        for phrase in stopwordpattern.split(sentence.strip()):
             phrase = phrase.strip().lower()
             if phrase:
-                phraseList.append(phrase)
-    return phraseList
+                phrases.append(phrase)
+    return phrases
 
 
-def calculateWordScores(phraseList):
-    wordfreq = {}
-    worddegree = {}
-    for phrase in phraseList:
-        wordlist = separatewords(phrase, 0)
-        wordlistlength = len(wordlist)
-        wordlistdegree = wordlistlength - 1
-        #if wordlistdegree > 3: wordlistdegree = 3 #exp.
-        for word in wordlist:
-            wordfreq.setdefault(word, 0)
-            wordfreq[word] += 1
-            worddegree.setdefault(word, 0)
-            worddegree[word] += wordlistdegree  # orig.
-            #worddegree[word] += 1/(wordlistlength*1.0) #exp.
+def calculate_word_scores(phrases):
+    freqs, degrees = Counter(), Counter()
 
-    for item in wordfreq:
-        worddegree[item] = worddegree[item] + wordfreq[item]
+    for phrase in phrases:
+        words = separate_words(phrase, 0)
+        degree = len(words) - 1
+        for word in words:
+            freqs[word] += 1
+            degrees[word] += degree
 
-    # Calculate Word scores = deg(w)/frew(w)
-    wordscore = {}
-    for item in wordfreq:
-        wordscore.setdefault(item, 0)
-        wordscore[item] = worddegree[item] / (wordfreq[item] * 1.0)  # orig.
-        #wordscore[item] = wordfreq[item]/(worddegree[item] * 1.0)  # exp.
-    return wordscore
+    # Calculate Word scores = deg(w) / freq(w)
+    score = Counter()
+    for word, freq in freqs.items():
+        degrees[word] = degrees[word] + freq
+        score[word] = degrees[word] / freq
+    return score
 
 
-def generateCandidateKeywordScores(phraseList, wordscore):
-    keywordcandidates = {}
-    for phrase in phraseList:
-        keywordcandidates.setdefault(phrase, 0)
-        wordlist = separatewords(phrase, 0)
-        candidatescore = 0
-        for word in wordlist:
-            candidatescore += wordscore[word]
-        keywordcandidates[phrase] = candidatescore
-    return keywordcandidates
+def generate_candidate_keywordscores(phrases, wordscore):
+    candidates = Counter()
+    for phrase in phrases:
+        words = separate_words(phrase, 0)
+        candidates[phrase] = sum(wordscore[word] for word in words)
+    return candidates
 
-if test:
-    #text = "Compatibility of systems of linear constraints over the set of natural numbers. Criteria of compatibility of a system of linear Diophantine equations, strict inequations, and nonstrict inequations are considered. Upper bounds for components of a minimal set of solutions and algorithms of construction of minimal generating sets of solutions for all types of systems are given. These criteria and the corresponding algorithms for constructing a minimal supporting set of solutions can be used in solving all the considered types of systems and systems of mixed types."
+
+def filter_subsets(keywords):
+    to_delete = deque()
+    for set_a, set_b in combinations(keywords.keys(), 2):
+        if set_a.issubset(set_b):
+            to_delete.append(set_a)
+        elif set_b.issubset(set_a):
+            to_delete.append(set_b)
+
+    for sub_keywords in to_delete:
+        print('deleting', sub_keywords)
+        del keywords[sub_keywords]
+
+if __name__ == '__main__':
     import sys
-
     text = sys.stdin.read()
 
-    # Split text into sentences
-    sentenceList = splitSentences(text)
-    #stoppath = "FoxStoplist.txt" #Fox stoplist contains "numbers", so it will not find "natural numbers" like in Table 1.1
-    #SMART stoplist misses some of the lower-scoring keywords in Figure 1.5,
-    # which means that the top 1/3 cuts off one of the 4.0 score words in Table
-    # 1.1
-    stoppath = "SmartStoplist.txt"
-    stopwordpattern = buildStopwordRegExPattern(stoppath)
+    sentenceList = split_sentences(text)
+    phrases = generate_candidate_keywords(sentenceList, "SmartStoplist.txt")
+    wordscores = calculate_word_scores(phrases)
+    candidates = generate_candidate_keywordscores(phrases, wordscores)
+    sorted_keywords = sorted(
+        candidates.items(),
+        key=operator.itemgetter(1),
+        reverse=True
+    )
 
-    # generate candidate keywords
-    phraseList = generateCandidateKeywords(sentenceList, stopwordpattern)
+    keywords_map = OrderedDict()
+    for idx, (keywords, rating) in enumerate(sorted_keywords):
+        words = separate_words(keywords, 0)
+        keywords_map[frozenset(words)] = rating
 
-    # calculate individual word scores
-    wordscores = calculateWordScores(phraseList)
+    filter_subsets(keywords_map)
 
-    # generate candidate keyword scores
-    keywordcandidates = generateCandidateKeywordScores(phraseList, wordscores)
-    if debug:
-        print(keywordcandidates)
-
-    sortedKeywords = sorted(iter(keywordcandidates.items()), key=operator.itemgetter(1), reverse=True)
-    if debug:
-        print(sortedKeywords)
-
-    totalKeywords = len(sortedKeywords)
-    if debug:
-        print(totalKeywords)
-
-    print(sortedKeywords[0:totalKeywords // 3])
+    for keywords, rating in keywords_map.items():
+        print('{:2.3f}: {}'.format(rating, keywords))

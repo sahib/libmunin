@@ -126,7 +126,8 @@ class AlbumNormalizeProvider(Provider):
         for pattern in self._strip_patterns:
             step = pattern.sub('', step)
 
-        step = ' '.join(filter(None, self._punctuation.split(step)))
+        step = filter(None, self._punctuation.split(step))
+        step = ' '.join(filter(lambda s: len(s) > 3, step))
         return (normalize_unicode_glyphs(step.strip()), )
 
 
