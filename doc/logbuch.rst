@@ -734,7 +734,7 @@ Beschreibung des Algorithmus (damit ichs net wieder vergess):
     B) Extrahierung der Phrases (Sequenzen von Nichtstoppwörtern) aus den Sätzen.
     C) Berechnung der Wordscores für jedes Wort in einem Phrase:
 
-       :math:`score(word) = degree(word) \cdot freq(word)`
+       :math:`score(word) = \frac{degree(word)}{freq(word)}`
 
        :math:`degree(word) = len(phrase) - 1`
 
