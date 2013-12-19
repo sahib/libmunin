@@ -62,6 +62,7 @@ Table of Contents
     api/song
     api/history
     api/helper
+    api/stopwords
     api/examples
 
 **Internals**
