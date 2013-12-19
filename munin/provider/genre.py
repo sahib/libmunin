@@ -208,7 +208,7 @@ def build_genre_tree():
     :returns: The root node of the Genre tree.
     """
     # Add a caching layer:
-    dump_path = '/tmp/genre_list.dump'
+    dump_path = get_cache_path('genre_list.dump')
     try:
         with open(dump_path, 'rb') as f:
             genres = pickle.load(f)

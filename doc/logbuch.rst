@@ -734,15 +734,17 @@ Beschreibung des Algorithmus (damit ichs net wieder vergess):
     B) Extrahierung der Phrases (Sequenzen von Nichtstoppwörtern) aus den Sätzen.
     C) Berechnung der Wordscores für jedes Wort in einem Phrase:
 
-       :math:`score(word) = \frac{degree(word)}{freq(word)}`
+           :math:`score(word) = \frac{degree(word)}{freq(word)}`
 
-       :math:`degree(word) = len(phrase) - 1`
+       wobei:
 
-       :math:`freq(word) = \sum count(word) \forall word \in corpus`
+          :math:`degree(word) = len(phrase) - 1`
+
+          :math:`freq(word) = \sum count(word) \forall word \in corpus`
 
     D) Zusammsetzen der Keywords, der Score eines Keywords ist definiert als:
 
-       :math:`\sum score(word) \forall word \in phrase`
+           :math:`\sum score(word) \forall word \in phrase`
 
 Das war der ursprüngliche Algorithmus, als Erweiterung von mir dazu:
 
