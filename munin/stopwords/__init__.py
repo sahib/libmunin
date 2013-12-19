@@ -3,7 +3,7 @@
 
 """
 Overview
---------
+~~~~~~~~
 
 Interface for loading stopwords from a set of 12 languages that
 are packaged along libmunin.
@@ -12,7 +12,7 @@ The stopwords can be used to split text into important and unimportant words.
 Additionally text language can be guessed through the ``guess_language`` module.
 
 Reference
----------
+~~~~~~~~~
 """
 
 
@@ -46,13 +46,13 @@ def load_stopwords(language_code):
     :param language_code: A ISO-639 Alpha2 language code
     :returns: A frozenset of words.
     """
+    global STOPWORD_CACHE
     if language_code in STOPWORD_CACHE:
         return STOPWORD_CACHE[language_code]
 
     relative_path = os.path.join(__path__, language_code)
     try:
         with open(relative_path, 'r') as handle:
-            global STOPWORD_CACHE
             stopwords = frozenset(parse_stopwords(handle))
             STOPWORD_CACHE[language_code] = stopwords
             return stopwords

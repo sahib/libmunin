@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-"""This module contains code for automatic keywordextraction.
+"""
+Overview
+~~~~~~~~
+
+This module contains code for automatic keywordextraction.
 
 The algorithm used is RAKE (Rapid Automatic Keyword Extraction) as described in:
 
@@ -15,6 +19,14 @@ but has been extended with automatic stopwordlist retrieval and stemming:
     https://github.com/aneesha/RAKE
 
 While adding these features all code was rewritten.
+
+
+.. note::
+
+    Of all functions below, you'll probably only need :func:`extract_keywords`.
+
+Reference
+~~~~~~~~~
 """
 
 # Stdlib:

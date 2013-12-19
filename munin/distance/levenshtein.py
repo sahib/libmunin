@@ -15,12 +15,8 @@ Reference
 ---------
 """
 
-# Stdlib:
-from itertools import product
-
 # Internal:
 from munin.distance import DistanceFunction
-from munin.helper import float_cmp
 
 # External:
 from pyxdameraulevenshtein import damerau_levenshtein_distance
