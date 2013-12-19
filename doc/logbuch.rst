@@ -617,3 +617,151 @@ Anonsten funktionier die Moodbar Analyse einigermaßen gut (*): ::
     * Interessante Seite vlt. noch:
 
         http://labrosa.ee.columbia.edu/projects/musicsim/normalization.html
+
+19 Dezember 2013
+----------------
+
+Hach, ja. Tägliches Schreiben ist schwer...
+
+In der Zwischenzeit ist viel und doch nicht viel passiert. libmunin hat die
+ersten *echten* Empfehlungen gegeben, es gibt einen neuen
+Beats-per-Minute-Provider und generell haben sich viele bugs verabschiedet.
+
+Heute war die Implementierung des *RAKE* Algorithmus dran. Kurz für (*Rapid
+Automatic Keyword Extraction*). Dieser kann aus beliebigen texten die
+wichtigsten Keywords extrahieren. 
+
+**Beispiellauf:**
+
+.. code-block:: bash
+
+    λ ~/dev/libmunin/ master* glyrc lyrics -a "the beatles" -t 'yellow submarine'  
+    1. Artist   : the beatles
+    2. Title    : yellow submarine
+    3. Language : de
+    4. Type     : lyrics
+
+    ---- Triggering: musictree 
+    ---- Triggering: local 
+    ---- Triggering: lyricswiki 
+    ---- 
+
+    ///// ITEM #1 /////
+    WRITE to './the beatles__yellow submarine_lyrics_1.txt'
+    FROM: <http://lyrics.wikia.com/The_Beatles:Yellow_Submarine>
+    PROV: lyricswiki
+    SIZE: 1270 Bytes
+    MSUM: 7d229df74bd4e39193773180c25224f0
+    TYPE: songtext
+    SAFE: No
+    RATE: 0
+    STMP: 0,000000
+    DATA: 
+    In the town where I was born 
+    Lived a man who sailed to sea 
+    And he told us of his life 
+    In the land of submarines 
+    So we sailed on to the sun 
+    Till we found a sea of green 
+    And we lived beneath the waves 
+    In our yellow submarine 
+    We all live in a yellow submarine 
+    Yellow submarine, yellow submarine 
+    We all live in a yellow submarine 
+    Yellow submarine, yellow submarine 
+
+    And our friends are all aboard 
+    Many more of them live next door 
+    And the band begins to play 
+    We all live in a yellow submarine 
+    Yellow submarine, yellow submarine 
+    We all live in a yellow submarine 
+    Yellow submarine, yellow submarine 
+
+    Spoken:
+
+    Full steam ahead, Mr. Boatswain, full steam ahead 
+    Full steam ahead it is, Sergeant
+    Cut the cable! Drop the cable!
+    Aye-aye, sir, aye-aye
+    Captain, captain
+    As we live a life of ease
+    Every one of us (every one of us) has all we need (has all we need)
+    Sky of blue (sky of blue) and sea of green (sea of green)
+    In our yellow (in our yellow) submarine (submarine, ha-ha!)
+
+    We all live in a yellow submarine 
+    A yellow submarine, yellow submarine
+    We all live in a yellow submarine 
+    A yellow submarine, yellow submarine
+    We all live in a yellow submarine 
+    Yellow submarine, yellow submarine
+    We all live in a yellow submarine
+    Yellow submarine, yellow submarine
+
+    //////////////////////////////////
+    λ ~/dev/libmunin/ master* cat the\ beatles__yellow\ submarine_lyrics_1.txt  | python munin/rake.py 
+     36.000: frozenset({'full', 'steam', 'ahead'})
+      8.000: frozenset({'eas', 'everi', 'one'})
+      7.333: frozenset({'live', 'door', 'next'})
+      4.000: frozenset({'sun', 'till'})
+      4.000: frozenset({'told', 'us'})
+      4.000: frozenset({'mani', 'aboard'})
+      4.000: frozenset({'band', 'begin'})
+      4.000: frozenset({'cut', 'sergeant'})
+      3.900: frozenset({'submarin', 'yellow'})
+      3.333: frozenset({'born', 'live'})
+      3.333: frozenset({'beneath', 'live'})
+      1.000: frozenset({'wave'})
+      1.000: frozenset({'captain'})
+      1.000: frozenset({'life'})
+      1.000: frozenset({'drop'})
+      1.000: frozenset({'friend'})
+      1.000: frozenset({'sky'})
+      1.000: frozenset({'found'})
+      1.000: frozenset({'sea'})
+      1.000: frozenset({'town'})
+      1.000: frozenset({'land'})
+      1.000: frozenset({'play'})
+      1.000: frozenset({'man'})
+      1.000: frozenset({'green'})
+      1.000: frozenset({'sail'})
+
+
+Beschreibung des Algorithmus (damit ichs net wieder vergess):
+
+    A) Aufteilung des Textes in Sätze (anhand von Interpunktion).
+    B) Extrahierung der Phrases (Sequenzen von Nichtstoppwörtern) aus den Sätzen.
+    C) Berechnung der Wordscores für jedes Wort in einem Phrase:
+
+       :math:`score(word) = degree(word) \cdot freq(word)`
+
+       :math:`degree(word) = len(phrase) - 1`
+
+       :math:`freq(word) = \sum count(word) \forall word \in corpus`
+
+    D) Zusammsetzen der Keywords, der Score eines Keywords ist definiert als:
+
+       :math:`\sum score(word) \forall word \in phrase`
+
+Das war der ursprüngliche Algorithmus, als Erweiterung von mir dazu:
+
+    A) Die Sprache wird mithilfe des ``guess_language`` modules geschätzt und eine 
+       entsprechende Stoppwortliste wird geladen.
+    B) Wörter werden gestemmt, mithilfe des Snowball-Stemmers, der ebenfalls die
+       Sprache berücksichtigt.
+    C) Keywords werden als sets zusammengefasst, dies erleichtern
+       Teilmengenuntersuchungen.
+    D) Sets die eine Untermenge anderer Keywordsets bilden werden entfernt, da diese
+       keine weiter Informationen beinhalten. Beispiels weise wurden die sets 
+       `{'yellow'}` und `{'submarine'}` entfernt da beide eine Untermenge von
+       `{'yellow', 'submarine'}` waren.
+
+
+**Nächste Ziele:** 
+
+    - *Sieve* Klasse bauen die Recommendation, die aus Usersicht, unter
+      Umständen falsch sein könnten rausfiltert.
+    - *LyricsProvider* schreiben.
+    - Demoanwendung mit **libmoosecat.so**.
+    - Möglichkeit um generelle Daten session übergreifen zu speichern.

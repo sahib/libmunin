@@ -100,7 +100,6 @@ def extract_phrases(sentences, language_code, use_stemmer):
     :param use_stemmer: If True words in the phrases are also stemmed.
     :returnes: An iterable of phrases. (str)
     """
-    #
     stopwords = munin.stopwords.load_stopwords(language_code)
 
     # If we have no stopwordlist for that, we can't do much:
