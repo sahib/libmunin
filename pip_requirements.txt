@@ -1,5 +1,5 @@
 # Lines beginning with a #: give the import name of the package.
-# This is used to mock these packages in Sphinx.
+# This is used to mock these packages in Sphinx. (the import name)
 # The package name followed by it will be used on TravisCI to install deps.
 # See this for the exact format: http://www.pip-installer.org/en/latest/cookbook.html#requirements-files
 
@@ -11,3 +11,5 @@ bidict
 pymining
 #: pyxDamerauLevenshtein
 pyxDamerauLevenshtein
+#: guess_language
+guess_language-spirit==0.5a4
