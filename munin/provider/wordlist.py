@@ -28,7 +28,7 @@ class WordlistProvider(Provider):
     def do_process(self, input_value):
         if isinstance(input_value, tuple):
             input_value = input_value[0]
-        return tuple(input_value.split())
+        return tuple(frozenset(input_value.split()))
 
 
 if __name__ == '__main__':

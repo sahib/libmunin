@@ -5,32 +5,31 @@
 Overview
 --------
 
-Compute the distance of two wordslists using Average-Link.
-
-.. todo:: How is this different to the default distance?
+Compute the distance of two wordslists by building the union of both
+wordlists and dividing this through the max length of both.
 
 Reference
 ---------
 """
 
 # Stdlib:
-from itertools import product
+from itertools import combinations
 
 # Internal:
 from munin.distance import DistanceFunction
 
 
 class WordlistDistance(DistanceFunction):
-    """Compare a list of words using complete link distance.
+    """Compare a list of words using average linkage.
 
     Takes: an iterable of words and compares them directly.
     """
     def do_compute(self, lefts, rights):
-        max_both = max(len(lefts), len(rights))
-        if max_both is 0:
+        union = lefts & rights
+        if not union:
             return 1.0
 
-        return 1.0 - sum(a == b for a, b in product(lefts, rights)) / max_both
+        return 1.0 - (len(union) / (max(len(lefts), len(rights))))
 
 if __name__ == '__main__':
     import unittest
@@ -39,16 +38,32 @@ if __name__ == '__main__':
         def test_cmp(self):
             dfunc = WordlistDistance()
             self.assertEqual(
-                dfunc.do_compute(('berta', ), ('berte', )), 1.0
+                dfunc.do_compute(
+                    frozenset(['berta']),
+                    frozenset(['berte']),
+                ),
+                1.0
             )
             self.assertEqual(
-                dfunc.do_compute(('berta', 'berte'), ('berte', )), 0.5
+                dfunc.do_compute(
+                    frozenset(['berta', 'berte']),
+                    frozenset(['berte']),
+                ),
+                0.5
             )
             self.assertEqual(
-                dfunc.do_compute(('berta', 'berte'), ('berta', 'berte')), 0.0
+                dfunc.do_compute(
+                    frozenset(['berta', 'berte']),
+                    frozenset(['berta', 'berte']),
+                ),
+                0.0
             )
             self.assertEqual(
-                dfunc.do_compute(('berte', 'berta'), ('berte', 'berta')), 0.0
+                dfunc.do_compute(
+                    frozenset(['berte', 'berta']),
+                    frozenset(['berte', 'berta']),
+                ),
+                0.0
             )
 
     unittest.main()
