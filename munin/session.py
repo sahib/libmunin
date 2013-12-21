@@ -44,7 +44,9 @@ from bidict import bidict
 
 # Internal:
 from munin.database import Database
+from munin.history import RecommendationHistory
 from munin.helper import song_or_uid
+
 import munin.graph
 
 
@@ -88,7 +90,12 @@ DEFAULT_CONFIG = {
     'rebuild_step_size': 20,
     'rebuild_refine_passes': 25,
     'rebuild_mean_scale': 2,
-    'rebuild_stupid_threshold': 350
+    'rebuild_stupid_threshold': 350,
+    'recom_history_sieving': True,
+    'recom_history_penalty': {
+        'album': 5,
+        'artist': 3
+    }
 }
 
 
@@ -167,6 +174,12 @@ class Session:
 
         # Create the associated database.
         self._database = Database(self)
+
+        # Filtering related:
+        self._filtering_enabled = config['recom_history_sieving']
+        self._recom_history = RecommendationHistory(
+            penalty_map=config['recom_history_penalty']
+        )
 
         # Publicly readable attribute.
         self.mapping = bidict()
@@ -329,6 +342,49 @@ class Session:
     #                             Recommendations                             #
     ###########################################################################
 
+    @property
+    def sieving(self):
+        """
+        Return True if sieving is enabled.
+        """
+        return self._filtering_enabled
+
+    @sieving.setter
+    def sieving(self, mode):
+        """Enable the sieving, i.e. filter recommendation that were given in
+        similar form recently.
+
+        .. seealso::
+
+            :class:`munin.history.RecommendationHistory` for more information
+            on what is used in the background here.
+
+        :param bool mode: The mode to set.
+        """
+        self._filtering_enabled = mode
+
+    def _recom_sieve(self, iterator, number):
+        """Filter songs that are now allowed by history, if sieving is enabled.
+
+        This also feeds the recommendation history.
+
+        :param iterator: Any recommendation iterator that yields songs.
+                         You should pass an infinite iterator here.
+        :param number: The number to finally yield
+        :return: iterator that yields the sieved songs.
+        """
+        enabled = self._filtering_enabled
+        given = 0
+
+        for recom in iterator:
+            if given >= number:
+                break
+
+            if not enabled or self._recom_history.allowed(recom):
+                self._recom_history.feed(recom)
+                given += 1
+                yield recom
+
     def recommend_from_attributes(self, subset, number=20):
         """Find n recommendations solely from intelligent guessing.
 
@@ -341,12 +397,11 @@ class Session:
 
         .. seealso: :func:`recommendations_from_seed`
         """
-        return munin.graph.recommendations_from_attributes(
+        return self._recom_sieve(munin.graph.recommendations_from_attributes(
             subset,
             self.database,
-            self.database.rule_index,
-            number
-        )
+            self.database.rule_index
+        ), number)
 
     def recommend_from_seed(self, song, number=20):
         """Recommend songs based on a certain attribute.
@@ -360,12 +415,11 @@ class Session:
         :returns: Recommendations like the others or None if no suitable song found.
         """
         song = song_or_uid(self.database, song)
-        return munin.graph.recommendations_from_seed(
+        return self._recom_sieve(munin.graph.recommendations_from_seed(
             self.database,
             self.rule_index,
-            song,
-            number
-        )
+            song
+        ), number)
 
     def recommend_from_heuristic(self, number=20):
         """Give 'n' recommendations based on 'song'.
@@ -385,11 +439,10 @@ class Session:
         :param n: Deliver so many recommendations (at max.)
         :returns: An iterator that yields recommend songs.
         """
-        return munin.graph.recommendations_from_heuristic(
+        return self._recom_sieve(munin.graph.recommendations_from_heuristic(
             self.database,
-            self.rule_index,
-            number
-        )
+            self.rule_index
+        ), number)
 
     def explain_recommendation(self, seed_song, recommendation, max_reasons=3):
         """Explain the recommendation you got.

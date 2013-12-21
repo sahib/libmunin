@@ -8,14 +8,15 @@ Methods to traverse the graph in order to do recommendations.
 from itertools import chain, islice, zip_longest
 from collections import deque
 from math import ceil
-
 import random
 
+# Internal
+from munin.helper import roundrobin
 
-def sorted_breadth_first_search(start, n=0):
+
+def sorted_breadth_first_search(start):
     """Iterator for a sorted (by distance) breadth first search.
 
-    :param n: Number of items to yield at max. If 0, the whole graph is traversed.
     :returns: An iterator that will yield single songs, including the start song.
     """
     paths = deque([start])
@@ -29,101 +30,71 @@ def sorted_breadth_first_search(start, n=0):
             if child not in visited:
                 paths.append(child)
                 visited.add(child)
-
                 yield child
 
-                if n is not 0 and len(visited) == n:
-                    raise StopIteration
 
-
-def recommendations_from_seed(database, rule_index, song, n=20):
-    # Shortcuts:
-    if n is 0:
-        return iter([])
-
-    if n is 1:
-        return next(iter(song.neighbors()))
-
-    return _recommendations_from_seed(database, rule_index, song, n=n)
-
-
-# Generator implementation:
-def _recommendations_from_seed(database, rule_index, seed_song, n=20):
+def recommendations_from_seed(database, rule_index, seed_song):
     # Find rules, that affect this seed_song:
     associated = list(rule_index.lookup(seed_song))
 
     # No rules? Just use the seed_song as starting point...
     # One day, we will have rules. Shortcut for now.
     if not associated:
-        bfs = sorted_breadth_first_search(seed_song, n=(n + 1))
-        for recom in islice(bfs, 1, n + 1):
+        bfs = sorted_breadth_first_search(seed_song)
+
+        # Throw away first song:
+        next(bfs)
+        for recom in bfs:
             yield recom
     else:
         # Create an iterator for each seed_song, in each associated rule:
         breadth_first_iters = deque()
 
-        # We weight the number of songs max. given per iterator by their rating
-        sum_rating = sum(rating for *_, rating in associated)
-
         # Now populate the list of breadth first iterators:
-        for left, right, *_, rating in associated:
+        for left, right, *_ in associated:
             # The maximum number that a single seed_song in this rule may
             # deliver (at least 1 - himself, therefore the ceil)
             bulk = right if seed_song in left else left
 
-            # Calculate the maximum of numbers a bulk may yield.
-            max_n = ceil(((rating / sum_rating) * (n // 2)) / len(bulk))
-            if n is 0 or n == len(database):
-                max_n *= 2
-            else:
-                max_n += 1
-
             # We take the songs in the opposite set of the rule:
             for bulk_song in bulk:
                 breadth_first = sorted_breadth_first_search(bulk_song)
-                breadth_first = islice(breadth_first, max_n)
                 breadth_first_iters.append(breadth_first)
 
         # The result set will be build by half
-        base_half = islice(
-            sorted_breadth_first_search(seed_song),
-            1,
-            n // 2 + 1
-        )
+        base_half = sorted_breadth_first_search(seed_song)
+        try:
+            next(base_half)
+        except StopIteration:
+            pass
 
         # Yield the base half first:
         songs_set = set([seed_song])
-        for recom in base_half:
-            yield recom
-            songs_set.add(recom)
 
         # Now build the final result set by filling one half original songs,
         # and one half songs that were pointed to by rules.
-        for legion in zip_longest(*breadth_first_iters):
-            for recom in filter(None, legion):
-                # We have this already in the result set:
-                if recom in songs_set:
-                    continue
-
+        for recom in roundrobin(base_half, roundrobin(*breadth_first_iters)):
+            # We have this already in the result set:
+            if recom in songs_set:
+                continue
+            else:
                 songs_set.add(recom)
-                yield recom
 
-                if len(songs_set) > n:
-                    raise StopIteration
+            yield recom
 
 
-def recommendations_from_attributes(subset, database, rule_index, n=20):
+def recommendations_from_attributes(subset, database, rule_index):
     try:
         chosen_song = next(database.find_matching_attributes(subset))
         return chain(
             [chosen_song],
-            recommendations_from_seed(database, rule_index, chosen_song, n=n)
+            recommendations_from_seed(database, rule_index, chosen_song)
         )
     except StopIteration:
         return iter([])
 
 
-def recommendations_from_heuristic(database, rule_index, n=20):
+def recommendations_from_heuristic(database, rule_index):
     best_rule = rule_index.best()
     if best_rule is not None:
         # First song of the rules' left side
@@ -137,7 +108,7 @@ def recommendations_from_heuristic(database, rule_index, n=20):
 
     return chain(
         [chosen_song],
-        recommendations_from_seed(database, rule_index, chosen_song, n=n)
+        recommendations_from_seed(database, rule_index, chosen_song)
     )
 
 
@@ -197,14 +168,14 @@ if __name__ == '__main__':
             rec = list(self._session.recommend_from_seed(self._session[0], number=self.N))
             self.assertEqual(len(rec), self.N - 1)
             self.assertEqual(
-                [1, 2, 3, 4, 5, 9, 8, 7, 6],
+                [1, 9, 2, 5, 3, 8, 4, 7, 6],
                 [r.uid for r in rec]
             )
 
             rec = list(self._session.recommend_from_seed(self._session[0], number=5))
             self.assertEqual(len(rec), 5)
             self.assertEqual(
-                [1, 2, 9, 5, 8],
+                [1, 9, 2, 5, 3],
                 [r.uid for r in rec]
             )
 
