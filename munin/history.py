@@ -150,6 +150,13 @@ class History:
         'Iterate over all songs in the history'
         return chain.from_iterable(self.groups())
 
+    def __reversed__(self):
+        'Iterate over all songs in the history in the reverse order, newest first'
+        for group in reversed(self.groups()):
+            for song in reversed(list(group)):
+                yield song
+        # return chain.from_iterable(reversed(self.groups()))
+
     def last_time(self):
         """Gives the last inserted timestamp, or if empty, the current time"""
         # Check if we have a current group:
@@ -268,6 +275,66 @@ class ListenHistory(History):
 
         rules = association_rules(itemsets, min_support=min_support, **kwargs)
         return sorted(rules, key=lambda x: x[-1], reverse=True)
+
+
+class RecommendationHistory(History):
+    """Save made recommendations in order to filter *bad* recommendations.
+
+    *bad* shall be defined as follows: If a recommendation with e.g. the same
+    artist is repeated, even though, the previous recommendation was from this
+    artist it's called *bad*. The same applies for the album or even for the genre.
+
+    In this case we might consider to give a *penalty* to those, so that the same
+    artist only might be recommended within the range of, say, 3 recommendations,
+    and the same album might only be recommended in the range of 5 recommendations.
+
+    The :class:`RecommendationHistory` can do this for any attribute you might
+    think of.
+    """
+    def __init__(self, penalty_map={'artist': 3, 'album': 5}, **kwargs):
+        """
+        .. note::
+
+            This takes the same keyword arguments as :class:`History`, but
+            ``maxlen`` will be silenty ignored.
+
+        :param penalty_map: A mapping from :term:`attribute` s to a penalty count
+                            i.e. the number of recommendations to wait before
+                            allowing it again.
+        """
+        # Hijack the users input, hope he doesn't see this line and gets angry.
+        max_group_size = kwargs.setdefault('max_group_size', 5)
+        kwargs['maxlen'] = max(penalty_map.values()) // max_group_size + 1
+        History.__init__(self, **kwargs)
+
+        self._penalty_map = penalty_map
+
+    def allowed(self, recommendation):
+        """Check if a recommendation is allowed, i.e. if it someting similar
+        was not recently recommended.
+
+        :param recommendation: The recommendation to check for forbidden attributes.
+        :type recommendation: :class:`munin.song.Song`
+        :returns: True if it is allowed, i.e. all possibly forbidden attributes
+                  are long enough ago.
+        """
+        for attribute, penalty in self._penalty_map.items():
+            forbidden = recommendation.get(attribute)
+            if forbidden is None:
+                continue
+
+            for idx, song in enumerate(reversed(self)):
+                if idx >= penalty:
+                    break
+
+                comparable = song.get(attribute)
+                if comparable is None:
+                    continue
+
+                if comparable == forbidden:
+                    return False
+
+        return True
 
 
 ###########################################################################
@@ -524,6 +591,27 @@ if __name__ == '__main__':
             self.assertEqual(len(list(history.groups())), 20)
             for group in history.groups():
                 self.assertEqual(len(list(group)), 5)
+
+        def test_recommendation_history(self):
+            history = RecommendationHistory()
+            session = Session('test',
+                {'artist': (None, None, 1), 'album': (None, None, 1)}
+            )
+            fst_song = Song(session, {
+                'artist': 'A',
+                'album': 'B'
+            })
+
+            self.assertEqual(history.allowed(fst_song), True)
+            history.feed(fst_song)
+            self.assertEqual(history.allowed(fst_song), False)
+
+            for expectation in [False, False, False, False, True]:
+                history.feed(Song(session, {
+                    'artist': 'X',
+                    'album': 'Y'
+                }))
+                self.assertEqual(history.allowed(fst_song), expectation)
 
         def test_relim(self):
             history = ListenHistory()

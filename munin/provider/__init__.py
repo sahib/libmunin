@@ -83,6 +83,7 @@ class Provider:
 ###########################################################################
 
 from munin.provider.genre import GenreTreeProvider
+from munin.provider.keywords import KeywordsProvider, PlyrLyricsProvider
 from munin.provider.composite import CompositeProvider
 from munin.provider.stem import StemProvider, StemProvider
 from munin.provider.moodbar import \

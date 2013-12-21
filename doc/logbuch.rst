@@ -759,6 +759,10 @@ Das war der ursprüngliche Algorithmus, als Erweiterung von mir dazu:
        `{'yellow'}` und `{'submarine'}` entfernt da beide eine Untermenge von
        `{'yellow', 'submarine'}` waren.
 
+Die ursprüngliche Idee stammt aus diesem Buch (*Textmining: Applications and
+Theory*):
+
+    http://gendocs.ru/docs/3/2304/conv_1/file1.pdf
 
 **Nächste Ziele:** 
 
