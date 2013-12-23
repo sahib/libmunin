@@ -157,7 +157,6 @@ else:
 #html_theme_options = {}
 
 html_theme_options = {
-    'index_logo': '_static/logo.png',
     'index_logo_height': '10px'
 }
 
@@ -173,7 +172,6 @@ html_title = 'libmunin ({version}) apidoc'.format(version=version)
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-# html_logo = '_static/logo.png'
 
 github_fork = 'sahib'
 

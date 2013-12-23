@@ -1,13 +1,11 @@
 Overview
 ========
 
-.. figure:: /_static/arch.png
+.. figure:: /_static/integration.svg
     :width: 100%
-    :alt: You should actually see an Image here.
+    :alt: How *libmunin* fits in the world.
 
-    Overview over a :term:`Session`. (Fullsize_)
-
-    .. _Fullsize: https://raw.github.com/sahib/libmunin/master/doc/_static/arch.png
+    How does *libmunin* fit into it's environement?
 
 Inputs
 ------
