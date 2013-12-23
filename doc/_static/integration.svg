@@ -25,8 +25,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.18616113"
-     inkscape:cx="1849.0675"
-     inkscape:cy="450.01488"
+     inkscape:cx="1725.5184"
+     inkscape:cy="1939.922"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -36,9 +36,36 @@
      inkscape:window-y="20"
      inkscape:window-maximized="0"
      showguides="true"
-     inkscape:guide-bbox="true" />
+     inkscape:guide-bbox="true"
+     borderlayer="true" />
   <defs
      id="defs2987">
+    <marker
+       inkscape:stockid="Arrow1Lend"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Lend"
+       style="overflow:visible;">
+      <path
+         id="path8314"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;"
+         transform="scale(0.8) rotate(180) translate(12.5,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleInM"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="TriangleInM"
+       style="overflow:visible">
+      <path
+         id="path8447"
+         d="M 5.77,0.0 L -2.88,5.0 L -2.88,-5.0 L 5.77,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt"
+         transform="scale(-0.4)" />
+    </marker>
     <marker
        style="overflow:visible"
        id="TriangleOutL"
@@ -309,7 +336,7 @@
      id="layer1"
      transform="translate(0,2187.6378)">
     <rect
-       style="fill:url(#radialGradient5897);fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:40, 80;stroke-dashoffset:0;opacity:0.60526316000000002"
+       style="fill:url(#radialGradient5897);fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;opacity:0.5"
        id="rect2993"
        width="1418.254"
        height="1523.3099"
@@ -406,6 +433,13 @@
          id="tspan3382"
          x="309.85013"
          y="-1160.2235">Session Cache</tspan></text>
+    <rect
+       y="-1627.9385"
+       x="1583.2319"
+       height="411.38858"
+       width="1423.0483"
+       id="rect5911"
+       style="opacity:0.5;fill:url(#radialGradient5913);fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
     <text
        sodipodi:linespacing="125%"
        id="text3384"
@@ -418,23 +452,16 @@
          x="2090.5532"
          id="tspan3386"
          sodipodi:role="line">libmunin</tspan></text>
-    <rect
-       y="-1627.9385"
-       x="1583.2319"
-       height="411.38858"
-       width="1423.0483"
-       id="rect5911"
-       style="opacity:0.60526314999999997;fill:url(#radialGradient5913);fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:40, 80;stroke-dashoffset:0" />
     <path
        style="fill:none;stroke:#000000;stroke-width:5.08542585;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;marker-start:none;marker-end:url(#TriangleOutL)"
-       d="m 1582.0099,-1381.742 -847.0311,0"
+       d="m 1578.432,-1381.9099 -847.03103,0"
        id="path3392"
        inkscape:connector-curvature="0" />
     <path
        inkscape:connector-curvature="0"
        id="path3394"
-       d="m 562.61845,56.850591 0,-1176.271691"
-       style="fill:none;stroke:#000000;stroke-width:5.3989048;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;marker-start:none;marker-end:url(#TriangleOutL)" />
+       d="m 562.61845,72.948719 0,-1192.019219"
+       style="fill:none;stroke:#000000;stroke-width:5.43279171;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;marker-start:none;marker-end:url(#TriangleOutL)" />
     <text
        sodipodi:linespacing="125%"
        id="text4269"
@@ -472,7 +499,7 @@
          y="231.68839"
          x="1713.0514"
          sodipodi:role="line"
-         id="tspan7483">• Mpd client/Server</tspan><tspan
+         id="tspan7483">• Mpd clients/Server</tspan><tspan
          id="tspan4281"
          y="390.9765"
          x="1713.0514"
@@ -480,11 +507,11 @@
          id="tspan4283"
          y="550.26465"
          x="1713.0514"
-         sodipodi:role="line">• Music websites</tspan><tspan
+         sodipodi:role="line">• Music Stream-sites</tspan><tspan
          y="709.5528"
          x="1713.0514"
          sodipodi:role="line"
-         id="tspan5915">• music tracker</tspan><tspan
+         id="tspan5915">• ,,Dj'' Software</tspan><tspan
          id="tspan4289"
          y="868.84088"
          x="1713.0514"
@@ -513,11 +540,10 @@
    id="tspan4303"
    style="font-size:100px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Humor Sans;-inkscape-font-specification:Humor Sans">the web</tspan></tspan></text>
     <path
-       transform="translate(0,-2187.6378)"
        inkscape:connector-curvature="0"
        id="path6099"
-       d="m 3007.8254,801.45366 474.373,0 0,1002.76674"
-       style="fill:none;stroke:#000000;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none;marker-end:url(#TriangleOutL)" />
+       d="m 3011.6159,-1387.6164 470.7434,0 0,1004.17444"
+       style="fill:none;stroke:#000000;stroke-width:4.98432922;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#TriangleOutL)" />
     <text
        sodipodi:linespacing="125%"
        id="text6293"
@@ -655,8 +681,8 @@
     <path
        inkscape:connector-curvature="0"
        id="path4258"
-       d="m 2329.9094,-1643.9736 0,-306.799"
-       style="fill:none;stroke:#000000;stroke-width:3.68561625;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;marker-start:none;marker-end:url(#TriangleOutL)" />
+       d="m 2329.9094,-1633.5557 0,-316.6434"
+       style="fill:none;stroke:#000000;stroke-width:3.74077654;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;marker-start:none;marker-end:url(#TriangleOutL)" />
     <rect
        style="fill:#71dedf;fill-opacity:0;stroke:#000000;stroke-width:3;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:12, 24;stroke-dashoffset:16.86"
        id="rect4262"

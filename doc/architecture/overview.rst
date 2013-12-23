@@ -1,11 +1,21 @@
 Overview
 ========
 
+
+Integration Diagram
+-------------------
+
 .. figure:: /_static/integration.svg
     :width: 100%
     :alt: How *libmunin* fits in the world.
 
-    How does *libmunin* fit into it's environement?
+
+Architecture Diagram
+--------------------
+
+.. figure:: /_static/arch.svg
+    :width: 100%
+    :alt: Architecture Overview of libmunin.
 
 Inputs
 ------
