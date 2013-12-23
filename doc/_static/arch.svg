@@ -223,8 +223,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.49497474"
-     inkscape:cx="3595.9498"
-     inkscape:cy="1602.512"
+     inkscape:cx="3001.98"
+     inkscape:cy="456.99902"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -1042,7 +1042,7 @@
          style="font-size:60px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Humor Sans;-inkscape-font-specification:Humor Sans">• GenreTree       - normalises genre to tree</tspan><tspan
          sodipodi:role="line"
          x="149.839"
-         y="391.40805"
+         y="391.40808"
          id="tspan3992"
          style="font-size:60px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Humor Sans;-inkscape-font-specification:Humor Sans">• BeatsPerMin      - calculate beats per minute of audio</tspan><tspan
          sodipodi:role="line"
@@ -1057,7 +1057,7 @@
          style="font-size:60px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Humor Sans;-inkscape-font-specification:Humor Sans">• AlbumNormalize  - normalise album strings</tspan><tspan
          sodipodi:role="line"
          x="149.839"
-         y="643.00366"
+         y="643.0036"
          id="tspan3998"
          style="font-size:60px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Humor Sans;-inkscape-font-specification:Humor Sans">• Moodbar         - analyse audio frequencies</tspan><tspan
          sodipodi:role="line"
@@ -1068,13 +1068,8 @@
          sodipodi:role="line"
          x="149.839"
          y="810.73401"
-         id="tspan4002"
-         style="font-size:60px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Humor Sans;-inkscape-font-specification:Humor Sans">• Composite        - compose several providers</tspan><tspan
-         sodipodi:role="line"
-         x="149.839"
-         y="894.59918"
          id="tspan4004"
-         style="font-size:60px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Humor Sans;-inkscape-font-specification:Humor Sans" /></text>
+         style="font-size:60px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Humor Sans;-inkscape-font-specification:Humor Sans">• Composite        - compose several providers  </tspan></text>
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Humor Sans;-inkscape-font-specification:Humor Sans"
@@ -1104,7 +1099,7 @@
          style="font-size:60px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Humor Sans;-inkscape-font-specification:Humor Sans">• BeatsPerMin - compare number of beats per minute</tspan><tspan
          sodipodi:role="line"
          x="2067.5344"
-         y="385.58505"
+         y="385.58508"
          id="tspan4038"
          style="font-size:60px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Humor Sans;-inkscape-font-specification:Humor Sans">• Levenshtein - compare strings via the damerau-levenshtein-distance</tspan><tspan
          sodipodi:role="line"
@@ -1115,6 +1110,21 @@
          sodipodi:role="line"
          x="2067.5344"
          y="553.31543"
+         style="font-size:60px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Humor Sans;-inkscape-font-specification:Humor Sans"
+         id="tspan4062">• Rating        - Compare the Rating of two user given songs</tspan><tspan
+         sodipodi:role="line"
+         x="2067.5344"
+         y="637.1806"
+         style="font-size:60px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Humor Sans;-inkscape-font-specification:Humor Sans"
+         id="tspan4060" /><tspan
+         sodipodi:role="line"
+         x="2067.5344"
+         y="721.04584"
+         style="font-size:60px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Humor Sans;-inkscape-font-specification:Humor Sans"
+         id="tspan4058" /><tspan
+         sodipodi:role="line"
+         x="2067.5344"
+         y="804.91101"
          id="tspan4042"
          style="font-size:60px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Humor Sans;-inkscape-font-specification:Humor Sans" /></text>
   </g>
