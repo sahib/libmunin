@@ -44,7 +44,7 @@ Table of Contents
 
 .. toctree::
     :glob: 
-    :maxdepth: 1
+    :maxdepth: 2
     
     architecture/*
     glossary

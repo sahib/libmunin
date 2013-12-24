@@ -67,7 +67,7 @@ Inputs
 
     The history of the user's listening habits is recorded and stored in little
     *packages* of Songs, each being maximally, for example, 5 songs big. If some
-    time passed a new *package* is openened even if the previous *package* was
+    time passed a new *package* is opened even if the previous *package* was
     not yet full. 
 
     These *packages* are used to derive :term:`Rule` from them that associate some
@@ -96,13 +96,13 @@ Currently there are 3 ways of creating them:
      :term:`Recommendation` based on a certain :term:`Song`. The song is located
      in the :term:`Graph` and a breadth-first-search is done in order to get it's
      similar neighbors. If :term:`Rule` s are known which affect this :term:`Song`,
-     these are taken as addiotnal seeds with lower priority.
+     these are taken as additional seeds with lower priority.
 
 2) **By heuristics:** 
 
      Selects a seed song in this order: 
         
-     * Find the best rated rule, take the associated :term:`Song`.
+     * Find the best rated rule, take (one of) the associated :term:`Song`.
      * Find the :term:`Song` with the highest playcount.
      * If all that fails a random song is picked from the :term:`Graph`.
 
