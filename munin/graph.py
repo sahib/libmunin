@@ -113,7 +113,9 @@ def recommendations_from_heuristic(database, rule_index):
 
 
 def explain_recommendation(seed_song, recommendation, max_reasons=3):
-    distance = seed_song.distance_compute(recommendation)
+    distance = seed_song.distance_get(recommendation)
+    if distance is None:
+        distance = seed_song.distance_compute(recommendation)
     return (distance, sorted(distance.items(), key=lambda tup: [1])[:max_reasons])
 
 

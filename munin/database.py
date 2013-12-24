@@ -462,7 +462,7 @@ if __name__ == '__main__':
         import math
 
         with session.transaction():
-            N = 100
+            N = 5000
             for i in range(int(N / 2) + 1):
                 session.add({
                     'genre': 1.0 - i / N,

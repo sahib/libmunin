@@ -102,20 +102,19 @@ class Song(SessionMapping, Hashable):
         :param other_song: a :class:`munin.song.Song`
         :returns: A :class:`munin.distance.Distance` with according weighting.
         """
-        distance_dict = {}
-        common_keys = set(self.keys()).intersection(other_song.keys())
+        try:
+            return self._dist_dict[other_song]
+        except KeyError:
+            distance_dict = {}
+            for key in set(self.keys()).intersection(other_song.keys()):
+                distance_func = self._session.distance_function_for_key(key)
+                value_a, value_b = self[key], other_song[key]
+                if value_a is None or value_b is None:
+                    distance_dict[key] = 1.0
+                else:
+                    distance_dict[key] = distance_func(value_a, value_b)
 
-        for key in common_keys:
-            distance_func = self._session.distance_function_for_key(key)
-            value_a, value_b = self[key], other_song[key]
-            if value_a is None or value_b is None:
-                distance_dict[key] = 1.0
-            else:
-                distance_dict[key] = distance_func(value_a, value_b)
-
-        return Distance(self._session, distance_dict)
-
-
+            return Distance(self._session, distance_dict)
 
     def distance_add(self, other, distance):
         """Add a relation to ``other`` with a certain distance.
@@ -140,6 +139,8 @@ class Song(SessionMapping, Hashable):
         sdd, odd = self._dist_dict, other._dist_dict
         if other in sdd:
             if sdd[other] < distance:
+                # This case should actually not happen.
+                # Just here for all cases.
                 return False  # Reject
 
             # Explain why this could damage worst song detection.
