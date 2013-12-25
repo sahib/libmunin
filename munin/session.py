@@ -377,7 +377,7 @@ class Session:
         given = 0
 
         for recom in iterator:
-            if given >= number:
+            if number is not 0 and given >= number:
                 break
 
             if not enabled or self._recom_history.allowed(recom):
@@ -506,8 +506,8 @@ class Session:
 
         .. code-block:: python
 
-            >>> with session.transaction():
-            ...     session.add({'genre': 'death metal', ...})
+            >>> with session.fix_graph():
+            ...     session.insert({'genre': 'death metal', ...})
 
         The rest is the same as with :meth:`add`.
         """

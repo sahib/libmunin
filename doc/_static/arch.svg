@@ -18,6 +18,19 @@
    sodipodi:docname="arch.svg">
   <defs
      id="defs7543">
+    <marker
+       inkscape:stockid="SquareL"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="SquareL"
+       style="overflow:visible">
+      <path
+         id="path4670"
+         d="M -5.0,-5.0 L -5.0,5.0 L 5.0,5.0 L 5.0,-5.0 L -5.0,-5.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt"
+         transform="scale(0.8)" />
+    </marker>
     <inkscape:perspective
        sodipodi:type="inkscape:persp3d"
        inkscape:vp_x="0 : 1620 : 1"
@@ -394,9 +407,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.49497474"
-     inkscape:cx="1296.6396"
-     inkscape:cy="2216.8173"
+     inkscape:zoom="0.24748737"
+     inkscape:cx="2541.8953"
+     inkscape:cy="2025.0334"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -1389,14 +1402,6 @@
          y="-379.08768"
          x="1710.9912"
          sodipodi:role="line">[1] -&gt; [2,3]</tspan></text>
-    <rect
-       y="-1998.0349"
-       x="-137.00369"
-       height="3.0501976"
-       width="2627.6091"
-       id="rect4072"
-       style="fill:#71dedf;fill-opacity:0;fill-rule:nonzero;stroke:#000000;stroke-width:3.56500006;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:14.26, 14.26;stroke-dashoffset:16.00685081"
-       transform="matrix(0,1,-1,0,0,0)" />
     <text
        xml:space="preserve"
        style="font-size:57.26913071px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Humor Sans;-inkscape-font-specification:Humor Sans"
