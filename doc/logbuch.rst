@@ -771,3 +771,15 @@ Theory*):
     - *LyricsProvider* schreiben.
     - Demoanwendung mit **libmoosecat.so**.
     - Möglichkeit um generelle Daten session übergreifen zu speichern.
+
+26 Dezember 2013
+----------------
+
+
+**Randideen:**
+
+    * Implementierung eines DBUS-Service/Clients fur remote sessions.
+    * Erwähnung von zeitgeist + integration von libmunin darin.
+
+
+

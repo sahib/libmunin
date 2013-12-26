@@ -83,15 +83,24 @@ def recommendations_from_seed(database, rule_index, seed_song):
             yield recom
 
 
-def recommendations_from_attributes(subset, database, rule_index):
-    try:
-        chosen_song = next(database.find_matching_attributes(subset))
-        return chain(
-            [chosen_song],
-            recommendations_from_seed(database, rule_index, chosen_song)
-        )
-    except StopIteration:
-        return iter([])
+def recommendations_from_attributes(subset, database, rule_index, max_seeds=10):
+    chosen_songs = list(islice(
+        database.find_matching_attributes(subset),
+        max_seeds
+    ))
+
+    if not chosen_songs:
+        return []
+
+    seed_iterables = [
+        recommendations_from_seed(database, rule_index, song)
+        for song in chosen_songs
+    ]
+
+    return chain(
+        chosen_songs,
+        roundrobin(*seed_iterables)
+    )
 
 
 def recommendations_from_heuristic(database, rule_index):

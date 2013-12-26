@@ -385,7 +385,7 @@ class Session:
                 given += 1
                 yield recom
 
-    def recommend_from_attributes(self, subset, number=20):
+    def recommend_from_attributes(self, subset, number=20, max_seeds=10):
         """Find n recommendations solely from intelligent guessing.
 
         This will try to find a good rule, that indicates a user's
@@ -396,11 +396,15 @@ class Session:
         The first song in the recommendations yielded is the seed song.
 
         .. seealso: :func:`recommendations_from_seed`
+
+        :param dict subset: Attribute-Value mapping that seed songs must have.
+        :param max_seeds: Maximum songs with the subset to get as a base.
         """
         return self._recom_sieve(munin.graph.recommendations_from_attributes(
             subset,
             self.database,
-            self.database.rule_index
+            self.database.rule_index,
+            max_seeds
         ), number)
 
     def recommend_from_seed(self, song, number=20):
