@@ -39,8 +39,12 @@ class MuninRemoteServer(dbus.service.Object):
         bus_name = dbus.service.BusName(MUNIN_BUS_NAME, bus=bus)
         dbus.service.Object.__init__(self, bus_name, '/org/libmunin')
 
-    @dbus.service.signal(dbus_interface=MUNIN_INTERFACE)
+    @dbus.service.method(MUNIN_BUS_NAME)
     def create(self, name):
+        pass
+
+    @dbus.service.method(MUNIN_BUS_NAME)
+    def load(self, path):
         pass
 
 
