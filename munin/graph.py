@@ -83,9 +83,12 @@ def recommendations_from_seed(database, rule_index, seed_song):
             yield recom
 
 
-def recommendations_from_attributes(subset, database, rule_index, max_seeds=10):
+def recommendations_from_attributes(
+        subset, database, rule_index,
+        max_seeds=10, max_numeric_offset=None
+):
     chosen_songs = list(islice(
-        database.find_matching_attributes(subset),
+        database.find_matching_attributes(subset, max_numeric_offset),
         max_seeds
     ))
 

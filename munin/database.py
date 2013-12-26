@@ -101,7 +101,35 @@ class Database:
 
         self._playcounts[song] += 1
 
-    def find_matching_attributes(self, subset):
+    def find_matching_attributes(self, subset, max_numeric_offset=None):
+        if max_numeric_offset is None:
+            return self.find_matching_attributes_generic(subset)
+        else:
+            return self.find_matching_attributes_numeric(subset, max_numeric_offset)
+
+    def find_matching_attributes_numeric(self, subset, max_offset):
+        try:
+            numerics = {}
+            for key, value in subset.items():
+                provider = self._session.provider_for_key(key)
+                numerics[key] = provider.process(value)
+
+            for song in self:
+                for key in (numerics.keys() & song.keys()):
+                    value = song.get(key)
+                    if value is None:
+                        break
+
+                    compar = numerics[key][0]
+                    if not (compar - max_offset <= value[0] <= compar + max_offset):
+                        break
+                else:
+                    yield song
+
+        except KeyError:
+            raise KeyError('key "{k}" is not in mask'.format(k=key))
+
+    def find_matching_attributes_generic(self, subset):
         try:
             value_set = set()
             for key, value in subset.items():
@@ -390,7 +418,54 @@ if __name__ == '__main__':
                 self._session.insert({'genre': [0], 'artist': [0]})
             # self._session.database.plot(250, 250)
 
-        def test_find_matching_attributes(self):
+        def test_find_matching_attributes_numeric(self):
+            from munin.provider import GenreTreeProvider
+            from munin.distance import GenreTreeDistance
+            from munin.helper import pairup
+
+            session = Session('session_find_test', {
+                'x': pairup(None, None, 1),
+                'y': pairup(None, None, 1)
+            })
+            a = session[session.add({
+                'x': 21,
+                'y': 42,
+            })]
+            b = session[session.add({
+                'x': 0,
+                'y': 100,
+            })]
+            c = session[session.add({
+                'x': 51,
+                'y': 50,
+            })]
+
+            self.assertEqual(list(session.database.find_matching_attributes_numeric(
+                {'x': 10},
+                20
+                )),
+                [a, b]
+            )
+            self.assertEqual(list(session.database.find_matching_attributes_numeric(
+                {'y': 100},
+                0
+                )),
+                [b]
+            )
+            self.assertEqual(list(session.database.find_matching_attributes_numeric(
+                {'x': 10, 'y': 40},
+                20
+                )),
+                [a]
+            )
+            self.assertEqual(list(session.database.find_matching_attributes_numeric(
+                {'x': 10, 'y': 10},
+                0,
+                )),
+                []
+            )
+
+        def test_find_matching_attributes_generic(self):
             from munin.provider import GenreTreeProvider
             from munin.distance import GenreTreeDistance
             from munin.helper import pairup
@@ -452,7 +527,6 @@ if __name__ == '__main__':
 
         # add ch to logger
         LOGGER.addHandler(ch)
-
 
         session = Session('session_test', {
             'genre': (None, DummyDistanceFunction(), 0.2),

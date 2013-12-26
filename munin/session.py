@@ -2,6 +2,8 @@
 # encoding: utf-8
 
 """
+.. currentmodule:: munin.session
+
 Overview
 --------
 
@@ -385,7 +387,7 @@ class Session:
                 given += 1
                 yield recom
 
-    def recommend_from_attributes(self, subset, number=20, max_seeds=10):
+    def recommend_from_attributes(self, subset, number=20, max_seeds=10, max_numeric_offset=None):
         """Find n recommendations solely from intelligent guessing.
 
         This will try to find a good rule, that indicates a user's
@@ -399,12 +401,14 @@ class Session:
 
         :param dict subset: Attribute-Value mapping that seed songs must have.
         :param max_seeds: Maximum songs with the subset to get as a base.
+        :param max_numeric_offset: Same as with :func:`find_matching_attributes`
         """
         return self._recom_sieve(munin.graph.recommendations_from_attributes(
             subset,
             self.database,
             self.database.rule_index,
-            max_seeds
+            max_seeds,
+            max_numeric_offset
         ), number)
 
     def recommend_from_seed(self, song, number=20):
@@ -546,16 +550,36 @@ class Session:
         """
         return self.database.playcounts(n)
 
-    def find_matching_attributes(self, subset):
+    def find_matching_attributes(self, subset, max_numeric_offset=None):
         """Search the database for a subset of the attributes/values in subset.
 
-        Example: ::
+        Example:
+
+        .. code-block:: python
 
             >>> find_matching_attributes({'genre': 'metal', 'artist': 'Debauchery'})
+            # yields songs from Debauchery with that have the exact genre 'metal'
 
+        Numeric example:
+
+        .. code-block:: python
+
+            >>> find_matching_attributes({'rating': 5}, max_numeric_offset=1)
+            # yield songs with rating 4-5
+
+        .. warning::
+
+            If ``max_numeric_offset`` is used, you may only use attributes
+            that support the *__sub__* operator, otherwise a TypeError will be raised.
+
+        :raises KeyError: if an unknown key is specified in subset.
+        :raises TypeError: if max_numeric_offset is not None and some values do
+                           not support substraction.
+        :param subset: The subset of attributes the songs must have.
+        :param max_numeric_offset:
         :returns: A lazy iterator over the matching songs.
         """
-        return self.database.find_matching_attributes(subset)
+        return self.database.find_matching_attributes(subset, max_numeric_offset)
 
     @contextmanager
     def transaction(self):
