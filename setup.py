@@ -11,10 +11,9 @@ print("""Please make sure to have these third party tools installed:
 
 # parse_requirements() returns generator of pip.req.InstallRequirement objects
 try:
-    install_reqs = parse_requirements('pip_requirements.txt')
-except OSError:
-    install_reqs = parse_requirements('https://raw.github.com/sahib/libmunin/master/pip_requirements.txt')
-
+    install_reqs = list(parse_requirements('pip_requirements.txt'))
+except:
+    install_reqs = list(parse_requirements('https://raw.github.com/sahib/libmunin/master/pip_requirements.txt'))
 
 
 setup(
