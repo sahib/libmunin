@@ -38,10 +38,11 @@ from munin.provider.bpm import check_for_bpmtools
 
 class EasySession(Session):
     @staticmethod
-    def from_name():
-        return Session.from_name('EasySession')
+    def from_name(name='EasySession'):
+        return Session.from_name(name)
 
-    def __init__(self):
+    def __init__(self, name='EasySession'):
+
         mask = {
             'artist': pairup(
                 ArtistNormalizeProvider(compress=True),
@@ -89,4 +90,4 @@ class EasySession(Session):
             logging.warning("Disabling bpm attr, no binary found in PATH.")
             del mask['bpm']
 
-        Session.__init__(self, 'EasySession', mask)
+        Session.__init__(self, name, mask)

@@ -99,7 +99,7 @@ class BPMProvider(Provider):
         except subprocess.CalledProcessError as err:
             LOGGER.debug('"{cmd}" failed with {e}'.format(cmd=err.cmd, e=err.returncode))
         except UnicodeDecodeError:
-            pass
+            LOGGER.debug('could not convert input to valid utf-8')
 
         return None
 
@@ -124,15 +124,18 @@ class BPMCachedProvider(BPMProvider):
                 with open(cache_path, 'r') as handle:
                     content = handle.read()
                     if content:
+                        LOGGER.debug('bpm for {} was cached.'.format(audio_path))
                         return (float(content), )
                     else:
+
                         return None
 
+            LOGGER.debug('calculating bpm for {}'.format(audio_path))
             bpm = BPMProvider.do_process(self, audio_path)
             if self._cache_invalid or bpm is not None:
                 with open(cache_path, 'w') as handle:
                     if bpm is not None:
-                        handle.write(bpm)
+                        handle.write(str(bpm[0]))
             return bpm
         except OSError:
             pass

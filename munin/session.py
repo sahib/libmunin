@@ -314,11 +314,10 @@ class Session:
         """
         return Session.from_archive_path(get_cache_path(session_name) + '.gz')
 
-    def save(self, path=None, compress=True):
+    def save(self, path=None):
         """Save the session (and all caches) to disk.
 
         :param path: Where to save the session in. If none XDG_CACHE_HOME is used.
-        :param compress: Compress the resulting folder with **gzip**?
         """
         path = os.path.join(path, self.name) if path else get_cache_path(self.name)
         if os.path.isfile(path):

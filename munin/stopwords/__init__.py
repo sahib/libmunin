@@ -50,7 +50,7 @@ def load_stopwords(language_code):
     if language_code in STOPWORD_CACHE:
         return STOPWORD_CACHE[language_code]
 
-    relative_path = os.path.join(__path__, language_code)
+    relative_path = os.path.join(__path__, 'data', language_code)
     try:
         with open(relative_path, 'r') as handle:
             stopwords = frozenset(parse_stopwords(handle))
@@ -62,6 +62,8 @@ def load_stopwords(language_code):
 
 if __name__ == '__main__':
     import sys
+    import guess_language
+
     if '--cli' in sys.argv:
         code = guess_language.guess_language(sys.argv[2])
         print(load_stopwords(code))

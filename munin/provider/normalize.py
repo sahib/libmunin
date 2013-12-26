@@ -34,7 +34,6 @@ def normalize_unicode_glyphs(string):
 def strip_stopwords(words):
     text = ' '.join(words)
     language_code = guess_language.guess_language(text)
-    print(language_code)
     if language_code == 'UNKNOWN':
         return words
 

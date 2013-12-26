@@ -25,6 +25,13 @@ setup(
     author='Christopher Pahl',
     author_email='sahib@online.de',
     license='GPLv3',
-    packages=['munin'],
+    packages=[
+        'munin',
+        'munin.distance',
+        'munin.provider',
+        'munin.scripts',
+        'munin.stopwords',
+    ],
+    package_data={'munin.stopwords': ['data/*']},
     install_requires=[str(ir.req) for ir in install_reqs]
 )
