@@ -43,6 +43,11 @@ class KeywordsProvider(Provider):
         return [keys for keys, rating in keywords_map.items() if rating > 1.0][:10]
 
 
+def check_for_plyr():
+    """Returns True if the plyr lyrics provider is available"""
+    return HAS_PLYR
+
+
 class PlyrLyricsProvider(Provider):
     """Retrieve a lyrics text from the web using libglyr.
 
@@ -68,13 +73,30 @@ class PlyrLyricsProvider(Provider):
         .. code-block:: python
 
             PlyrLyricsProvider() | KeywordsProvider()
+
+    .. warning::
+
+        If a artist/title combination is not found the result is remembered.
+        If you do not want this behaviour set the ``cache_failures`` argument
+        to False. ::
+
+            >>> PlyrLyricsProvider(cache_failures=False)
+
+    .. note::
+
+        When feeding tags from your music database as artist/title
+        it is recommended to use the album_artist and the track_artist
+        as fallback.
+
     """
     def __init__(self, **kwargs):
         if not HAS_PLYR:
             raise LookupError('Plyr could be imported, which is needed for lyrics')
 
-        KeywordsProvider.__init__(self, **kwargs)
+        self._cache_failures = kwargs.pop('cache_failures', True)
         self.database = plyr.Database(get_cache_path(None))
+
+        Provider.__init__(self, **kwargs)
 
     def do_process(self, artist_title):
         artist, title = artist_title
@@ -87,15 +109,26 @@ class PlyrLyricsProvider(Provider):
             artist=artist,
             title=title,
             database=self.database,
-            parallel=3
+            parallel=4,
+            timeout=5
         )
         items = qry.commit()
 
         if items:
+            first = items[0]
+
+            # This item was cached on failure:
+            if first.rating is -1:
+                return None
+
             try:
-                return (items[0].data.decode('utf-8'), )
+                return (first.data.decode('utf-8'), )
             except UnicodeDecodeError:
                 pass
+
+        if self._cache_failures:
+            dummy = self.database.make_dummy()
+            self.database.insert(qry, dummy)
         return None
 
 

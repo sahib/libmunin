@@ -34,6 +34,7 @@ from munin.distance import \
 # Checking if the attribute shall be used:
 from munin.provider.moodbar import check_for_moodbar
 from munin.provider.bpm import check_for_bpmtools
+from munin.provider.keywords import check_for_plyr
 
 
 class EasySession(Session):

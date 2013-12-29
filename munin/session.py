@@ -328,7 +328,7 @@ class Session:
 
         class VerbosePickler (pickle._Pickler):
             def save(self, obj):
-                # print('pickling object  {0} of type {1}'.format(obj, type(obj)))
+                print('pickling object  {0} of type {1}'.format(obj, type(obj)))
                 pickle._Pickler.save(self, obj)
 
         with open(os.path.join(path, 'session.pickle'), 'wb') as handle:

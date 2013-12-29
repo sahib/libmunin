@@ -136,7 +136,7 @@ class AlbumNormalizeProvider(Provider):
         self._punctuation = re.compile("\W|_")
         self._strip_patterns = [re.compile(pattern) for pattern in [
             r'\s*[\(\[{].*?[}\)\]]',  # Strip everything in brackets ([{
-            r'\s*cd\s*\d+'         # remove CD <X> stuff.
+            r'\s*(cd|disc)\s*\d+'     # remove CD <X> stuff.
         ]]
 
     def do_process(self, input_string):
