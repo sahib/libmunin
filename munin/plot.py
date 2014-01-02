@@ -25,7 +25,8 @@ def _build_graph_from_song_list(graph, song_list):
 
 
 def _color_from_distance(distance):
-    return '#' + '01234567890ABCDEF'[int(distance * 16)] * 2 + '0000'
+    r, g, b = (int(v * 255) for v in hsv_to_rgb(abs(1.0 - distance), 1.0, 0.5))
+    return '#{:02x}{:02x}{:02x}'.format(r, g, b)
 
 
 def _edge_color_list(graph):
@@ -36,7 +37,7 @@ def _edge_color_list(graph):
         distance = a.distance_get(b)
         if distance is not None:
             edge_colors.append(_color_from_distance(distance.distance))
-            edge_widths.append((distance.distance + 0.1) * 3)
+            edge_widths.append((distance.distance + 0.1) * 1.5)
 
     return list(edge_colors), list(edge_widths)
 
@@ -50,7 +51,7 @@ def _style(graph, width, height):
         'edge_width': edge_width,
         'vertex_color': [hsv_to_rgb(v, 1.0, 1.0) for v in colors],
         'vertex_label_color': [hsv_to_rgb(1 - v, 0.2, 0.1) for v in colors],
-        'vertex_size': 42,
+        'vertex_size': 25,
         'layout': graph.layout('fr'),
         'bbox': (width, height)
     }
@@ -75,3 +76,29 @@ def plot(database, width=1000, height=1000):
     _build_graph_from_song_list(graph, database)
     style = _style(graph, width, height)
     igraph.plot(graph, **style)
+
+
+def Plot(database, width=1000, height=1000, path=None, do_save=True):
+    """Plot the currrent graph.
+
+    This **returns** the graph as igraph plot. If you want to use the Plot
+    for drawing it interactively, you can access it's .surface attribute.
+    """
+    try:
+        import igraph
+    except ImportError:
+        print('-- You need igraph and python-igraph installed for this.')
+        return
+
+    graph = igraph.Graph(directed=False)
+    _build_graph_from_song_list(graph, database)
+    style = _style(graph, width, height)
+
+    path = path or '/tmp/.munin_plot.png'
+    bg_color = "rgba(100%, 100%, 100%, 0%)"
+    plot = igraph.Plot(path, background=bg_color, bbox=(width, height))
+    plot.add(graph, **style)
+    plot.redraw()
+    if do_save:
+        plot.save()
+    return plot.surface

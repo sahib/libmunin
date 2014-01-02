@@ -23,12 +23,13 @@ from munin.provider import \
     GenreTreeProvider, \
     BPMCachedProvider, \
     StemProvider, \
-    WordlistProvider
+    KeywordsProvider
 
 from munin.distance import \
     MoodbarDistance, \
-    GenreTreeDistance, \
-    BPMDistance
+    GenreTreeAvgLinkDistance, \
+    BPMDistance, \
+    KeywordsDistance
 
 
 # Checking if the attribute shall be used:
@@ -42,7 +43,7 @@ class EasySession(Session):
     def from_name(name='EasySession'):
         return Session.from_name(name)
 
-    def __init__(self, name='EasySession'):
+    def __init__(self, name='EasySession', disabled_attrs=None):
 
         mask = {
             'artist': pairup(
@@ -62,7 +63,7 @@ class EasySession(Session):
             ),
             'genre': pairup(
                 GenreTreeProvider(),
-                GenreTreeDistance(),
+                GenreTreeAvgLinkDistance(),
                 2
             ),
             'bpm': pairup(
@@ -77,8 +78,8 @@ class EasySession(Session):
             ),
             # TODO: Keyword Provider should be used here.
             'lyrics': pairup(
-                WordlistProvider() | StemProvider(),
-                None,
+                KeywordsProvider(),
+                KeywordsDistance(),
                 3
             )
         }
@@ -90,5 +91,11 @@ class EasySession(Session):
         if not check_for_bpmtools():
             logging.warning("Disabling bpm attr, no binary found in PATH.")
             del mask['bpm']
+
+        for disabled_attr in disabled_attrs or []:
+            try:
+                del mask[disabled_attr]
+            except KeyError:
+                pass
 
         Session.__init__(self, name, mask)

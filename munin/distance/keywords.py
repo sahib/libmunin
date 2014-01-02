@@ -38,6 +38,9 @@ class KeywordsDistance(DistanceFunction):
         if not lefts or not rights:
             return 1.0
 
+        left_lang, lefts = lefts
+        right_lang, rights = rights
+
         old_distance = 1.0
         for kwa, kwb in product(lefts, rights):
             union = kwa & kwb
@@ -49,7 +52,7 @@ class KeywordsDistance(DistanceFunction):
             if float_cmp(distance, 0.0):
                 break
 
-        return old_distance
+        return 0.67 * old_distance + 0.33 * (not right_lang == left_lang)
 
 
 if __name__ == '__main__':
@@ -59,22 +62,20 @@ if __name__ == '__main__':
         def test_basic(self):
             dist = KeywordsDistance()
             self.assertAlmostEqual(dist.do_compute(
-                [frozenset(['a', 'b']), frozenset(['c', 'd'])],
-                [frozenset(['a', 'c']), frozenset(['b', 'd'])]
-            ), 0.5)
+                ('de', [frozenset(['a', 'b']), frozenset(['c', 'd'])]),
+                ('de', [frozenset(['a', 'c']), frozenset(['b', 'd'])])
+            ), 0.335)  # 0.67 / 2
             self.assertAlmostEqual(dist.do_compute(
-                [frozenset(['a', 'b']), frozenset(['c', 'd'])],
-                [frozenset(['a', 'x']), frozenset(['y', 'd'])]
-            ), 0.5)
+                ('de', [frozenset(['a', 'b']), frozenset(['c', 'd'])]),
+                ('en', [frozenset(['a', 'x']), frozenset(['y', 'd'])])
+            ), 0.335 + 0.33)
             self.assertAlmostEqual(dist.do_compute(
-                [frozenset(['a', 'b']), frozenset(['c', 'd'])],
-                [frozenset(['a', 'b']), frozenset(['c', 'd'])]
+                ('de', [frozenset(['a', 'b']), frozenset(['c', 'd'])]),
+                ('de', [frozenset(['a', 'b']), frozenset(['c', 'd'])])
             ), 0.0)
             self.assertAlmostEqual(dist.do_compute(
-                [frozenset(['a', 'b']), frozenset(['c', 'd'])],
-                [frozenset(['x', 'y']), frozenset(['z', 'ö'])],
+                ('de', [frozenset(['a', 'b']), frozenset(['c', 'd'])]),
+                ('fr', [frozenset(['x', 'y']), frozenset(['z', 'ö'])]),
             ), 1.0)
-
-            # self.assertTrue(False)
 
     unittest.main()

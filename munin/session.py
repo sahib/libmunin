@@ -21,9 +21,11 @@ Reference
 ---------
 """
 
+
 # Standard:
-from shutil import rmtree
 from copy import copy
+from shutil import rmtree
+from itertools import islice, tee
 from contextlib import contextmanager
 
 import tarfile
@@ -82,7 +84,7 @@ def get_cache_path(extra_name=None):
 
 
 DEFAULT_CONFIG = {
-    'max_neighbors': 7,
+    'max_neighbors': 10,
     'max_distance': 0.999,
     'history_max_pkg': 10000,
     'history_timeout': 1200,
@@ -95,8 +97,8 @@ DEFAULT_CONFIG = {
     'rebuild_stupid_threshold': 350,
     'recom_history_sieving': True,
     'recom_history_penalty': {
-        'album': 5,
-        'artist': 3
+        'album': 3,
+        'artist': 2
     }
 }
 
@@ -326,13 +328,14 @@ class Session:
             rmtree(path, ignore_errors=True)
         os.mkdir(path)
 
-        class VerbosePickler (pickle._Pickler):
-            def save(self, obj):
-                print('pickling object  {0} of type {1}'.format(obj, type(obj)))
-                pickle._Pickler.save(self, obj)
+        # class VerbosePickler (pickle._Pickler):
+        #     def save(self, obj):
+        #         print('pickling object  {0} of type {1}'.format(obj, type(obj)))
+        #         pickle._Pickler.save(self, obj)
 
         with open(os.path.join(path, 'session.pickle'), 'wb') as handle:
-            VerbosePickler(handle).dump(self)
+            # VerbosePickler(handle).dump(self)
+            pickle.dump(self, handle)
 
         with tarfile.open(path + '.gz', 'w:gz') as tar:
             tar.add(path, arcname='')
@@ -375,15 +378,30 @@ class Session:
         :return: iterator that yields the sieved songs.
         """
         enabled = self._filtering_enabled
-        given = 0
-
-        for recom in iterator:
-            if number is not 0 and given >= number:
-                break
-
-            if not enabled or self._recom_history.allowed(recom):
+        if not enabled:
+            iterator = islice(iterator, number) if number else iterator
+            for recom in iterator:
                 self._recom_history.feed(recom)
-                given += 1
+                yield recom
+        else:
+            for recom in islice(self._recom_sieve_enabled(iterator), number):
+                yield recom
+
+    def _recom_sieve_enabled(self, iterator):
+            recom_set = set()
+            while True:
+                iterator, starter = tee(iterator)
+                for recom in filter(lambda r: r not in recom_set, starter):
+                    if self._recom_history.allowed(recom):
+                        # we found a candidate!
+                        break
+                else:
+                    # exhausted.
+                    break
+
+                self._recom_history.feed(recom)
+                recom_set.add(recom)
+
                 yield recom
 
     def recommend_from_attributes(self, subset, number=20, max_seeds=10, max_numeric_offset=None):
@@ -539,6 +557,7 @@ class Session:
         :returns: Number of times this song was played.
         :rtype: int
         """
+        song = song_or_uid(self.database, song)
         return self.database.playcount(song)
 
     def playcounts(self, n=0):
@@ -610,6 +629,10 @@ class Session:
     @property
     def listen_history(self):
         return self.database._listen_history
+
+    @property
+    def recom_history(self):
+        return self._recom_history
 
 
 if __name__ == '__main__':

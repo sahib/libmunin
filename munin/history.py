@@ -368,9 +368,7 @@ class RuleIndex:
         :param maxlen: Max. number of rules to save, or 0 for no limit.
         """
         self._max_rules = maxlen or 2 ** 100
-        self._rule_list = OrderedDict()
-        self._rule_dict = defaultdict(set)
-        self._rule_cuid = 0
+        self.clear()
 
     def __iter__(self):
         """Iterate over all rules in a sorted way.
@@ -381,7 +379,7 @@ class RuleIndex:
 
     def __contains__(self, rule_tuple):
         'Check if a rule tuple is in the index. Only considers songs in it.'
-        return bool(self.locate(rule_tuple))
+        return any(self._locate(rule_tuple))
 
     def _locate(self, rule_tuple):
         """Locate the the first rule_tuple and rule_uid with same left/right.
@@ -409,6 +407,15 @@ class RuleIndex:
                 return uid, stored_tuple
 
         return None, None
+
+    def clear(self):
+        """Clear all known rules.
+
+        This really does what it says. Be careful.
+        """
+        self._rule_list = OrderedDict()
+        self._rule_dict = defaultdict(set)
+        self._rule_cuid = 0
 
     def best(self):
         """Return the currently best rule (the one with the highest rating)
@@ -443,9 +450,12 @@ class RuleIndex:
         # Step 0: Check if we already know that item.
         stored_uid, stored_rule = self._locate(rule_tuple)
 
-        # Update if the rating is better:
-        if stored_rule is not None and rule_tuple[-1] > stored_rule[-1]:
-            self._rule_list[stored_uid] = rule_tuple
+        if stored_rule is not None:
+            # Update if the rating is better:
+            if rule_tuple[-1] > stored_rule[-1]:
+                self._rule_list[stored_uid] = rule_tuple
+
+            # Nothing to be done.
             return
 
         # Step 1: Add the affected songs to the index:
@@ -527,38 +537,39 @@ if __name__ == '__main__':
 
             for setting in [False, True] * 10:
                 self._idx = RuleIndex(maxlen=10)
-                songs = ['one', 'two', 'three', 'four']
+                songs = [
+                    'one', 'two', 'three', 'four', 'five',
+                    'six', 'seven', 'eight', 'nine', 'ten'
+                ]
 
                 # Feed random input to the history:
                 for i in range(N, 0, -1):
-                    shuffle(songs)
-                    self._idx.insert_rule(
-                            (
-                                frozenset(songs[:2]),
-                                frozenset(songs[2:]),
-                                0.1, 1 - i / N, i / N * 0.5
-                            ),
-                            drop_invalid=setting
-                    )
+                    songs.append(songs.pop(0))
+                    self._idx.insert_rule((
+                        frozenset(songs[:5]),
+                        frozenset(songs[5:]),
+                        0.1, 1 - i / N,
+                        i / N * 0.5
+                    ), drop_invalid=setting)
 
                 # Check if we still cann access it:
                 for left, right, *_ in self._idx.lookup('one'):
                     self.assertTrue('one' in left or 'one' in right)
 
                 # Check the number of items in the index:
-                self.assertEqual(len(self._idx._rule_list), 10)
-                self.assertEqual(len(self._idx._rule_dict), 4)
+                self.assertEqual(len(self._idx._rule_list), 5)
+                self.assertEqual(len(self._idx._rule_dict), 10)
                 for value in self._idx._rule_dict.values():
                     if setting is False:
-                        self.assertEqual(len(value), N)
+                        self.assertEqual(len(value), 5)
                     else:
-                        self.assertEqual(len(value), 10)
+                        self.assertEqual(len(value), 5)
 
                 # Invalidate the cache for this setting:
                 if setting is False:
                     self._idx.drop_invalid()
                     for value in self._idx._rule_dict.values():
-                        self.assertEqual(len(value), 10)
+                        self.assertEqual(len(value), 5)
 
                 # Check if iteration works:
                 iterated = [rating for *_, rating in self._idx]

@@ -107,7 +107,7 @@ class Distance(SessionMapping):
 ###########################################################################
 
 from munin.distance.bpm import BPMDistance
-from munin.distance.genre import GenreTreeDistance
+from munin.distance.genre import GenreTreeDistance, GenreTreeAvgLinkDistance
 from munin.distance.rating import RatingDistance
 from munin.distance.moodbar import MoodbarDistance
 from munin.distance.keywords import KeywordsDistance

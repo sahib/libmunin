@@ -39,8 +39,14 @@ class KeywordsProvider(Provider):
         if isinstance(text, tuple):
             text = text[0]
 
-        keywords_map = extract_keywords(text)
-        return [keys for keys, rating in keywords_map.items() if rating > 1.0][:10]
+        language_code, keywords_map = extract_keywords(text)
+        if language_code is None or not keywords_map:
+            return None
+
+        return (
+            language_code,
+            [keys for keys, rating in keywords_map.items() if rating > 1.0][:15]
+        )
 
 
 def check_for_plyr():

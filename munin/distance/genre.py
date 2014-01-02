@@ -9,6 +9,31 @@ from munin.distance import DistanceFunction
 from munin.helper import float_cmp
 
 
+def compare_single_path(left, right):
+    """Compare a single path with another.
+
+    :returns: The ratio of matching numbers divided by max. length of both.
+    """
+    n = 0.0
+    for l, r in zip(left, right):
+        if l != r:
+            break
+        n += 1
+    return 1 - n / (max(len(left), len(right)) or 1)
+
+
+# TODO: test/docs
+class GenreTreeAvgLinkDistance(DistanceFunction):
+    def do_compute(self, lefts, rights):
+        if not lefts or not rights:
+            return 1.0
+
+        dist_sum = 0
+        for left, right in product(lefts, rights):
+            dist_sum += compare_single_path(left, right)
+        return dist_sum / (len(lefts) * len(rights))
+
+
 class GenreTreeDistance(DistanceFunction):
     """DistanceFunction Calculator for comparing two lists of GenrePaths.
 
@@ -23,25 +48,13 @@ class GenreTreeDistance(DistanceFunction):
         """
         min_dist = 1.0
         for left, right in product(lefts, rights):
-            min_dist = min(min_dist, self.compare_single_path(left, right))
+            min_dist = min(min_dist, compare_single_path(left, right))
 
             # Optimization: Often we get a low value early.
             if float_cmp(min_dist, 0.0):
                 break
 
         return min_dist
-
-    def compare_single_path(self, left, right):
-        """Compare a single path with another.
-
-        :returns: The ratio of matching numbers divided by max. length of both.
-        """
-        n = 0.0
-        for l, r in zip(left, right):
-            if l != r:
-                break
-            n += 1
-        return 1 - n / (max(len(left), len(right)) or 1)
 
 
 if __name__ == '__main__':
@@ -63,9 +76,9 @@ if __name__ == '__main__':
             calc = GenreTreeDistance(GenreTreeProvider())
             for left, right, result in inputs:
                 self.assertTrue(
-                        float_cmp(calc.compare_single_path(left, right), result)
+                        float_cmp(compare_single_path(left, right), result)
                         and
-                        float_cmp(calc.compare_single_path(right, left), result)
+                        float_cmp(compare_single_path(right, left), result)
                 )
 
     class TestGenreTreeDistanceFunctionFunctionFunction(unittest.TestCase):

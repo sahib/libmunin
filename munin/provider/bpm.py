@@ -120,6 +120,7 @@ class BPMCachedProvider(BPMProvider):
     def do_process(self, audio_path):
         try:
             cache_path = audio_path + '.bpm'
+            print(cache_path)
             if os.access(cache_path, os.R_OK):
                 with open(cache_path, 'r') as handle:
                     content = handle.read()
@@ -127,7 +128,6 @@ class BPMCachedProvider(BPMProvider):
                         LOGGER.debug('bpm for {} was cached.'.format(audio_path))
                         return (float(content), )
                     else:
-
                         return None
 
             LOGGER.debug('calculating bpm for {}'.format(audio_path))

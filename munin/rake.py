@@ -201,11 +201,11 @@ def extract_keywords(text, use_stemmer=True):
 
     # This can happen if no stopwords are avaible, or a one-word input was used.
     if phrases is None:
-        return OrderedDict()
+        return None, OrderedDict()
 
     scores = word_scores(phrases)
     keywords = candidate_keywordscores(phrases, scores)
-    return filter_subsets(keywords)
+    return language_code, filter_subsets(keywords)
 
 
 ###########################################################################
@@ -220,6 +220,7 @@ if __name__ == '__main__':
     if '--no-stemmer' in sys.argv:
         use_stemmer = False
 
-    keywords_map = extract_keywords(text, use_stemmer=use_stemmer)
+    lang, keywords_map = extract_keywords(text, use_stemmer=use_stemmer)
+    p
     for keywords, rating in keywords_map.items():
         print('{:>7.3f}: {}'.format(rating, keywords))
