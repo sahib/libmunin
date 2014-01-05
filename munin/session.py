@@ -423,7 +423,7 @@ class Session:
         return self._recom_sieve(munin.graph.recommendations_from_attributes(
             subset,
             self.database,
-            self.database.rule_index,
+            self.rule_index,
             max_seeds,
             max_numeric_offset
         ), number)
