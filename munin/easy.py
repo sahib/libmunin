@@ -29,7 +29,8 @@ from munin.distance import \
     MoodbarDistance, \
     GenreTreeAvgLinkDistance, \
     BPMDistance, \
-    KeywordsDistance
+    KeywordsDistance, \
+    RatingDistance
 
 
 # Checking if the attribute shall be used:
@@ -76,10 +77,14 @@ class EasySession(Session):
                 MoodbarDistance(),
                 5
             ),
-            # TODO: Keyword Provider should be used here.
             'lyrics': pairup(
                 KeywordsProvider(),
                 KeywordsDistance(),
+                3
+            ),
+            'rating': pairup(
+                None,
+                RatingDistance(),
                 3
             )
         }
