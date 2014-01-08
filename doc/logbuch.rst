@@ -783,3 +783,15 @@ Theory*):
 
 
 
+7 Januar 2013
+-------------
+
+Ein Ende der Implementierung ist in Sicht.
+
+- Kein DBUS Daemon, nur skizzenhaft als Source - nur möglichkeit erwähnen.
+- Idee: Nicht nur die gehörten Songs ins Lernen einbeziehen, sondern auch die
+        nicht gehörten. Sollte die Anzahl der gehörten songs groß genug sein
+        und die playlist größe ausreichend klein im vergleich dazu, kann 
+        man vermuten dass nie gelistende songs eher unwichtig sind.
+        vlt. auch datum mit einbeziehen? (Spinnerei :)
+- Sonst: GUI Implementiert.
