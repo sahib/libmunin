@@ -321,10 +321,42 @@ class Database:
                     LOGGER.critical('!! warning: unsorted elements: !({} < {})'.format(dist, last))
                 last = dist
 
+    # TODO: tests
+    def modify(self, song, sub_value_dict, star_threshold=0.75, iterstep_threshold=50):
+        value_dict = song.to_dict()
+        for key, value in sub_value_dict.items():
+            try:
+                provider = self._session.provider_for_key(key)
+                if value is None:
+                    sub_value_dict[key] = None
+                else:
+                    sub_value_dict[key] = provider.process(value)
+            except KeyError:
+                raise KeyError('key "{k}" is not in mask'.format(k=key))
+
+        value_dict.update(sub_value_dict)
+        new_song = Song(
+            self._session, value_dict,
+            max_neighbors=self._session.config['max_neighbors'],
+            max_distance=self._session.config['max_distance']
+        )
+        new_song.uid = song.uid
+        self._song_list[song.uid] = new_song
+
+        # Clear all know distances:
+        new_song.distance_reset()
+        return self._insert_song_to_graph(
+            new_song, star_threshold, iterstep_threshold
+        )
+
     def insert(self, value_dict, star_threshold=0.75, iterstep_threshold=50):
         new_song = self._song_list[self.add(value_dict)]
-        next_len = len(self._song_list)
+        return self._insert_song_to_graph(
+            new_song, star_threshold, iterstep_threshold
+        )
 
+    def _insert_song_to_graph(self, new_song, star_threshold=0.75, iterstep_threshold=50):
+        next_len = len(self._song_list)
         if len(self) < iterstep_threshold:
             iterstep = 1
         else:

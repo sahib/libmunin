@@ -524,6 +524,10 @@ class Session:
         """
         return self.database.add(value_mapping)
 
+    def modify(self, song, sub_value_mapping):
+        song = song_or_uid(self.database, song)
+        return self.database.modify(song, sub_value_mapping)
+
     def insert(self, value_mapping):
         """Insert a song without triggering a rebuild.
 

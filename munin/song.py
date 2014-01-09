@@ -68,6 +68,16 @@ class Song(SessionMapping, Hashable):
         self._pop_list = [(1.0 - dist.distance, song) for song, dist in self._dist_dict.items()]
         heapify(self._pop_list)
 
+    def distance_reset(self):
+        '''
+        Remove all distances known by this song.
+
+        distance_finalize should be called afterwards.
+        '''
+        self.disconnect()
+        self._dist_dict = OrderedDict()
+        self._reset_invariants()
+
     #######################
     #  Other convinience  #
     #######################
