@@ -22,8 +22,14 @@ def compare_single_path(left, right):
     return 1 - n / (max(len(left), len(right)) or 1)
 
 
-# TODO: test/docs
 class GenreTreeAvgLinkDistance(DistanceFunction):
+    """
+    Like :class:`munin.distance.genre.GenreTreeDistance`,
+    but use Average Linkage instead of Single Linkage.
+
+    This is recommended if you have long genre descriptions, like
+    produced by :class:`munin.provider.genre.DiscogsGenreProvider`.
+    """
     def do_compute(self, lefts, rights):
         if not lefts or not rights:
             return 1.0
@@ -81,7 +87,7 @@ if __name__ == '__main__':
                         float_cmp(compare_single_path(right, left), result)
                 )
 
-    class TestGenreTreeDistanceFunctionFunctionFunction(unittest.TestCase):
+    class TestGenreTreeDistanceFunction(unittest.TestCase):
         def test_valid(self):
             calc = GenreTreeDistance(GenreTreeProvider())
 

@@ -42,17 +42,33 @@ Reference
 ---------
 """
 
+# Stdlib:
 import urllib.request
 import pickle
+import shelve
 import json
 import re
 
-from Stemmer import Stemmer
-STEMMER = Stemmer('english')
+from urllib.request import urlopen
+from urllib.parse import quote
 
 # Internal imports:
 from munin.provider import Provider
 from munin.session import get_cache_path, check_or_mkdir
+
+from munin.provider.normalize import \
+    ArtistNormalizeProvider, \
+    AlbumNormalizeProvider
+
+
+# External Imports:
+from Stemmer import Stemmer
+STEMMER = Stemmer('english')
+
+
+from pyxdameraulevenshtein import \
+    normalized_damerau_levenshtein_distance as \
+    levenshtein
 
 
 def load_genrelist_from_echonest(dump_path=None):
@@ -341,7 +357,7 @@ def build_genre_path_all(root, words):
             child_idx = current_root.find_idx(word)
             if child_idx is not None:
                 children.append(
-                        (idx, child_idx, current_root.children[child_idx])
+                    (idx, child_idx, current_root.children[child_idx])
                 )
 
         if not children and len(_result) > 0:
@@ -351,8 +367,8 @@ def build_genre_path_all(root, words):
             child_mask = list(_mask)
             child_mask[word_idx] = True
             _iterate_recursive(
-                    child, _mask=child_mask,
-                    _result=_result + (child_idx, )
+                child, _mask=child_mask,
+                _result=_result + (child_idx, )
             )
 
     _iterate_recursive(root, (True, ) * len(words), ())
@@ -383,6 +399,145 @@ def load_genre_tree(pickle_path):
             with open(pickle_path, 'wb') as f:
                 pickle.dump(root, f)
         return root
+
+
+###########################################################################
+#                         Discogs Genre Provider                          #
+###########################################################################
+
+
+DISCOGS_API_SEARCH_URL = "http://api.discogs.com/database/search?type=release&q={artist}"
+
+
+def _find_right_genre(json_doc, artist, album, persist_on_album):
+    """
+    Try to read the correct genre from the json document by discogs.
+
+    :param artist: a normalized artist
+    :param album: a normalized album.
+    :param persist_on_album: If False, other albums of this artist are valid sources too.
+    :returns: A set of music genres (i.e. rock) and a set of styles (i.e. death metal)
+    """
+    genre_set, style_set = set(), set()
+    for item in json_doc['results']:
+        # Some artist items have not a style in them.
+        # Skip these items.
+        if 'style' not in item:
+            continue
+
+        # Get the remote artist/album from the title, also normalise them.
+        artist_normalizer = ArtistNormalizeProvider()
+        album_normalizer = AlbumNormalizeProvider()
+        remote_artist, remote_album = item['title'].split(' - ', maxsplit=1)
+        remote_artist, *_ = artist_normalizer.do_process(remote_artist)
+        remote_album, *_ = album_normalizer.do_process(remote_album)
+
+        # Try to outweight spelling errors, or small
+        # pre/suffixes to the artist. (i.e. 'the beatles' <-> beatles')
+        if levenshtein(artist, remote_artist) > 0.75:
+            continue
+
+        # Same for the album:
+        if persist_on_album and levenshtein(album, remote_album) > 0.75:
+            continue
+
+        # Remember the set of all genres and styles.
+        genre_set.update(item['genre'])
+        style_set.update(item['style'])
+
+    return genre_set, style_set
+
+
+def find_genre_via_discogs(artist, album):
+    """
+    Try to find the genre from discogs.com using only the artist and album
+    as base.
+
+    The following strategy is taken:
+
+        1) Try to find the artist/album combinations using
+           levenshtein fuzzy matching.
+        2) If the exact combinations was not found the genre
+           is taken from the other known albums of this artist.
+
+    The resulting genre may not very informative for humans, but is easily
+    split into seperate sub-genres by the GenreTreeProvider, which is good
+    for comparasions.
+
+    Future versions might include a version that tries to find a more
+    human readable string.
+
+    Example output: ::
+
+        Genre: Non-Music; Folk, World, & Country; Stage & Screen / Comedy, Monolog, Spoken Word, Political
+
+    .. note::
+
+        Tip: Use :class:`munin.distance.GenreTreeAvgLinkDistance` with this data.
+        The normal :class:`munin.distance.GenreTreeProvider` uses Single Linkage,
+        which may give too good distances often enough.
+
+    :param artist: The artist string to search for (gets normalised)
+    :param album: The album string to search for (gets normalised)
+    :returns: A genre string like in the example or None.
+    """
+    # Get the data from discogs
+    api_root = DISCOGS_API_SEARCH_URL.format(artist=quote(artist))
+    html_doc = urlopen(api_root).read().decode('utf-8')
+    json_doc = json.loads(html_doc)
+
+    # Normalize the input artist/album
+    artist_normalizer = ArtistNormalizeProvider()
+    album_normalizer = AlbumNormalizeProvider()
+    artist, *_ = artist_normalizer.do_process(artist)
+    album, *_ = album_normalizer.do_process(album)
+
+    genre_set, style_set = _find_right_genre(json_doc, artist, album, True)
+    if not (genre_set or style_set):
+        # Lower the expectations, just take the genre of
+        # all known albums of this artist, if any:
+        genre_set, style_set = _find_right_genre(json_doc, artist, album, False)
+
+    # Still not? Welp.
+    if not (genre_set or style_set):
+        return None
+
+    # Bulid a genre string that is formatted this way:
+    #  genre1; genre2 [;...] / style1, style2, style3 [,...]
+    #  blues; rock / blues rock, country rock, christian blues
+    return ' / '.join(('; '.join(genre_set), ', '.join(style_set)))
+
+
+class DiscogsGenreProvider(Provider):
+    """
+    Use :func:`find_genre_via_discogs` to find the genre of a song automatically.
+
+    This is provided for convinience if you want to fetch the genre
+    automatically. Additionaly caching of the results is available.
+    """
+    def __init__(self, use_cache=True, cache_fails=True, **kwargs):
+        """
+        :param use_cache: Cache found results?
+        :param cache_fails: Also cache missed results?
+        """
+        Provider.__init__(self, **kwargs)
+        self._use_cache, self._cache_fails = use_cache, cache_fails
+        self._shelve = shelve.open(
+            get_cache_path('discogs_genre.dump'),
+            writeback=True
+        )
+
+    def do_process(self, artist_album):
+        key = '__'.join(artist_album)
+        if self._use_cache and key in self._shelve:
+            return self._shelve[key]
+
+        genre = find_genre_via_discogs(*artist_album)
+        if self._cache_fails or genre is not None:
+            self._shelve[key] = genre
+            self._shelve.sync()
+        return genre
+
 
 ###########################################################################
 #                         Provider Implementation                         #
