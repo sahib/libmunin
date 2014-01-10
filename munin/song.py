@@ -69,11 +69,11 @@ class Song(SessionMapping, Hashable):
         heapify(self._pop_list)
 
     def distance_reset(self):
-        '''
+        """
         Remove all distances known by this song.
 
         distance_finalize should be called afterwards.
-        '''
+        """
         self.disconnect()
         self._dist_dict = OrderedDict()
         self._reset_invariants()
@@ -195,6 +195,10 @@ class Song(SessionMapping, Hashable):
     def distance_finalize(self):
         """Delete/Fix all invalid edges and neighbors of this song"""
         to_consider = deque()
+
+        if self in self._dist_dict:
+            del self._dist_dict[self]
+
         for other in self._dist_dict:
             dist_a, dist_b = self.distance_get(other), other.distance_get(self)
             if dist_a is None:

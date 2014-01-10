@@ -22,19 +22,31 @@ class RatingDistance(DistanceFunction):
     """Instance a new RatingDistance.
     """
     # Default to "5 stars"
-    def __init__(self, min_rating=0, max_rating=5, **kwargs):
+    def __init__(self, no_rating=0, min_rating=1, max_rating=5, **kwargs):
         """
-        :param min_rating: The minimal rating you will have e.g. 0 stars.
+        :param no_rating: The rating that unrated songs will have, e.g. 0 stars.
+        :param min_rating: The minimal rating you will have e.g. 1 stars.
         :param max_rating: The maximal rating you will have e.g. 5 stars.
         """
-        self._min_rating, self._max_rating = min_rating, max_rating
         DistanceFunction.__init__(self, **kwargs)
+
+        self._min_rating = min_rating
+        self._max_rating = max_rating
+        self._no_rating = no_rating
 
     def do_compute(self, lefts, rights):
         l_rating = min(lefts[0], self._max_rating)
         r_rating = min(rights[0], self._max_rating)
-        diff = (l_rating - self._min_rating) - (r_rating - self._min_rating)
-        return max(0, abs(diff) / self._max_rating)
+
+        if l_rating == self._no_rating or r_rating == self._no_rating:
+            print(l_rating, r_rating)
+            if l_rating == r_rating:
+                return 0.0
+            else:
+                return 0.5
+
+        diff = abs((l_rating - self._min_rating) - (r_rating - self._min_rating))
+        return diff / (self._max_rating - self._min_rating)
 
 
 if __name__ == '__main__':
@@ -43,8 +55,10 @@ if __name__ == '__main__':
     class TestRatingDistance(unittest.TestCase):
         def test_rating(self):
             dfunc = RatingDistance()
-            self.assertAlmostEqual(dfunc.do_compute([0.0], [5]), 1.0)
+            self.assertAlmostEqual(dfunc.do_compute([0.0], [0]), 0.0)
+            self.assertAlmostEqual(dfunc.do_compute([0.0], [5]), 0.5)
+            self.assertAlmostEqual(dfunc.do_compute([1.0], [5]), 1.0)
             self.assertAlmostEqual(dfunc.do_compute([5.0], [5]), 0.0)
-            self.assertAlmostEqual(dfunc.do_compute([2.5], [5]), 0.5)
+            self.assertAlmostEqual(dfunc.do_compute([2.5], [5]), 0.625)
 
     unittest.main()

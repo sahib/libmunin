@@ -5,9 +5,8 @@
 Methods to traverse the graph in order to do recommendations.
 """
 # Stdlib:
-from itertools import chain, islice, zip_longest
+from itertools import chain, islice
 from collections import deque
-from math import ceil
 import random
 
 # Internal

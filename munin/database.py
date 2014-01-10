@@ -413,6 +413,24 @@ if __name__ == '__main__':
                 'artist': (None, None, 0.3)
             })
 
+        def test_modify(self):
+            from munin.distance.rating import RatingDistance
+
+            session = Session('session_test_modify', {
+                'rating': (None, RatingDistance(), 1),
+            })
+
+            with session.transaction():
+                for i in range(0, 6):
+                    session.add({'rating': i})
+
+            self.assertTrue(session[5].distance_get(session[0]) is None)
+            self.assertAlmostEqual(session[5]['rating'], (5, ))
+            with session.fix_graph():
+                session.modify(5, {'rating': 0})
+            self.assertAlmostEqual(session[5].distance_get(session[0]).distance, 0.0)
+            self.assertAlmostEqual(session[5]['rating'], (0, ))
+
         def test_basics(self):
             with self._session.transaction():
                 N = 20
@@ -467,7 +485,7 @@ if __name__ == '__main__':
                 'x': 0,
                 'y': 100,
             })]
-            c = session[session.add({
+            session[session.add({
                 'x': 51,
                 'y': 50,
             })]

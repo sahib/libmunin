@@ -79,12 +79,11 @@ if __name__ == '__main__':
                 ((), (), 1)
             ]
 
-            calc = GenreTreeDistance(GenreTreeProvider())
             for left, right, result in inputs:
                 self.assertTrue(
-                        float_cmp(compare_single_path(left, right), result)
-                        and
-                        float_cmp(compare_single_path(right, left), result)
+                    float_cmp(compare_single_path(left, right), result)
+                    and
+                    float_cmp(compare_single_path(right, left), result)
                 )
 
     class TestGenreTreeDistanceFunction(unittest.TestCase):
