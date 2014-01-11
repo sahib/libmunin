@@ -424,7 +424,7 @@ if __name__ == '__main__':
                 for i in range(0, 6):
                     session.add({'rating': i})
 
-            self.assertTrue(session[5].distance_get(session[0]) is None)
+            self.assertAlmostEqual(session[5].distance_get(session[0]).distance, 0.5)
             self.assertAlmostEqual(session[5]['rating'], (5, ))
             with session.fix_graph():
                 session.modify(5, {'rating': 0})

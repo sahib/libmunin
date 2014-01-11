@@ -23,7 +23,6 @@ def histogram(channel, bin_width=51):
     return [counter[key] for key in sorted(counter.keys())]
 
 
-
 def draw_moodbar(ctx, rgb, w, h):
     step = w / len(rgb)
     ctx.set_source_rgb(0.25, 0.25, 0.25)
@@ -87,13 +86,13 @@ def draw_moodbar(ctx, rgb, w, h):
             ctx.fill()
             idx += block_size
 
-    draw_checker(40, 750)
-    draw_graph(0, (1, 0, 0), height=40, width=750)
-    draw_graph(1, (0, 1, 0), height=40, width=750)
-    draw_graph(2, (0, 0, 1), height=40, width=750)
+    draw_checker(0.4 * h, 0.75 * w)
+    draw_graph(0, (1, 0, 0), height=0.4 * h, width=0.75 * w)
+    draw_graph(1, (0, 1, 0), height=0.4 * h, width=0.75 * w)
+    draw_graph(2, (0, 0, 1), height=0.4 * h, width=0.75 * w)
 
     ctx.set_source_rgb(1, 1, 1)
-    ctx.rectangle(0, 40, w, 1)
+    ctx.rectangle(0, 0.4 * h, w, 1)
     ctx.fill()
 
     for idx, (r, g, b) in enumerate(rgb):
@@ -102,7 +101,7 @@ def draw_moodbar(ctx, rgb, w, h):
 
         # plus one to fill the gap between stripes
         # (cairo uses sub pixel accuracy)
-        ctx.rectangle(idx * step, 41, step + 0.5, h)
+        ctx.rectangle(idx * step, 0.4 * h + 1, step + 0.5, h)
         ctx.fill()
 
     # Pain the black border down there:
@@ -110,28 +109,29 @@ def draw_moodbar(ctx, rgb, w, h):
     ctx.rectangle(0, h - h / 6, w, h / 6 + 1)
     ctx.fill()
 
-    draw_histogram(0, 760, 40, 80, (1.00, 0.75, 0.50))
-    draw_histogram(1, 840, 40, 80, (0.50, 1.00, 0.50))
-    draw_histogram(2, 920, 40, 80, (0.50, 0.75, 1.00))
+    draw_histogram(0, 0.760 * w, 0.4 * h, 0.08 * w, (1.00, 0.75, 0.50))
+    draw_histogram(1, 0.840 * w, 0.4 * h, 0.08 * w, (0.50, 1.00, 0.50))
+    draw_histogram(2, 0.920 * w, 0.4 * h, 0.08 * w, (0.50, 0.75, 1.00))
 
     # Change color to white for the text:
     ctx.set_source_rgb(1, 1, 1)
 
-    # Draw the scala:
-    for i in range(0, w + 10, 10):
-        x = min(max(step * i - 5, 0), w - 21)
-        text = str(int(i / 10)) + '%'
+    # Draw the scala
+    scale_step = w // 100
+    for i in range(0, w + scale_step, scale_step):
+        x = min(max(i - 5, 0), w - 21)
+        text = str(int(i / scale_step)) + '%'
 
-        if i % 100 is 0:
+        if i % (scale_step * 10) is 0:
             height, width = h / 15, 2
             draw_text_at_pos(ctx, x, h - height - 10, '<b>{}</b>'.format(text), font_size=6)
-        elif i % 50 is 0:
+        elif i % (scale_step * 5) is 0:
             height, width = h / 20, 1.5
             draw_text_at_pos(ctx, x, h - height - 8, '<i>{}</i>'.format(text), font_size=5)
         else:
             height, width = h / 35, 0.75
 
-        ctx.rectangle(min(step * i, w - step), h - height, width, height)
+        ctx.rectangle(i, h - height, width, height)
         ctx.fill()
 
     # Pain the little white border between moodbar and scala:
@@ -167,7 +167,7 @@ if __name__ == '__main__':
     # Read the rgb vector:
     rgb_values = read_moodbar_values(moodbar_file)
 
-    w, h = 1000, 100
+    w, h = 1900, 100
     surface = PDFSurface('/tmp/mood.out', w, h)
     draw_moodbar(Context(surface), rgb_values, w, h)
     surface.finish()

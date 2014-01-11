@@ -120,7 +120,7 @@ class Song(SessionMapping, Hashable):
                 distance_func = self._session.distance_function_for_key(key)
                 value_a, value_b = self[key], other_song[key]
                 if value_a is None or value_b is None:
-                    distance_dict[key] = 1.0
+                    distance_dict[key] = int(value_a is not value_b)
                 else:
                     distance_dict[key] = distance_func(value_a, value_b)
 

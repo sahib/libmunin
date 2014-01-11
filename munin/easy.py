@@ -50,17 +50,17 @@ class EasySession(Session):
             'artist': pairup(
                 ArtistNormalizeProvider(compress=True),
                 None,
-                1
+                0.5,
             ),
             'album': pairup(
                 AlbumNormalizeProvider(compress=True),
                 None,
-                1
+                0.5,
             ),
             'title': pairup(
                 TitleNormalizeProvider(compress=False) | StemProvider(),
                 None,
-                1
+                0.5,
             ),
             'genre': pairup(
                 GenreTreeProvider(),

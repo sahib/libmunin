@@ -37,7 +37,7 @@ def _edge_color_list(graph):
         distance = a.distance_get(b)
         if distance is not None:
             edge_colors.append(_color_from_distance(distance.distance))
-            edge_widths.append((distance.distance + 0.1) * 1.5)
+            edge_widths.append((1.0 - distance.distance) * 3)
 
     return list(edge_colors), list(edge_widths)
 
@@ -53,7 +53,8 @@ def _style(graph, width, height):
         'vertex_label_color': [hsv_to_rgb(1 - v, 0.2, 0.1) for v in colors],
         'vertex_size': 25,
         'layout': graph.layout('fr'),
-        'bbox': (width, height)
+        'bbox': (width, height),
+        'margin': (30, 30, 30, 30)
     }
 
 
@@ -78,7 +79,7 @@ def plot(database, width=1000, height=1000):
     igraph.plot(graph, **style)
 
 
-def Plot(database, width=1000, height=1000, path=None, do_save=True):
+def Plot(database, width=1000, height=1000, path=None, do_save=True, target=None):
     """Plot the currrent graph.
 
     This **returns** the graph as igraph plot. If you want to use the Plot
@@ -96,7 +97,7 @@ def Plot(database, width=1000, height=1000, path=None, do_save=True):
 
     path = path or '/tmp/.munin_plot.png'
     bg_color = "rgba(100%, 100%, 100%, 0%)"
-    plot = igraph.Plot(path, background=bg_color, bbox=(width, height))
+    plot = igraph.Plot(target=target, background=bg_color, bbox=(width, height))
     plot.add(graph, **style)
     plot.redraw()
     if do_save:

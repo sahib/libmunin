@@ -123,15 +123,17 @@ def recommendations_from_heuristic(database, rule_index):
     )
 
 
-def explain_recommendation(seed_song, recommendation, max_reasons=3):
+def explain_recommendation(session, seed_song, recommendation, max_reasons=3):
     distance = seed_song.distance_get(recommendation)
     if distance is None:
         distance = seed_song.distance_compute(recommendation)
 
-    return (distance, sorted(
-        distance.items(),
-        key=lambda tup: tup[1])[:max_reasons]
-    )
+    def sort_func(dist_tuple):
+        attr, dist = dist_tuple
+        weight = session.weight_for_key(attr)
+        return weight * (1 - dist)
+
+    return (distance, sorted(distance.items(), key=sort_func, reverse=True))
 
 
 if __name__ == '__main__':

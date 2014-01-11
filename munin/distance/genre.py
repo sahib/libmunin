@@ -34,10 +34,11 @@ class GenreTreeAvgLinkDistance(DistanceFunction):
         if not lefts or not rights:
             return 1.0
 
-        dist_sum = 0
-        for left, right in product(lefts, rights):
-            dist_sum += compare_single_path(left, right)
-        return dist_sum / (len(lefts) * len(rights))
+        dists = 0
+        for left in lefts:
+            dists += min(compare_single_path(left, right) for right in rights)
+
+        return dists / max(len(lefts), len(rights))
 
 
 class GenreTreeDistance(DistanceFunction):
@@ -85,6 +86,26 @@ if __name__ == '__main__':
                     and
                     float_cmp(compare_single_path(right, left), result)
                 )
+
+    class TestGenreTreeAvgLinkDistanceFunction(unittest.TestCase):
+        def test_valid(self):
+            calc = GenreTreeAvgLinkDistance(GenreTreeProvider())
+
+            a = [(85, 0), (190, 2), (190, 6)]
+            b = [(85, 0), (190, 2, 0), (190, 2, 1), (190, 6)]
+            self.assertAlmostEqual(calc.compute(
+                a, b
+            ), 0.333333333333 / 4)
+            self.assertAlmostEqual(calc.compute(
+                a, a
+            ), 0)
+            self.assertAlmostEqual(calc.compute(
+                b, b
+            ), 0)
+            self.assertAlmostEqual(calc.compute(
+                [(1, 0)],
+                [(0, 1)]
+            ), 1)
 
     class TestGenreTreeDistanceFunction(unittest.TestCase):
         def test_valid(self):

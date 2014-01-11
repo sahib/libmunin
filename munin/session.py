@@ -488,9 +488,12 @@ class Session:
         :retruns: Tuple of the total distance to each other and a list of pairs
                   that consist of (attribute_name: subdistance_float)
         """
+        seed_song = song_or_uid(self.database, seed_song)
+        recommend = song_or_uid(self.database, recommendation)
         return munin.graph.explain_recommendation(
+            self,
             seed_song,
-            recommendation,
+            recommend,
             max_reasons
         )
 

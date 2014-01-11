@@ -39,7 +39,6 @@ class RatingDistance(DistanceFunction):
         r_rating = min(rights[0], self._max_rating)
 
         if l_rating == self._no_rating or r_rating == self._no_rating:
-            print(l_rating, r_rating)
             if l_rating == r_rating:
                 return 0.0
             else:
