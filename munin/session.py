@@ -547,7 +547,7 @@ class Session:
             This is **not a cheap function**. The song is removed and all
             distances to it are recalculated under the hood.
 
-        .. seelalso::
+        .. seealso::
 
             :meth:`munin.session.Session.insert`
 
