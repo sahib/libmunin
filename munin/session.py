@@ -528,6 +528,38 @@ class Session:
         return self.database.add(value_mapping)
 
     def modify(self, song, sub_value_mapping):
+        """Modify an existing and known song by the attributes mentioned
+        in ``sub_value_mapping``.
+
+        This should be run during the ``fix_graph`` contextmanager.
+
+        Usage example:
+
+        .. code-block:: python
+
+            >>> with session.fix_graph():
+            ...     session.modify(some_song, {'rating': 5})
+
+        One usecase is shown in the example, the adjustment of the rating.
+
+        .. note::
+
+            This is **not a cheap function**. The song is removed and all
+            distances to it are recalculated under the hood.
+
+        .. seelalso::
+
+            :meth:`munin.session.Session.insert`
+
+        .. warning::
+
+            Attention! The returned uid is the same as before, but the underlying
+            song is different. Do not compare by reference!
+
+        :param song: The song to modify, either an uid or a :class:`munin.song.Song`
+        :param sub_value_mapping: A mapping of attributes in values.
+        :returns: ``song.uid``
+        """
         song = song_or_uid(self.database, song)
         return self.database.modify(song, sub_value_mapping)
 

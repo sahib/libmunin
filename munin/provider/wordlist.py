@@ -17,8 +17,6 @@ Reference
 from munin.provider import Provider
 
 
-# TODO: StopwordlistProvider (at least for english)
-
 class WordlistProvider(Provider):
     """
     Split the input value using the standard split function.

@@ -321,7 +321,6 @@ class Database:
                     LOGGER.critical('!! warning: unsorted elements: !({} < {})'.format(dist, last))
                 last = dist
 
-    # TODO: tests
     def modify(self, song, sub_value_dict, star_threshold=0.75, iterstep_threshold=50):
         value_dict = song.to_dict()
         for key, value in sub_value_dict.items():
