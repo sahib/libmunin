@@ -99,11 +99,11 @@ def phrase_iter(sentence, stopwords, stemmer):
     phrase = deque()
     for word in separate_words(sentence):
         if word in stopwords:
-            yield_result()
+            yield_result(phrase)
             phrase = deque()
             continue
         phrase.append(word)
-    yield_result()
+    yield_result(phrase)
 
 
 def extract_phrases(sentences, language_code, use_stemmer):
