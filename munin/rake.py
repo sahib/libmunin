@@ -92,14 +92,18 @@ def phrase_iter(sentence, stopwords, stemmer):
     :rtype: [str]
     :returns: An iterator that yields a list of words.
     """
+    def yield_result(phrase):
+        if phrase:
+            yield [stemmer.stemWord(word) for word in phrase]
+
     phrase = deque()
     for word in separate_words(sentence):
         if word in stopwords:
-            if phrase:
-                yield [stemmer.stemWord(word) for word in phrase]
+            yield_result()
             phrase = deque()
             continue
         phrase.append(word)
+    yield_result()
 
 
 def extract_phrases(sentences, language_code, use_stemmer):
