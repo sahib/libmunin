@@ -144,6 +144,9 @@ def read_moodbar_values(path):
     with open(path, 'rb') as handle:
         vector = handle.read()
 
+    if len(vector) is 0:
+        raise OSError('broken moodbar file: ' + path)
+
     for rgb in grouper(vector, n=3):
         rgb_values.append(tuple(c / 0xff for c in rgb))
 

@@ -42,23 +42,33 @@ def _edge_color_list(graph):
     return list(edge_colors), list(edge_widths)
 
 
-def _style(graph, width, height):
+def _format_vertex_label(mapping, uid):
+    try:
+        return '{}\n\n\n{}'.format(uid, mapping[uid])
+    except KeyError:
+        return str(uid)
+
+
+def _style(graph, vx_mapping, width, height):
     colors = graph.eigenvector_centrality(directed=False)
     edge_color, edge_width = _edge_color_list(graph)
     return {
-        'vertex_label': [str(vx['song'].uid) for vx in graph.vs],
         'edge_color': edge_color,
         'edge_width': edge_width,
         'vertex_color': [hsv_to_rgb(v, 1.0, 1.0) for v in colors],
         'vertex_label_color': [hsv_to_rgb(1 - v, 0.2, 0.1) for v in colors],
-        'vertex_size': 25,
+        'vertex_label_size': 10,
+        'vertex_size': 15,
         'layout': graph.layout('fr'),
         'bbox': (width, height),
-        'margin': (30, 30, 30, 30)
+        'margin': (50, 50, 50, 50),
+        'vertex_label': [
+            _format_vertex_label(vx_mapping, vx['song'].uid) for vx in graph.vs
+        ],
     }
 
 
-def plot(database, width=1000, height=1000):
+def plot(database, width=1000, height=1000, vx_mapping=None):
     """Plot the current graph for debugging purpose.
 
     Will try to open an installed image viewer - does not return an image.
@@ -75,11 +85,15 @@ def plot(database, width=1000, height=1000):
 
     graph = igraph.Graph(directed=False)
     _build_graph_from_song_list(graph, database)
-    style = _style(graph, width, height)
+    style = _style(graph, vx_mapping or {}, width, height)
     igraph.plot(graph, **style)
 
 
-def Plot(database, width=1000, height=1000, path=None, do_save=True, target=None):
+def Plot(
+    database, width=1000, height=1000,
+    path=None, do_save=True, target=None,
+    vx_mapping=None
+):
     """Plot the currrent graph.
 
     This **returns** the graph as igraph plot. If you want to use the Plot
@@ -93,7 +107,7 @@ def Plot(database, width=1000, height=1000, path=None, do_save=True, target=None
 
     graph = igraph.Graph(directed=False)
     _build_graph_from_song_list(graph, database)
-    style = _style(graph, width, height)
+    style = _style(graph, vx_mapping or {}, width, height)
 
     path = path or '/tmp/.munin_plot.png'
     bg_color = "rgba(100%, 100%, 100%, 0%)"
