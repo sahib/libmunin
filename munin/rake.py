@@ -13,13 +13,22 @@ The algorithm used is RAKE (Rapid Automatic Keyword Extraction) as described in:
     Automatic keyword extraction from indi-vidual documents.
     Text Mining: Applications and Theory
 
+Paper can be found here:
+
+    http://media.wiley.com/product_data/excerpt/22/04707498/0470749822.pdf
+
 The original code is based on aneesha's Python implemenation of RAKE,
-but has been extended with automatic stopwordlist retrieval and stemming:
+but has been extended with automatic stopwordlist retrieval, stemming and
+duplicate keyword filtering:
 
     https://github.com/aneesha/RAKE
 
 While adding these features all code was rewritten.
 
+.. note::
+
+    The in the paper mentioned "Adjoining of Keywords" is not implemented,
+    since this implementation is targeted to short text (i.e. lyrics) anyway.
 
 .. note::
 
@@ -36,7 +45,6 @@ import operator
 from collections import deque, Counter, OrderedDict
 from itertools import combinations
 
-
 # Internal:
 import munin.stopwords
 
@@ -45,6 +53,8 @@ import munin.stopwords
 import Stemmer
 import guess_language
 guess_language.use_enchant(True)
+
+from pyxdameraulevenshtein import normalized_damerau_levenshtein_distance
 
 
 # This is a fallback for the case when no stemmer for a language was found:
@@ -80,7 +90,7 @@ def split_sentences(text):
 
     :returns: an iterable of strings.
     """
-    return re.split('[.!?,;:\t\\-\\"\\(\\)\\\'\u2019\u2013]', text)
+    return re.split('[.!?,;:\t\n\\-\\"\\(\\)\\\'\u2019\u2013]', text)
 
 
 def phrase_iter(sentence, stopwords, stemmer):
@@ -96,12 +106,16 @@ def phrase_iter(sentence, stopwords, stemmer):
 
     phrase = deque()
     for word in separate_words(sentence):
-        if word in stopwords:
+        is_stopword = word in stopwords
+        if is_stopword:
             if phrase:
                 yield stemphrase(phrase)
             phrase = deque()
-            continue
+
+            if is_stopword:
+                continue
         phrase.append(word)
+
     if phrase:
         yield stemphrase(phrase)
 
@@ -134,6 +148,7 @@ def extract_phrases(sentences, language_code, use_stemmer):
     phrases = deque()
     for sentence in sentences:
         phrases += phrase_iter(sentence.strip(), stopwords, language_stemmer)
+
     return phrases
 
 
@@ -146,13 +161,12 @@ def word_scores(phrases):
     freqs, degrees = Counter(), Counter()
 
     for phrase in phrases:
-        degree = len(phrase) - 1
         for word in phrase:
-            freqs[word] += 1
-            degrees[word] += degree
+            freqs[word] += len(word) / 3
+            degrees[word] += len(phrase)
 
     # Calculate Word scores = deg(w) / freq(w)
-    return {word: (degrees[word] + freq) / freq for word, freq in freqs.items()}
+    return {word: (degrees[word] + freq ** 2) / freq for word, freq in freqs.items()}
 
 
 def candidate_keywordscores(phrases, wordscore):
@@ -164,13 +178,46 @@ def candidate_keywordscores(phrases, wordscore):
     """
     candidates = {}
     for phrase in phrases:
-        candidates[frozenset(phrase)] = sum(wordscore[word] for word in phrase)
+        candidates[tuple(phrase)] = sum(wordscore[word] for word in phrase)
 
     return OrderedDict(sorted(
         candidates.items(),
         key=operator.itemgetter(1),
         reverse=True
     ))
+
+
+def issubset_levenshtein(set_a, set_b, threshold=0.4):
+    """Compare two sets of strings, return True if b is a subset of a.
+
+    Strings are compared with levenshtein.
+    """
+    lev = normalized_damerau_levenshtein_distance
+    dist_sum = 0
+
+    smaller, larger = sorted((set_a, set_b), key=len)
+
+    for word_a in larger:
+        dist_sum += min(lev(word_b, word_a) for word_b in smaller)
+
+    distance = dist_sum / len(larger)
+    return distance <= 0.3
+
+
+def decide_which_to_delete(set_a, set_b):
+    """Return the longer of two sets,
+    or if they have the same size, the one with the shorter
+    (and thus more comparable) words.
+    """
+    len_a, len_b = len(set_a), len(set_b)
+    if len_a < len_b:
+        return set_a
+    elif len_b < len_a:
+        return set_b
+    else:
+        sum_a = sum(len(w) for w in set_a)
+        sum_b = sum(len(w) for w in set_b)
+        return set_b if sum_a < sum_b else set_a
 
 
 def filter_subsets(keywords):
@@ -181,11 +228,15 @@ def filter_subsets(keywords):
     :returns: keywords, the modified input.
     """
     to_delete = deque()
-    for set_a, set_b in combinations(keywords.keys(), 2):
+    for keyword_a, keyword_b in combinations(keywords.keys(), 2):
+        set_a, set_b = frozenset(keyword_a), frozenset(keyword_b)
+
         if set_a.issubset(set_b):
-            to_delete.append(set_a)
+            to_delete.append(keyword_a)
         elif set_b.issubset(set_a):
-            to_delete.append(set_b)
+            to_delete.append(keyword_b)
+        elif issubset_levenshtein(keyword_a, keyword_b):
+            to_delete.append(decide_which_to_delete(keyword_a, keyword_b))
 
     for sub_keywords in set(to_delete):
         del keywords[sub_keywords]
@@ -203,13 +254,17 @@ def extract_keywords(text, use_stemmer=True):
     language_code = guess_language.guess_language(text)
     phrases = extract_phrases(split_sentences(text), language_code, use_stemmer)
 
-    # This can happen if no stopwords are avaible, or a one-word input was used.
+    # This can happen if no stopwords are available, or a one-word input was used.
     if phrases is None:
         return None, OrderedDict()
 
     scores = word_scores(phrases)
     keywords = candidate_keywordscores(phrases, scores)
-    return language_code, filter_subsets(keywords)
+
+    fz = OrderedDict()
+    for kw, score in keywords.items():
+        fz[frozenset(kw)] = score
+    return language_code, fz
 
 
 ###########################################################################
@@ -225,5 +280,6 @@ if __name__ == '__main__':
         use_stemmer = False
 
     lang, keywords_map = extract_keywords(text, use_stemmer=use_stemmer)
+    print('-- Detected language:', lang)
     for keywords, rating in keywords_map.items():
         print('{:>7.3f}: {}'.format(rating, keywords))
