@@ -262,10 +262,6 @@ class Session:
         'This is in Session for performance reasons'
         dist_sum = 0.0
 
-        # TODO: Think about this:
-        # for key, dist in dist_dict.items():
-        #     weight_sum += self._mask[key][-1]
-        #     dist_sum += dist
         for key, (_, _, weight) in self._mask.items():
             try:
                 dist_sum += dist_dict[key] * weight

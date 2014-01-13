@@ -102,6 +102,14 @@ class Distance(SessionMapping):
     def __invert__(self):
         return 1.0 - self.distance
 
+    @staticmethod
+    def make_dummy(session):
+        return Distance(
+            session,
+            {key: 0.0 for key in session._mask.keys()}
+        )
+
+
 ###########################################################################
 #                             Import Aliases                              #
 ###########################################################################

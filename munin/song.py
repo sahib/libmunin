@@ -115,6 +115,9 @@ class Song(SessionMapping, Hashable):
         try:
             return self._dist_dict[other_song]
         except KeyError:
+            if self is other_song:
+                return Distance.make_dummy(self._session)
+
             distance_dict = {}
             for key in set(self.keys()).intersection(other_song.keys()):
                 distance_func = self._session.distance_function_for_key(key)

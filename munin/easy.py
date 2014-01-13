@@ -30,7 +30,8 @@ from munin.distance import \
     GenreTreeAvgLinkDistance, \
     BPMDistance, \
     KeywordsDistance, \
-    RatingDistance
+    RatingDistance, \
+    LevenshteinDistance
 
 
 # Checking if the attribute shall be used:
@@ -59,8 +60,8 @@ class EasySession(Session):
             ),
             'title': pairup(
                 TitleNormalizeProvider(compress=False) | StemProvider(),
-                None,
-                0.5,
+                LevenshteinDistance(),
+                1,
             ),
             'genre': pairup(
                 GenreTreeProvider(),
