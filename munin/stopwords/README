@@ -5,5 +5,9 @@ are high-frequency grammatical words which are usually ignored in text
 retrieval applications.
 
 They were obtained from:
-http://anoncvs.postgresql.org/cvsweb.cgi/pgsql/src/backend/snowball/stopwords/
 
+http://members.unine.ch/jacques.savoy/clef/index.html
+
+and some from: 
+
+http://anoncvs.postgresql.org/cvsweb.cgi/pgsql/src/backend/snowball/stopwords/
