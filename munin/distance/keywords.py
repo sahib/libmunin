@@ -18,7 +18,7 @@ Reference
 """
 
 # Stdlib:
-from itertools import product
+from itertools import product, takewhile
 
 # Internal:
 from munin.distance import DistanceFunction
@@ -41,18 +41,18 @@ class KeywordsDistance(DistanceFunction):
         left_lang, lefts = lefts
         right_lang, rights = rights
 
-        old_distance = 1.0
-        for kwa, kwb in product(lefts, rights):
-            union = kwa & kwb
-            if not union:
-                continue
+        if right_lang != left_lang:
+            return 1.0
 
-            distance = 1.0 - len(union) / max(len(kwa), len(kwb))
-            old_distance = min(old_distance, distance)
+        min_distance = 1.0
+        for kwa, kwb in product(lefts, rights):
+            common = sum(1 for _ in takewhile(lambda t: t[0] == t[1], zip(kwa, kwb)))
+            distance = 1.0 - common / max(len(kwa), len(kwb))
+            min_distance = min(distance, min_distance)
             if float_cmp(distance, 0.0):
                 break
 
-        return 0.67 * old_distance + 0.33 * (not right_lang == left_lang)
+        return 0.67 * min_distance + 0.33 * (not right_lang == left_lang)
 
 
 if __name__ == '__main__':
@@ -64,11 +64,11 @@ if __name__ == '__main__':
             self.assertAlmostEqual(dist.do_compute(
                 ('de', [frozenset(['a', 'b']), frozenset(['c', 'd'])]),
                 ('de', [frozenset(['a', 'c']), frozenset(['b', 'd'])])
-            ), 0.335)  # 0.67 / 2
+            ), 0.335)
             self.assertAlmostEqual(dist.do_compute(
                 ('de', [frozenset(['a', 'b']), frozenset(['c', 'd'])]),
                 ('en', [frozenset(['a', 'x']), frozenset(['y', 'd'])])
-            ), 0.335 + 0.33)
+            ), 1.0)
             self.assertAlmostEqual(dist.do_compute(
                 ('de', [frozenset(['a', 'b']), frozenset(['c', 'd'])]),
                 ('de', [frozenset(['a', 'b']), frozenset(['c', 'd'])])

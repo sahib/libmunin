@@ -178,7 +178,7 @@ if __name__ == '__main__':
                 prov = AlbumNormalizeProvider()
                 self.assertEqual(
                     prov.do_process('### The art of getting &bugs (live!) [liver!!] {livest!!!} CD1'),
-                    ('art getting bugs', )
+                    ('art bugs', )
                 )
 
         unittest.main()

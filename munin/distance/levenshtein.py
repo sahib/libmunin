@@ -19,7 +19,7 @@ Reference
 from munin.distance import DistanceFunction
 
 # External:
-from pyxdameraulevenshtein import damerau_levenshtein_distance
+from pyxdameraulevenshtein import normalized_damerau_levenshtein_distance
 
 
 class LevenshteinDistance(DistanceFunction):
@@ -28,9 +28,14 @@ class LevenshteinDistance(DistanceFunction):
     **Takes:** two lists of length 1.
     """
     def do_compute(self, lefts, rights):
-        left, right = lefts[0], rights[0]
-        max_both = max(len(left), len(right))
-        return damerau_levenshtein_distance(left, right) / max_both
+        lev = normalized_damerau_levenshtein_distance
+        dist_sum = 0
+
+        smaller, larger = sorted((lefts, rights), key=len)
+        for word_a in larger:
+            dist_sum += min(lev(word_b, word_a) for word_b in smaller)
+
+        return dist_sum / len(larger)
 
 if __name__ == '__main__':
     import unittest
