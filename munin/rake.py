@@ -162,11 +162,11 @@ def word_scores(phrases):
 
     for phrase in phrases:
         for word in phrase:
-            freqs[word] += len(word) / 3
+            freqs[word] += min(2, len(word) / 3)
             degrees[word] += len(phrase)
 
     # Calculate Word scores = deg(w) / freq(w)
-    return {word: (degrees[word] + freq ** 2) / freq for word, freq in freqs.items()}
+    return {word: (degrees[word] + (freq ** 1.6)) / freq for word, freq in freqs.items()}
 
 
 def candidate_keywordscores(phrases, wordscore):
@@ -260,11 +260,7 @@ def extract_keywords(text, use_stemmer=True):
 
     scores = word_scores(phrases)
     keywords = candidate_keywordscores(phrases, scores)
-
-    fz = OrderedDict()
-    for kw, score in keywords.items():
-        fz[frozenset(kw)] = score
-    return language_code, fz
+    return language_code, filter_subsets(keywords)
 
 
 ###########################################################################
