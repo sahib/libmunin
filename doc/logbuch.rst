@@ -795,3 +795,24 @@ Ein Ende der Implementierung ist in Sicht.
         man vermuten dass nie gelistende songs eher unwichtig sind.
         vlt. auch datum mit einbeziehen? (Spinnerei :)
 - Sonst: GUI Implementiert.
+
+14 Januar 2013
+--------------
+
+*Täterätäääää! Dschingderassa Bumm Bumm Bumm!*
+
+Angepeilt war bis zum 15ten Januar fertig zu werden mit der Implementierung, 
+und wie das Schicksal so ist kommt es scheinbar **genau** so. 
+Die GUI ist soweit fertig, und das einzige was noch zu machen bleibt 
+sind ein paar Songs zur Testdatenbank zu adden, so dass man ca. 2000 Songs hat - 
+was denk ich für die ersten Testruns eine repräsentative Menge ist.
+
+
+Ein Bild von der GUI:
+"""""""""""""""""""""
+
+.. figure:: /_static/gui.png
+   :width: 700px
+
+Das nächste wird dann sein sich mitteils sphinxtr ein Template für Projekt- und
+Bachelorarbeit zu erstellen: https://github.com/jterrace/sphinxtr
