@@ -51,6 +51,7 @@ import re
 
 from urllib.request import urlopen
 from urllib.parse import quote
+from collections import Counter
 
 # Internal imports:
 from munin.provider import Provider
@@ -408,6 +409,21 @@ def load_genre_tree(pickle_path):
 
 DISCOGS_API_SEARCH_URL = "http://api.discogs.com/database/search?type=release&q={artist}"
 
+def _filter_crosslinks(genre_set, style_set):
+    for key in genre_set:
+        if key in style_set:
+            del style_set[key]
+
+
+def _filter_spam(counter):
+    if not counter:
+        return
+
+    avg = sum(counter.values()) // len(counter)
+    for key in list(counter):
+        if counter[key] < avg:
+            del counter[key]
+
 
 def _find_right_genre(json_doc, artist, album, persist_on_album):
     """
@@ -418,7 +434,7 @@ def _find_right_genre(json_doc, artist, album, persist_on_album):
     :param persist_on_album: If False, other albums of this artist are valid sources too.
     :returns: A set of music genres (i.e. rock) and a set of styles (i.e. death metal)
     """
-    genre_set, style_set = set(), set()
+    genre_set, style_set = Counter(), Counter()
     for item in json_doc['results']:
         # Some artist items have not a style in them.
         # Skip these items.
@@ -434,17 +450,20 @@ def _find_right_genre(json_doc, artist, album, persist_on_album):
 
         # Try to outweight spelling errors, or small
         # pre/suffixes to the artist. (i.e. 'the beatles' <-> beatles')
-        if levenshtein(artist, remote_artist) > 0.75:
+        if levenshtein(artist, remote_artist) > 0.5:
             continue
 
         # Same for the album:
-        if persist_on_album and levenshtein(album, remote_album) > 0.75:
+        if persist_on_album and levenshtein(album, remote_album) > 0.5:
             continue
 
         # Remember the set of all genres and styles.
         genre_set.update(item['genre'])
         style_set.update(item['style'])
 
+    _filter_spam(genre_set)
+    _filter_spam(style_set)
+    _filter_crosslinks(genre_set, style_set)
     return genre_set, style_set
 
 
@@ -504,8 +523,11 @@ def find_genre_via_discogs(artist, album):
 
     # Bulid a genre string that is formatted this way:
     #  genre1; genre2 [;...] / style1, style2, style3 [,...]
-    #  blues; rock / blues rock, country rock, christian blues
-    return ' / '.join(('; '.join(genre_set), ', '.join(style_set)))
+    #  blues, rock / blues rock, country rock, christian blues
+    return ' / '.join((
+        ', '.join(k for k, v in genre_set.most_common(3)),
+        ', '.join(k for k, v in style_set.most_common(4))
+    ))
 
 
 class DiscogsGenreProvider(Provider):
