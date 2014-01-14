@@ -82,7 +82,7 @@ class Provider:
 #                             Import Aliases                              #
 ###########################################################################
 
-from munin.provider.genre import GenreTreeProvider
+from munin.provider.genre import GenreTreeProvider, DiscogsGenreProvider
 from munin.provider.keywords import KeywordsProvider, PlyrLyricsProvider
 from munin.provider.composite import CompositeProvider
 from munin.provider.stem import StemProvider, StemProvider
