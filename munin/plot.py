@@ -115,5 +115,5 @@ def Plot(
     plot.add(graph, **style)
     plot.redraw()
     if do_save:
-        plot.save()
+        plot.save(path)
     return plot.surface

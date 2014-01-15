@@ -274,7 +274,7 @@ class Database:
             LOGGER.debug('|-- Mean Distane: {:f} (sd: {:f})'.format(
                 mean_counter.mean, mean_counter.sd
             ))
-            LOGGER.debug('+ Step #2: Applying refinement:', end='')
+            LOGGER.debug('+ Step #2: Applying refinement:')
             self._rebuild_step_refine(
                 mean_counter,
                 num_passes=refine_passes
