@@ -45,7 +45,7 @@ class KeywordsProvider(Provider):
 
         return (
             language_code,
-            [keys for keys, rating in keywords_map.items() if rating >= 3.0]
+            [keys for keys, rating in keywords_map.items() if rating >= 2.0]
         )
 
 
