@@ -86,18 +86,21 @@ class BPMProvider(Provider):
     def do_process(self, audio_path):
         try:
             stdout = subprocess.check_output(
-                    BPM_COMMAND.format(path=pipes.quote(audio_path)),
-                    shell=True, stderr=DEVNULL
+                BPM_COMMAND.format(path=pipes.quote(audio_path)),
+                shell=True,
+                stderr=DEVNULL
             )
             converted = float(stdout.decode('utf-8').strip())
 
             # Check if the maximum value is reached (which usually means an error)
-            if float_cmp(converted, 350):
+            if converted > 340:
                 return None
 
             return (converted, )
         except subprocess.CalledProcessError as err:
-            LOGGER.debug('"{cmd}" failed with {e}'.format(cmd=err.cmd, e=err.returncode))
+            LOGGER.debug('"{cmd}" failed with {e}'.format(
+                cmd=err.cmd, e=err.returncode
+            ))
         except UnicodeDecodeError:
             LOGGER.debug('could not convert input to valid utf-8')
 

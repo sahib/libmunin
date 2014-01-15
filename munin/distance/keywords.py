@@ -31,6 +31,8 @@ class KeywordsDistance(DistanceFunction):
 
         :math:`distance(A, B) = \\min(\\frac{\\vert a\\cup b\\vert}{\\max \\vert a \\vert, \\vert b \\vert} \\forall a, b \\in A \\times B)`
 
+    *edit*: Nope. Changed.
+
     where *A* and *B* are the list of keywords to compare, and *a* and *b* are
     the individual keywordsets.
     """
@@ -46,8 +48,8 @@ class KeywordsDistance(DistanceFunction):
 
         min_distance = 1.0
         for kwa, kwb in product(lefts, rights):
-            common = sum(1 for _ in takewhile(lambda t: t[0] == t[1], zip(kwa, kwb)))
-            distance = 1.0 - common / max(len(kwa), len(kwb))
+            # common = sum(1 for _ in takewhile(lambda t: t[0] == t[1], zip(kwa, kwb)))
+            distance = 1.0 - len(kwa & kwb) / max(4, max(len(kwa), len(kwb)))
             min_distance = min(distance, min_distance)
             if float_cmp(distance, 0.0):
                 break
@@ -64,7 +66,7 @@ if __name__ == '__main__':
             self.assertAlmostEqual(dist.do_compute(
                 ('de', [frozenset(['a', 'b']), frozenset(['c', 'd'])]),
                 ('de', [frozenset(['a', 'c']), frozenset(['b', 'd'])])
-            ), 0.335)
+            ), 0.5025)
             self.assertAlmostEqual(dist.do_compute(
                 ('de', [frozenset(['a', 'b']), frozenset(['c', 'd'])]),
                 ('en', [frozenset(['a', 'x']), frozenset(['y', 'd'])])
@@ -72,6 +74,10 @@ if __name__ == '__main__':
             self.assertAlmostEqual(dist.do_compute(
                 ('de', [frozenset(['a', 'b']), frozenset(['c', 'd'])]),
                 ('de', [frozenset(['a', 'b']), frozenset(['c', 'd'])])
+            ), 0.335)
+            self.assertAlmostEqual(dist.do_compute(
+                ('de', [frozenset(['a', 'b', 'c', 'd']), frozenset(['c', 'd'])]),
+                ('de', [frozenset(['a', 'b', 'c', 'd']), frozenset(['c', 'd'])])
             ), 0.0)
             self.assertAlmostEqual(dist.do_compute(
                 ('de', [frozenset(['a', 'b']), frozenset(['c', 'd'])]),

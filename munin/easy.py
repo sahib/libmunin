@@ -83,7 +83,7 @@ class EasySession(Session):
             'rating': pairup(
                 None,
                 RatingDistance(),
-                3
+                2
             ),
             'genre': pairup(
                 GenreTreeProvider(),
