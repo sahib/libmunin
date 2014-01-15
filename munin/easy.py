@@ -23,7 +23,8 @@ from munin.provider import \
     GenreTreeProvider, \
     BPMCachedProvider, \
     StemProvider, \
-    KeywordsProvider
+    KeywordsProvider, \
+    DateProvider
 
 from munin.distance import \
     MoodbarDistance, \
@@ -31,7 +32,8 @@ from munin.distance import \
     BPMDistance, \
     KeywordsDistance, \
     RatingDistance, \
-    LevenshteinDistance
+    LevenshteinDistance, \
+    DateDistance
 
 
 # Checking if the attribute shall be used:
@@ -63,20 +65,15 @@ class EasySession(Session):
                 LevenshteinDistance(),
                 1,
             ),
-            'genre': pairup(
-                GenreTreeProvider(),
-                GenreTreeAvgLinkDistance(),
+            'date': pairup(
+                DateProvider(),
+                DateDistance(),
                 2
             ),
             'bpm': pairup(
                 BPMCachedProvider(),
                 BPMDistance(),
                 3
-            ),
-            'moodbar': pairup(
-                MoodbarAudioFileProvider(),
-                MoodbarDistance(),
-                5
             ),
             'lyrics': pairup(
                 KeywordsProvider(),
@@ -87,6 +84,16 @@ class EasySession(Session):
                 None,
                 RatingDistance(),
                 3
+            ),
+            'genre': pairup(
+                GenreTreeProvider(),
+                GenreTreeAvgLinkDistance(),
+                4
+            ),
+            'moodbar': pairup(
+                MoodbarAudioFileProvider(),
+                MoodbarDistance(),
+                5
             )
         }
 

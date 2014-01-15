@@ -13,3 +13,5 @@ pymining
 pyxDamerauLevenshtein
 #: guess_language
 guess_language-spirit>=0.5a4
+#: magicdate
+magicdate

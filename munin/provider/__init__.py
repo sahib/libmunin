@@ -91,6 +91,7 @@ from munin.provider.moodbar import \
     MoodbarMoodFileProvider, \
     MoodbarAudioFileProvider
 
+from munin.provider.date import DateProvider
 from munin.provider.bpm import BPMProvider, BPMCachedProvider
 from munin.provider.wordlist import WordlistProvider
 from munin.provider.normalize import \
