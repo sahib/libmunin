@@ -408,15 +408,15 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.24748737"
-     inkscape:cx="2541.8953"
-     inkscape:cy="2025.0334"
+     inkscape:cx="2529.7735"
+     inkscape:cy="1451.2667"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1920"
-     inkscape:window-height="1060"
-     inkscape:window-x="0"
-     inkscape:window-y="20"
+     inkscape:window-width="1888"
+     inkscape:window-height="1028"
+     inkscape:window-x="12"
+     inkscape:window-y="32"
      inkscape:window-maximized="0" />
   <metadata
      id="metadata7546">
@@ -701,11 +701,11 @@
        sodipodi:cy="262.07031"
        sodipodi:rx="141.42136"
        sodipodi:ry="141.42136"
-       d="m 3971.9199,262.07031 a 141.42136,141.42136 0 1 1 -282.8427,0 141.42136,141.42136 0 1 1 282.8427,0 z"
+       d="m 3971.9199,262.07031 c 0,78.10486 -63.3165,141.42136 -141.4214,141.42136 -78.1048,0 -141.4213,-63.3165 -141.4213,-141.42136 0,-78.10486 63.3165,-141.42135 141.4213,-141.42135 78.1049,0 141.4214,63.31649 141.4214,141.42135 z"
        transform="matrix(0.4421676,0,0,0.4421676,-1071.5625,-2125.8145)" />
     <path
        transform="matrix(0.4421676,0,0,0.4421676,-1073.3439,-613.23218)"
-       d="m 3971.9199,262.07031 a 141.42136,141.42136 0 1 1 -282.8427,0 141.42136,141.42136 0 1 1 282.8427,0 z"
+       d="m 3971.9199,262.07031 c 0,78.10486 -63.3165,141.42136 -141.4214,141.42136 -78.1048,0 -141.4213,-63.3165 -141.4213,-141.42136 0,-78.10486 63.3165,-141.42135 141.4213,-141.42135 78.1049,0 141.4214,63.31649 141.4214,141.42135 z"
        sodipodi:ry="141.42136"
        sodipodi:rx="141.42136"
        sodipodi:cy="262.07031"
@@ -715,7 +715,7 @@
        sodipodi:type="arc" />
     <path
        transform="matrix(0.4421676,0,0,0.4421676,2181.9445,-1291.586)"
-       d="m 3971.9199,262.07031 a 141.42136,141.42136 0 1 1 -282.8427,0 141.42136,141.42136 0 1 1 282.8427,0 z"
+       d="m 3971.9199,262.07031 c 0,78.10486 -63.3165,141.42136 -141.4214,141.42136 -78.1048,0 -141.4213,-63.3165 -141.4213,-141.42136 0,-78.10486 63.3165,-141.42135 141.4213,-141.42135 78.1049,0 141.4214,63.31649 141.4214,141.42135 z"
        sodipodi:ry="141.42136"
        sodipodi:rx="141.42136"
        sodipodi:cy="262.07031"
@@ -781,7 +781,7 @@
          id="tspan9377">dations</tspan></text>
     <path
        transform="matrix(0.4421676,0,0,0.4421676,-1071.5625,-1697.2431)"
-       d="m 3971.9199,262.07031 a 141.42136,141.42136 0 1 1 -282.8427,0 141.42136,141.42136 0 1 1 282.8427,0 z"
+       d="m 3971.9199,262.07031 c 0,78.10486 -63.3165,141.42136 -141.4214,141.42136 -78.1048,0 -141.4213,-63.3165 -141.4213,-141.42136 0,-78.10486 63.3165,-141.42135 141.4213,-141.42135 78.1049,0 141.4214,63.31649 141.4214,141.42135 z"
        sodipodi:ry="141.42136"
        sodipodi:rx="141.42136"
        sodipodi:cy="262.07031"
@@ -831,7 +831,7 @@
        style="fill:none;stroke:#000000;stroke-width:4.84060574;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#TriangleOutL)" />
     <path
        transform="matrix(0.4421676,0,0,0.4421676,-8.7053571,-2125.8145)"
-       d="m 3971.9199,262.07031 a 141.42136,141.42136 0 1 1 -282.8427,0 141.42136,141.42136 0 1 1 282.8427,0 z"
+       d="m 3971.9199,262.07031 c 0,78.10486 -63.3165,141.42136 -141.4214,141.42136 -78.1048,0 -141.4213,-63.3165 -141.4213,-141.42136 0,-78.10486 63.3165,-141.42135 141.4213,-141.42135 78.1049,0 141.4214,63.31649 141.4214,141.42135 z"
        sodipodi:ry="141.42136"
        sodipodi:rx="141.42136"
        sodipodi:cy="262.07031"
@@ -1074,11 +1074,11 @@
        sodipodi:cy="262.07031"
        sodipodi:rx="141.42136"
        sodipodi:ry="141.42136"
-       d="m 3971.9199,262.07031 a 141.42136,141.42136 0 1 1 -282.8427,0 141.42136,141.42136 0 1 1 282.8427,0 z"
+       d="m 3971.9199,262.07031 c 0,78.10486 -63.3165,141.42136 -141.4214,141.42136 -78.1048,0 -141.4213,-63.3165 -141.4213,-141.42136 0,-78.10486 63.3165,-141.42135 141.4213,-141.42135 78.1049,0 141.4214,63.31649 141.4214,141.42135 z"
        transform="matrix(0.4421676,0,0,0.4421676,648.12148,-1289.4082)" />
     <path
        transform="matrix(0.4421676,0,0,0.4421676,585.26434,-620.8368)"
-       d="m 3971.9199,262.07031 a 141.42136,141.42136 0 1 1 -282.8427,0 141.42136,141.42136 0 1 1 282.8427,0 z"
+       d="m 3971.9199,262.07031 c 0,78.10486 -63.3165,141.42136 -141.4214,141.42136 -78.1048,0 -141.4213,-63.3165 -141.4213,-141.42136 0,-78.10486 63.3165,-141.42135 141.4213,-141.42135 78.1049,0 141.4214,63.31649 141.4214,141.42135 z"
        sodipodi:ry="141.42136"
        sodipodi:rx="141.42136"
        sodipodi:cy="262.07031"
@@ -1094,7 +1094,7 @@
        sodipodi:cy="262.07031"
        sodipodi:rx="141.42136"
        sodipodi:ry="141.42136"
-       d="m 3971.9199,262.07031 a 141.42136,141.42136 0 1 1 -282.8427,0 141.42136,141.42136 0 1 1 282.8427,0 z"
+       d="m 3971.9199,262.07031 c 0,78.10486 -63.3165,141.42136 -141.4214,141.42136 -78.1048,0 -141.4213,-63.3165 -141.4213,-141.42136 0,-78.10486 63.3165,-141.42135 141.4213,-141.42135 78.1049,0 141.4214,63.31649 141.4214,141.42135 z"
        transform="matrix(0.4421676,0,0,0.4421676,1476.6929,-1112.2653)" />
     <path
        style="fill:none;stroke:#000000;stroke-width:4.86761808;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#TriangleOutL)"
@@ -1109,7 +1109,7 @@
        sodipodi:cy="262.07031"
        sodipodi:rx="141.42136"
        sodipodi:ry="141.42136"
-       d="m 3971.9199,262.07031 a 141.42136,141.42136 0 1 1 -282.8427,0 141.42136,141.42136 0 1 1 282.8427,0 z"
+       d="m 3971.9199,262.07031 c 0,78.10486 -63.3165,141.42136 -141.4214,141.42136 -78.1048,0 -141.4213,-63.3165 -141.4213,-141.42136 0,-78.10486 63.3165,-141.42135 141.4213,-141.42135 78.1049,0 141.4214,63.31649 141.4214,141.42135 z"
        transform="matrix(0.4421676,0,0,0.4421676,-218.81709,-620.8368)" />
     <path
        style="fill:none;stroke:#000000;stroke-width:4.92963648;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#TriangleOutL)"
@@ -1331,8 +1331,18 @@
          sodipodi:role="line"
          x="149.839"
          y="810.73401"
-         id="tspan4004"
-         style="font-size:60px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Humor Sans;-inkscape-font-specification:Humor Sans">• Composite        - compose several providers  </tspan></text>
+         style="font-size:60px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Humor Sans;-inkscape-font-specification:Humor Sans"
+         id="tspan3225">• Composite        - compose several providers  </tspan><tspan
+         sodipodi:role="line"
+         x="149.839"
+         y="894.59918"
+         style="font-size:60px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Humor Sans;-inkscape-font-specification:Humor Sans"
+         id="tspan3219">• DiscogsGenre     - Search genre of Artist/Album on </tspan><tspan
+         sodipodi:role="line"
+         x="149.839"
+         y="969.59918"
+         style="font-size:60px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Humor Sans;-inkscape-font-specification:Humor Sans"
+         id="tspan3221">                       www.Discogs.com with fuzzy matching</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Humor Sans;-inkscape-font-specification:Humor Sans"
@@ -1379,15 +1389,20 @@
          x="2067.5344"
          y="637.1806"
          style="font-size:60px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Humor Sans;-inkscape-font-specification:Humor Sans"
-         id="tspan4060" /><tspan
+         id="tspan3223">• Date          - Compare the RElease Date of two Albums</tspan><tspan
          sodipodi:role="line"
          x="2067.5344"
          y="721.04584"
          style="font-size:60px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Humor Sans;-inkscape-font-specification:Humor Sans"
-         id="tspan4058" /><tspan
+         id="tspan4060" /><tspan
          sodipodi:role="line"
          x="2067.5344"
          y="804.91101"
+         style="font-size:60px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Humor Sans;-inkscape-font-specification:Humor Sans"
+         id="tspan4058" /><tspan
+         sodipodi:role="line"
+         x="2067.5344"
+         y="888.77618"
          id="tspan4042"
          style="font-size:60px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Humor Sans;-inkscape-font-specification:Humor Sans" /></text>
     <text
@@ -1424,5 +1439,5 @@
            height="222.23357"
            x="888.93427"
            y="1169.573" /></flowRegion><flowPara
-         id="flowPara4084"></flowPara></flowRoot>  </g>
+         id="flowPara4084" /></flowRoot>  </g>
 </svg>

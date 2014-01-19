@@ -43,7 +43,6 @@ Reference
 """
 
 # Stdlib:
-import urllib.request
 import pickle
 import shelve
 import json
@@ -56,6 +55,8 @@ from collections import Counter
 # Internal imports:
 from munin.provider import Provider
 from munin.session import get_cache_path, check_or_mkdir
+from munin.generate_genre_list import load_genrelist
+
 
 from munin.provider.normalize import \
     ArtistNormalizeProvider, \
@@ -70,26 +71,6 @@ STEMMER = Stemmer('english')
 from pyxdameraulevenshtein import \
     normalized_damerau_levenshtein_distance as \
     levenshtein
-
-
-def load_genrelist_from_echonest(dump_path=None):
-    """Try yo load a list of genres from echonest (with libglyr's APIKEY)
-
-    This requires a working internet connection obviously.
-
-    :param dump_path: Pickle the list under this path.
-    :type dump_path: string
-    :returns: a list with ~700 genres.
-    """
-    URL = 'http://developer.echonest.com/api/v4/artist/list_genres?api_key=ZSIUEIVVZGJVJVWIS&format=json'
-    json_file = json.loads(urllib.request.urlopen(URL).read().decode('utf-8'))
-    genres = [pair['name'] for pair in json_file['response']['genres']]
-
-    # Pickle the list if desired:
-    if dump_path is not None:
-        with open(dump_path, 'wb') as f:
-            pickle.dump(genres, f)
-    return genres
 
 
 class Tree:
@@ -225,12 +206,7 @@ def build_genre_tree():
     :returns: The root node of the Genre tree.
     """
     # Add a caching layer:
-    dump_path = get_cache_path('genre_list.dump')
-    try:
-        with open(dump_path, 'rb') as f:
-            genres = pickle.load(f)
-    except (OSError, IOError, AttributeError):
-        genres = load_genrelist_from_echonest(dump_path)
+    genres = load_genrelist()
 
     # Create the root node ('music' is always optional)
     root = Tree('music', children=[Tree(genre) for genre in genres])
@@ -338,7 +314,7 @@ def build_genre_path_best_of_two(root, words):
     fst_try = build_genre_path_single(root, words)
     words.reverse()
     snd_try = build_genre_path_single(root, words)
-    return sorted(fst_try + snd_try)
+    return sorted(set(fst_try + snd_try))
 
 
 def build_genre_path_all(root, words):
@@ -408,6 +384,7 @@ def load_genre_tree(pickle_path):
 
 
 DISCOGS_API_SEARCH_URL = "http://api.discogs.com/database/search?type=release&q={artist}"
+
 
 def _filter_crosslinks(genre_set, style_set):
     for key in genre_set:
@@ -705,7 +682,7 @@ if __name__ == '__main__':
             print('Prepared Words:', words)
             print('Result Path   :', paths)
             if paths:
-                print('Resolved      :', root.resolve_path(paths[0]))
+                print('Resolved      :', [root.resolve_path(path) for path in paths])
             print('---------------')
 
         # Silly graph drawing playground ahead:

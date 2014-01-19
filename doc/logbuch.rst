@@ -816,3 +816,18 @@ Ein Bild von der GUI:
 
 Das nächste wird dann sein sich mitteils sphinxtr ein Template für Projekt- und
 Bachelorarbeit zu erstellen: https://github.com/jterrace/sphinxtr
+
+Neulich bei heise:
+
+http://research.google.com/bigpicture/music/
+
+
+Mögliche Zukunftsspinnerei:
+
+* Einbau von munin in mopidy (weil immer ein client listenen muss sonst)
+* Einstellungsmöglichkeit der Session in gui
+* Statistiken in Einleitung (~5000 LoC Python etc.)
+
+Moosecat:
+
+* Query Syntax: Quotation marks und Ranges. Einfach weil mans kann :)

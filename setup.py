@@ -13,7 +13,9 @@ print("""Please make sure to have these third party tools installed:
 try:
     install_reqs = list(parse_requirements('pip_requirements.txt'))
 except:
-    install_reqs = list(parse_requirements('https://raw.github.com/sahib/libmunin/master/pip_requirements.txt'))
+    install_reqs = list(parse_requirements(
+        'https://raw.github.com/sahib/libmunin/master/pip_requirements.txt'
+    ))
 
 
 setup(
@@ -32,6 +34,9 @@ setup(
         'munin.scripts',
         'munin.stopwords',
     ],
-    package_data={'munin.stopwords': ['data/*']},
+    package_data={
+        'munin.stopwords': ['data/*'],
+        'munin.provider': ['genre.list']
+    },
     install_requires=[str(ir.req) for ir in install_reqs]
 )
