@@ -163,9 +163,12 @@ def load_genrelist():
     genres = sorted(wiki_genres | echo_genres)
 
     # Pickle the list if desired:
-    with open(relative_path, 'w') as handle:
-        for genre in genres:
-            handle.write(genre.strip() + '\n')
+    try:
+        with open(relative_path, 'w') as handle:
+            for genre in genres:
+                handle.write(genre.strip() + '\n')
+    except OSError:
+        pass
     return genres
 
 

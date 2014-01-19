@@ -84,7 +84,7 @@ def get_cache_path(extra_name=None):
 
 
 DEFAULT_CONFIG = {
-    'max_neighbors': 13,
+    'max_neighbors': 15,  # Average length of an album in tracks + 1.
     'max_distance': 0.999,
     'history_max_pkg': 10000,
     'history_timeout': 1200,

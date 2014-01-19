@@ -55,7 +55,7 @@ from collections import Counter
 # Internal imports:
 from munin.provider import Provider
 from munin.session import get_cache_path, check_or_mkdir
-from munin.generate_genre_list import load_genrelist
+from munin.provider.generate_genre_list import load_genrelist
 
 
 from munin.provider.normalize import \
