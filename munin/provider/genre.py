@@ -687,26 +687,60 @@ if __name__ == '__main__':
 
         # Silly graph drawing playground ahead:
         def draw_genre_path(root):
-            import networkx as nx
-            import matplotlib.pyplot as plt
+            import igraph
+            from colorsys import hsv_to_rgb
+            from collections import deque, Counter
+            import math
+            import random
 
             # Build up the Tree recursively:
-            def recursive(root, _graph=None):
-                g = _graph or nx.DiGraph()
-                for child in root.children:
-                    g.add_edge(root.genre, child.genre)
-                    recursive(child, _graph=g)
+            def build_graph(root, _graph=None, vx_map=None):
+                g = _graph or igraph.Graph()
+                nodes = deque([root])
+                node_ids = {}
+
+                while nodes:
+                    node = nodes.popleft()
+                    g.add_vertex(name=node.genre)
+
+                    if node not in node_ids:
+                        node_ids[node] = len(node_ids)
+
+                    for child in node.children:
+                        g.add_vertex(name=child.genre)
+                        if child not in node_ids:
+                            node_ids[child] = len(node_ids)
+
+                        g.add_edge(node_ids[node], node_ids[child])
+                        nodes.append(child)
                 return g
 
-            graph = recursive(root)
-            nx.draw_networkx(
-                graph,
-                pos=nx.spring_layout(graph, dim=2, k=0.05, scale=100, iterations=10),
-                width=0.2, node_size=150, alpha=0.2, node_color='#A0CBE2',
-                font_size=2, arrows=False, node_shape=' '
-            )
+            def _style(graph, width, height):
+                colors = graph.eigenvector_centrality(directed=False)
+                layout = graph.layout('rt_circular', root=0)
+                layout.scale(10, 1)
 
-            plt.savefig("graph.pdf")
-            plt.savefig('graph.png', dpi=1000)
-        # Uncomment this line to enable graph writing:
-        #draw_genre_path(root)
+                return {
+                    #'edge_color': edge_color,
+                    'edge_width': 0.25,
+                    'vertex_color': [hsv_to_rgb(v, 1.0, 1.0) for v in colors],
+                    'vertex_label_size': 10,
+                    'vertex_label_dist': [random.random() * 50 for vx in graph.vs],
+                    'vertex_size': 2,
+                    'layout': layout,
+                    'bbox': (width, height),
+                    'margin': (50, 50, 50, 50),
+                    'vertex_label': ['\n\n\n' + vx['name'] for vx in graph.vs]
+                }
+
+            width, height = 5000, 5000
+            graph = build_graph(root)
+            path = 'genre_graph.pdf'
+            bg_color = "rgba(100%, 100%, 100%, 0%)"
+            plot = igraph.Plot(target=path, background=bg_color, bbox=(width, height))
+            plot.add(graph, **_style(graph, width, height))
+            plot.redraw()
+            plot.save('genre_graph.svg')
+
+        if '--plot' in sys.argv:
+            draw_genre_path(root)
