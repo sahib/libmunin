@@ -97,8 +97,8 @@ DEFAULT_CONFIG = {
     'rebuild_stupid_threshold': 350,
     'recom_history_sieving': True,
     'recom_history_penalty': {
-        'album': 3,
-        'artist': 2
+        'album': 5,
+        'artist': 3
     }
 }
 
