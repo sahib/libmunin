@@ -17,6 +17,18 @@ Tests are run on every commit via http://travis-ci.org:
 
     https://travis-ci.org/sahib/libmunin
 
+Screenshot of the Demo GUI
+--------------------------
+
+.. image:: http://libmunin.readthedocs.org/en/latest/_images/gui.png
+   :alt: demo gui screenshot
+
+
+The Demo GUI is based on moosecat_. Source code is available in the ``naglfar``
+branch, under ``moosecat/naglfar/main.py``.
+
+.. _moosecat: https://github.com/studentkittens/moosecat/tree/naglfar
+
 Installation
 ============
 
