@@ -687,60 +687,51 @@ if __name__ == '__main__':
 
         # Silly graph drawing playground ahead:
         def draw_genre_path(root):
-            import igraph
-            from colorsys import hsv_to_rgb
-            from collections import deque, Counter
-            import math
-            import random
+            from itertools import cycle
+            from collections import deque
 
-            # Build up the Tree recursively:
-            def build_graph(root, _graph=None, vx_map=None):
-                g = _graph or igraph.Graph()
-                nodes = deque([root])
-                node_ids = {}
+            nodes = deque([root])
+            lines = deque()
 
-                while nodes:
-                    node = nodes.popleft()
-                    g.add_vertex(name=node.genre)
+            colors = []
+            for i in range(16):
+                colors.append('{:1.3f} {{:1.3f}} {:1.3f}'.format(i / 16, 0.8))
 
-                    if node not in node_ids:
-                        node_ids[node] = len(node_ids)
+            colors = cycle(colors)
 
-                    for child in node.children:
-                        g.add_vertex(name=child.genre)
-                        if child not in node_ids:
-                            node_ids[child] = len(node_ids)
+            while nodes:
+                node = nodes.popleft()
+                if not node.children:
+                    continue
 
-                        g.add_edge(node_ids[node], node_ids[child])
-                        nodes.append(child)
-                return g
+                saturation = min(0.6, (min(10, len(node.children)) / 10))
+                lines.append(
+                    'node [shape="none", style="rounded,filled", fillcolor="{color}"]'.format(
+                        color=next(colors).format(saturation)
+                    )
+                )
 
-            def _style(graph, width, height):
-                colors = graph.eigenvector_centrality(directed=False)
-                layout = graph.layout('rt_circular', root=0)
-                layout.scale(10, 1)
+                for child in node.children:
+                    lines.append(
+                        '"{l}" -- "{r}"'.format(l=node.genre, r=child.genre)
+                    )
+                    nodes.append(child)
 
-                return {
-                    #'edge_color': edge_color,
-                    'edge_width': 0.25,
-                    'vertex_color': [hsv_to_rgb(v, 1.0, 1.0) for v in colors],
-                    'vertex_label_size': 10,
-                    'vertex_label_dist': [random.random() * 50 for vx in graph.vs],
-                    'vertex_size': 2,
-                    'layout': layout,
-                    'bbox': (width, height),
-                    'margin': (50, 50, 50, 50),
-                    'vertex_label': ['\n\n\n' + vx['name'] for vx in graph.vs]
-                }
+            with open('/tmp/genre.graph', 'w') as handle:
+                handle.write('''
+                /*
+                * sfdp /tmp/genre.graph | gvmap -e | neato -n2 -Tpng > graph.png
+                */
+                graph Netbasic
+                {
+                    overlap=prism3000
+                    overlap_scale=-7
+                    splines=curved
 
-            width, height = 5000, 5000
-            graph = build_graph(root)
-            path = 'genre_graph.pdf'
-            bg_color = "rgba(100%, 100%, 100%, 0%)"
-            plot = igraph.Plot(target=path, background=bg_color, bbox=(width, height))
-            plot.add(graph, **_style(graph, width, height))
-            plot.redraw()
-            plot.save('genre_graph.svg')
+                    edge [color="#666666"]
+                    node [shape="none", style="rounded,filled", fillcolor="white"]
+
+                ''' + '\n'.join(lines) + '}')
 
         if '--plot' in sys.argv:
             draw_genre_path(root)
