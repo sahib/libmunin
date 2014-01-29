@@ -219,7 +219,7 @@ def extract(vector, chan_idx):
     return [f(rgb) for rgb in vector]
 
 
-def find_dominant_colors(vector, samples, roundoff=17):
+def find_dominant_colors(vector, samples, roundoff=34):
     """Find the most dominant colors in the vector.
 
     :param vector: The vector of rgb triples.
@@ -231,7 +231,7 @@ def find_dominant_colors(vector, samples, roundoff=17):
               and the percent of black colors as integer.
     """
     blackness_count, result = 0, []
-    data = [tuple([int(v / roundoff) * roundoff for v in rgb]) for rgb in vector]
+    data = [tuple([v // roundoff * roundoff for v in rgb]) for rgb in vector]
 
     for color, count in Counter(data).most_common():
         # Do not count very dark colors:
