@@ -79,7 +79,7 @@ class Tree:
     can contain subgenres.
     """
 
-    def __init__(self, genre, children=None):
+    def __init__(self, genre, depth=0, children=None):
         """
         :param genre: The genre.
         'param children: A list of children.'
@@ -87,6 +87,7 @@ class Tree:
         self.genre = genre
         self.children = children or []
         self._index = {}
+        self.depth = depth
 
     def build_index_recursively(self):
         """Build a index of self.children (the stemmed genre being the key)"""
@@ -148,7 +149,7 @@ class Tree:
             child.print_tree(_tabs=_tabs + 1, _idx=idx)
 
 
-def unflatten_list(root):
+def unflatten_list(root, depth):
     """Takes a list of genres stored in root.children and splits them up.
 
     Example:
@@ -187,16 +188,20 @@ def unflatten_list(root):
 
     root.children = []
     for genre, sub_genres in genre_mapping.items():
-        root.add(Tree(genre, children=[Tree(g) for g in sub_genres if g]))
+        root.add(Tree(
+            genre,
+            children=[Tree(g) for g in sub_genres if g],
+            depth=depth
+        ))
     return was_flattened
 
 
-def recursive_unflatten_list(root):
+def recursive_unflatten_list(root, _depth=1):
     """Recursively calls unflatten_list on root until all nodes are unflattened.
     """
-    if unflatten_list(root):
+    if unflatten_list(root, _depth):
         for child in root.children:
-            recursive_unflatten_list(child)
+            recursive_unflatten_list(child, _depth=_depth + 1)
 
 
 def build_genre_tree():
@@ -228,7 +233,7 @@ def build_genre_tree():
     for child in root.children:
         if 'core' in child.genre and child.genre != 'core':
             actual_name, *_ = child.genre.split('core')
-            core_node.add(Tree(actual_name))
+            core_node.add(Tree(actual_name, depth=child.depth + 1))
             to_delete.append(child)
 
     for child in to_delete:
@@ -239,7 +244,7 @@ def build_genre_tree():
 
     # Add some common not already in:
     for to_add in ['vocal', 'speech']:
-        root.add(Tree(to_add))
+        root.add(Tree(to_add, depth=1))
 
     # Make sure find_idx() works - this should be the last operation.
     root.build_index_recursively()
@@ -686,52 +691,62 @@ if __name__ == '__main__':
             print('---------------')
 
         # Silly graph drawing playground ahead:
-        def draw_genre_path(root):
+        def draw_genre_path(root, min_saturation=0.0):
             from itertools import cycle
             from collections import deque
 
             nodes = deque([root])
             lines = deque()
 
-            colors = []
-            for i in range(16):
-                colors.append('{:1.3f} {{:1.3f}} {:1.3f}'.format(i / 16, 0.8))
-
-            colors = cycle(colors)
+            colors = [
+                '0.000 {:1.3f} 0.850',
+                '0.050 {:1.3f} 0.850',
+                '0.100 {:1.3f} 0.850',
+                '0.150 {:1.3f} 0.850',
+                '0.200 {:1.3f} 0.850',
+                '0.250 {:1.3f} 0.850',
+                '0.300 {:1.3f} 0.850',
+                '0.350 {:1.3f} 0.850',
+                '0.450 {:1.3f} 0.850'
+            ]
 
             while nodes:
                 node = nodes.popleft()
                 if not node.children:
                     continue
 
-                saturation = min(0.6, (min(10, len(node.children)) / 10))
-                lines.append(
-                    'node [shape="none", style="rounded,filled", fillcolor="{color}"]'.format(
-                        color=next(colors).format(saturation)
-                    )
-                )
-
                 for child in node.children:
-                    lines.append(
-                        '"{l}" -- "{r}"'.format(l=node.genre, r=child.genre)
-                    )
-                    nodes.append(child)
+                    saturation = min(8, len(child.children)) / 8
+                    if saturation >= min_saturation:
+                        lines.append(
+                            'node [shape="none", style="rounded, filled", fillcolor="{color}", fontcolor="black" fontsize="{size}"]'.format(
+                                color=colors[child.depth].format(min(0.75, saturation)),
+                                size=max(8, saturation * 25)
+                            )
+                        )
+                        lines.append(
+                            '"  {l}  " -- "  {r}  "'.format(l=node.genre, r=child.genre)
+                        )
+                        nodes.append(child)
 
             with open('/tmp/genre.graph', 'w') as handle:
                 handle.write('''
                 /*
-                * sfdp /tmp/genre.graph | gvmap -e | neato -n2 -Tpng > graph.png
+                * python munin/provider/genre.py --cli --plot 0.0
+                * sfdp /tmp/genre.graph | gvmap -e | neato -n2 -Ecolor="#55555555" -Nfontname="TeX Gyre Adventor" -Tpng > graph.png && sxiv graph.png
                 */
-                graph Netbasic
+                graph GenreGraph
                 {
                     overlap=prism3000
                     overlap_scale=-7
                     splines=curved
 
                     edge [color="#666666"]
-                    node [shape="none", style="rounded,filled", fillcolor="white"]
+                    node [shape="rectangle", style="rounded", fillcolor="white", fontcolor="black" fontsize=50]
+
+                    "  music  "
 
                 ''' + '\n'.join(lines) + '}')
 
         if '--plot' in sys.argv:
-            draw_genre_path(root)
+            draw_genre_path(root, float(sys.argv[3]))

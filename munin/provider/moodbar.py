@@ -255,7 +255,7 @@ def process_moodbar(vector, samples=25):
     hist_r, hist_g, hist_b = histogram(chan_r), histogram(chan_g), histogram(chan_b)
 
     # Find the most dominant colors, our most important attribute:
-    dominant_colors, blackness = find_dominant_colors(vector, samples)
+    dominant_colors, blackness = find_dominant_colors(vector, samples // 2)
 
     # Countervariables:
     max_samples, min_samples = [0] * samples, [0] * samples

@@ -89,6 +89,7 @@ class MoodbarDistance(DistanceFunction):
 
 
 if __name__ == '__main__':
+    import sys
     import unittest
 
     from munin.provider.moodbar import MoodbarDescription, MoodbarChannel
@@ -138,4 +139,14 @@ if __name__ == '__main__':
 
             self.assertAlmostEqual(func.do_compute([description], [anti]), 1.0)
 
-    unittest.main()
+    if '--cli' in sys.argv:
+        from munin.provider.moodbar import MoodbarMoodFileProvider
+        prov = MoodbarMoodFileProvider()
+        one = prov.do_process(sys.argv[2])
+        two = prov.do_process(sys.argv[3])
+        func = MoodbarDistance()
+        print(one)
+        print(two)
+        print(func.do_compute(one, two))
+    else:
+        unittest.main()
