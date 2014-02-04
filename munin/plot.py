@@ -68,7 +68,7 @@ def _style(graph, vx_mapping, width, height):
     }
 
 
-def plot(database, width=1000, height=1000, vx_mapping=None):
+def plot(database, width=1000, height=1000, vx_mapping=None, **kwargs):
     """Plot the current graph for debugging purpose.
 
     Will try to open an installed image viewer - does not return an image.
@@ -86,13 +86,15 @@ def plot(database, width=1000, height=1000, vx_mapping=None):
     graph = igraph.Graph(directed=False)
     _build_graph_from_song_list(graph, database)
     style = _style(graph, vx_mapping or {}, width, height)
+    style.update(kwargs)
     igraph.plot(graph, **style)
 
 
 def Plot(
     database, width=1000, height=1000,
     path=None, do_save=True, target=None,
-    vx_mapping=None
+    vx_mapping=None,
+    **kwargs
 ):
     """Plot the currrent graph.
 
@@ -108,6 +110,7 @@ def Plot(
     graph = igraph.Graph(directed=False)
     _build_graph_from_song_list(graph, database)
     style = _style(graph, vx_mapping or {}, width, height)
+    style.update(kwargs)
 
     path = path or '/tmp/.munin_plot.png'
     bg_color = "rgba(100%, 100%, 100%, 0%)"

@@ -103,13 +103,13 @@ def wiki_genres_for(page):
 
     for line in text.splitlines():
         match = ITEM_PAT.search(line)
-        if match:
-            name = match.group(1)
-            # Filter some non-genre links.
-            if wiki_is_bad_name(name):
-                continue
+        name = match.group(1) if match else None
 
-            yield DROP_PART_PAT.sub('', name).strip().lower()
+        # Filter some non-genre links.
+        if name is None or wiki_is_bad_name(name):
+            continue
+
+        yield DROP_PART_PAT.sub('', name).strip().lower()
 
 
 def load_genrelist_from_wikipedia(dump_path):

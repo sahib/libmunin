@@ -223,19 +223,20 @@ def build_genre_tree():
     root.remove(music_node)
 
     # Fix the core genres manually to be a subgenre of 'core'
-    to_delete = []
     core_node = root.find_linear('core')
-    for child in root.children:
-        if 'core' in child.genre and child.genre != 'core':
-            actual_name, *_ = child.genre.split('core')
-            core_node.add(Tree(actual_name))
-            to_delete.append(child)
+    if core_node is not None:
+        to_delete = []
+        for child in root.children:
+            if 'core' in child.genre and child.genre != 'core':
+                actual_name, *_ = child.genre.split('core')
+                core_node.add(Tree(actual_name))
+                to_delete.append(child)
 
-    for child in to_delete:
-        root.remove(child)
+        for child in to_delete:
+            root.remove(child)
 
-    # 'death core' was somehow there as 'deathcore' too:
-    core_node.remove(core_node.find_linear('death'))
+        # 'death core' was somehow there as 'deathcore' too:
+        core_node.remove(core_node.find_linear('death'))
 
     # Add some common not already in:
     for to_add in ['vocal', 'speech']:
@@ -725,22 +726,31 @@ if __name__ == '__main__':
                     'edge_width': 0.25,
                     'vertex_color': [hsv_to_rgb(v, 1.0, 1.0) for v in colors],
                     'vertex_label_size': 10,
-                    'vertex_label_dist': [random.random() * 50 for vx in graph.vs],
+                    # 'vertex_label_dist': [random.random() * 50 for vx in graph.vs],
                     'vertex_size': 2,
                     'layout': layout,
                     'bbox': (width, height),
                     'margin': (50, 50, 50, 50),
-                    'vertex_label': ['\n\n\n' + vx['name'] for vx in graph.vs]
+                    'vertex_label': [vx['name'] for vx in graph.vs]
                 }
 
             width, height = 5000, 5000
             graph = build_graph(root)
             path = 'genre_graph.pdf'
             bg_color = "rgba(100%, 100%, 100%, 0%)"
-            plot = igraph.Plot(target=path, background=bg_color, bbox=(width, height))
-            plot.add(graph, **_style(graph, width, height))
-            plot.redraw()
-            plot.save('genre_graph.svg')
+
+            igraph.plot(
+                graph.community_walktrap(),
+                **_style(graph, width, height)
+            )
+
+            #plot = igraph.Plot(
+            #    target=path, background=bg_color, bbox=(width, height)
+            #)
+
+            #plot.add(graph, **_style(graph, width, height))
+            #plot.redraw()
+            #plot.save('genre_graph.svg')
 
         if '--plot' in sys.argv:
             draw_genre_path(root)

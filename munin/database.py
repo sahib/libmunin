@@ -74,7 +74,7 @@ class Database:
             return self._revoked_uids.pop()
         return len(self._song_list)
 
-    def plot(self, width=1000, height=1000):
+    def plot(self, width=1000, height=1000, **kwargs):
         """Plot the current graph for debugging purpose.
 
         Will try to open an installed image viewer - does not return an image.
@@ -83,7 +83,7 @@ class Database:
         :param width: Width of the plotted image in pixel.
         :param height: Width of the plotted image in pixel.
         """
-        munin.plot.plot(self, width, height)
+        munin.plot.plot(self, width, height, **kwargs)
 
     def playcount(self, song):
         return self._playcounts.get(song, 0)

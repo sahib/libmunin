@@ -35,4 +35,4 @@ for munin_song in session.recommend_from_seed(session[1], 3):
 
 if '--plot' in sys.argv:
     print('Now rendering a plot of the relation graph...')
-    session.database.plot()
+    session.database.plot(width=150, height=150, margin=15)
