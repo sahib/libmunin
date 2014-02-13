@@ -4,7 +4,7 @@ python:
   - "3.3"
 
 # command to install dependencies
-install: "pip install -r pip_requirements.txt --use-mirrors"
+install: "pip install -r pip_requirements.txt --allow-all-external"
 
 # command to run tests
 script: PYTHONPATH='.' ./run_tests.sh
