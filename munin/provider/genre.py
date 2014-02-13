@@ -228,19 +228,20 @@ def build_genre_tree():
     root.remove(music_node)
 
     # Fix the core genres manually to be a subgenre of 'core'
-    to_delete = []
     core_node = root.find_linear('core')
-    for child in root.children:
-        if 'core' in child.genre and child.genre != 'core':
-            actual_name, *_ = child.genre.split('core')
-            core_node.add(Tree(actual_name, depth=child.depth + 1))
-            to_delete.append(child)
+    if core_node is not None:
+        to_delete = []
+        for child in root.children:
+            if 'core' in child.genre and child.genre != 'core':
+                actual_name, *_ = child.genre.split('core')
+                core_node.add(Tree(actual_name))
+                to_delete.append(child)
 
-    for child in to_delete:
-        root.remove(child)
+        for child in to_delete:
+            root.remove(child)
 
-    # 'death core' was somehow there as 'deathcore' too:
-    core_node.remove(core_node.find_linear('death'))
+        # 'death core' was somehow there as 'deathcore' too:
+        core_node.remove(core_node.find_linear('death'))
 
     # Add some common not already in:
     for to_add in ['vocal', 'speech']:
