@@ -80,7 +80,7 @@ def plot(database, width=1000, height=1000, vx_mapping=None):
     try:
         import igraph
     except ImportError:
-        print('-- You need igraph and python-igraph installed for this.')
+        print('-- You need igraph and python-igraph installed for plotting.')
         return
 
     graph = igraph.Graph(directed=False)
@@ -102,7 +102,7 @@ def Plot(
     try:
         import igraph
     except ImportError:
-        print('-- You need igraph and python-igraph installed for this.')
+        print('-- You need igraph and python-igraph installed for plotting.')
         return
 
     graph = igraph.Graph(directed=False)

@@ -35,4 +35,5 @@ for munin_song in session.recommend_from_seed(session[1], 3):
 
 if '--plot' in sys.argv:
     print('Now rendering a plot of the relation graph...')
-    session.database.plot()
+    vx = {idx: row[0] for idx, row in enumerate(MY_DATABASE)}
+    session.database.plot(width=300, height=300, vx_mapping=vx)
