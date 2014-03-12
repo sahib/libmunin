@@ -25,7 +25,7 @@ def parse_requirements(url):
         except:
             pass
     else:
-        text = urllib.request.urlopen(url).read()
+        text = urllib.request.urlopen(url).read().decode('utf-8')
 
     for line in text.splitlines():
         line = line.strip()
