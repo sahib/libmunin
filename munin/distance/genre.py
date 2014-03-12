@@ -97,7 +97,7 @@ if __name__ == '__main__':
             b = [(85, 0), (190, 2, 0), (190, 2, 1), (190, 6)]
             self.assertAlmostEqual(calc.compute(
                 a, b
-            ), 0.333333333333 / 4)
+            ), 0.333333333333 / 2)
             self.assertAlmostEqual(calc.compute(
                 a, a
             ), 0)
