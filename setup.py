@@ -1,6 +1,6 @@
 from setuptools import setup
-from pip.req import parse_requirements
 from munin import __version__, __url__
+
 
 
 print("""Please make sure to have these third party tools installed:
@@ -9,14 +9,35 @@ print("""Please make sure to have these third party tools installed:
     - bpm-utils: ttp://www.pogo.org.uk/~mark/bpm-tools/
 """)
 
-# parse_requirements() returns generator of pip.req.InstallRequirement objects
+# Sadly, this does not work on Debian (wat. Debian, get your stuff together.)
+# So, we just fake it.
+# from pip.req import parse_requirements
+import urllib.request
+
+
+def parse_requirements(url):
+    text = None
+    protocol, path = url.split('://', maxsplit=1)
+    if protocol == 'file':
+        with open(path, 'r') as handle:
+            text = handle.read()
+    else:
+        text = urllib.request.urlopen(url).read()
+
+    for line in text.splitlines():
+        line = line.strip()
+        if not line.startswith('#') and line:
+            yield line
+
+
 try:
-    install_reqs = list(parse_requirements('pip_requirements.txt'))
+    install_reqs = list(parse_requirements('file://pip_requirements.txt'))
 except:
     install_reqs = list(parse_requirements(
         'https://raw.github.com/sahib/libmunin/master/pip_requirements.txt'
     ))
 
+print('IR', install_reqs)
 
 setup(
     name='libmunin',
@@ -38,5 +59,5 @@ setup(
         'munin.stopwords': ['data/*'],
         'munin.provider': ['genre.list']
     },
-    install_requires=[str(ir.req) for ir in install_reqs]
+    install_requires=install_reqs
 )
