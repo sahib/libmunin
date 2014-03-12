@@ -17,10 +17,13 @@ import urllib.request
 
 def parse_requirements(url):
     text = None
-    protocol, path = url.split('://', maxsplit=1)
+    protocol, path = url.split('://', 1)
     if protocol == 'file':
-        with open(path, 'r') as handle:
-            text = handle.read()
+        try:
+            with open(path, 'r') as handle:
+                text = handle.read()
+        except:
+            pass
     else:
         text = urllib.request.urlopen(url).read()
 
