@@ -28,7 +28,7 @@ from munin.provider import \
 
 from munin.distance import \
     MoodbarDistance, \
-    GenreTreeAvgLinkDistance, \
+    GenreTreeAvgDistance, \
     BPMDistance, \
     KeywordsDistance, \
     RatingDistance, \
@@ -87,7 +87,7 @@ class EasySession(Session):
             ),
             'genre': pairup(
                 GenreTreeProvider(),
-                GenreTreeAvgLinkDistance(),
+                GenreTreeAvgDistance(),
                 4
             ),
             'moodbar': pairup(

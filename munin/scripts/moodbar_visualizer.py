@@ -170,7 +170,7 @@ if __name__ == '__main__':
     # Read the rgb vector:
     rgb_values = read_moodbar_values(moodbar_file)
 
-    w, h = 1900, 100
+    w, h = 1000, 125
     surface = PDFSurface('/tmp/mood.out', w, h)
     draw_moodbar(Context(surface), rgb_values, w, h)
     surface.finish()

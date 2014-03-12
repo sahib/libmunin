@@ -585,7 +585,7 @@ if __name__ == '__main__':
         import math
 
         with session.transaction():
-            N = 5000
+            N = 100
             for i in range(int(N / 2) + 1):
                 session.add({
                     'genre': 1.0 - i / N,
@@ -601,7 +601,7 @@ if __name__ == '__main__':
 
         LOGGER.debug('+ Step #3: Layouting and Plotting')
         if '--plot' in sys.argv:
-            session.database.plot(3000, 3000)
+            session.database.plot(1000, 500)
 
     if '--cli' in sys.argv:
         main()

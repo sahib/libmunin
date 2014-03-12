@@ -25,7 +25,7 @@ class WordlistDistance(DistanceFunction):
     Takes: an iterable of words and compares them directly.
     """
     def do_compute(self, lefts, rights):
-        union = lefts & rights
+        union = frozenset(lefts) & frozenset(rights)
         if not union:
             return 1.0
 

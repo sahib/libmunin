@@ -37,7 +37,7 @@ def _edge_color_list(graph):
         distance = a.distance_get(b)
         if distance is not None:
             edge_colors.append(_color_from_distance(distance.distance))
-            edge_widths.append((1.0 - distance.distance) * 3)
+            edge_widths.append((1.0 - distance.distance) * 0.5)
 
     return list(edge_colors), list(edge_widths)
 
@@ -46,6 +46,7 @@ def _format_vertex_label(mapping, uid):
     try:
         return '{}\n\n\n{}'.format(uid, mapping[uid])
     except KeyError:
+        return ''
         return str(uid)
 
 

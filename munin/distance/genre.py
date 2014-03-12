@@ -22,7 +22,7 @@ def compare_single_path(left, right):
     return 1 - n / (max(len(left), len(right)) or 1)
 
 
-class GenreTreeAvgLinkDistance(DistanceFunction):
+class GenreTreeAvgDistance(DistanceFunction):
     """
     Like :class:`munin.distance.genre.GenreTreeDistance`,
     but use Average Linkage instead of Single Linkage.
@@ -35,10 +35,12 @@ class GenreTreeAvgLinkDistance(DistanceFunction):
             return 1.0
 
         dists = 0
+        lefts, rights = sorted([lefts, rights], key=len, reverse=True)
+
         for left in lefts:
             dists += min(compare_single_path(left, right) for right in rights)
 
-        return dists / max(len(lefts), len(rights))
+        return dists / len(lefts)
 
 
 class GenreTreeDistance(DistanceFunction):
@@ -87,9 +89,9 @@ if __name__ == '__main__':
                     float_cmp(compare_single_path(right, left), result)
                 )
 
-    class TestGenreTreeAvgLinkDistanceFunction(unittest.TestCase):
+    class TestGenreTreeAvgDistanceFunction(unittest.TestCase):
         def test_valid(self):
-            calc = GenreTreeAvgLinkDistance(GenreTreeProvider())
+            calc = GenreTreeAvgDistance(GenreTreeProvider())
 
             a = [(85, 0), (190, 2), (190, 6)]
             b = [(85, 0), (190, 2, 0), (190, 2, 1), (190, 6)]

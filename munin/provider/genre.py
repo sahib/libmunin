@@ -89,9 +89,12 @@ class Tree:
         self._index = {}
         self.depth = depth
 
+    def __hash__(self):
+        return hash(self.genre)
+
     def build_index_recursively(self):
         """Build a index of self.children (the stemmed genre being the key)"""
-        self.children.sort(key=lambda elem: elem.genre)
+        self.children = sorted(set(self.children), key=lambda elem: elem.genre)
         for idx, child in enumerate(self.children):
             self._index[STEMMER.stemWord(child.genre)] = idx
             child.build_index_recursively()
@@ -332,9 +335,11 @@ def build_genre_path_all(root, words):
     path_list = []
 
     def _iterate_recursive(current_root, _mask, _result):
+        # Search fitting children that are in words.
+        # Save them in `children` as (word_idx, child_idx, treenode)
         children = []
         for idx, word in enumerate(words):
-            if not _mask[idx]:
+            if _mask[idx]:
                 continue
 
             child_idx = current_root.find_idx(word)
@@ -343,9 +348,11 @@ def build_genre_path_all(root, words):
                     (idx, child_idx, current_root.children[child_idx])
                 )
 
+        # No new children found, but result is non-empty? We have a winner.
         if not children and len(_result) > 0:
             path_list.append(_result)
 
+        # Repeat for every child.
         for word_idx, child_idx, child in children:
             child_mask = list(_mask)
             child_mask[word_idx] = True
@@ -354,7 +361,7 @@ def build_genre_path_all(root, words):
                 _result=_result + (child_idx, )
             )
 
-    _iterate_recursive(root, (True, ) * len(words), ())
+    _iterate_recursive(root, (False, ) * len(words), ())
     path_list.sort()
     return path_list
 
@@ -475,7 +482,7 @@ def find_genre_via_discogs(artist, album):
 
     .. note::
 
-        Tip: Use :class:`munin.distance.GenreTreeAvgLinkDistance` with this data.
+        Tip: Use :class:`munin.distance.GenreTreeAvgDistance` with this data.
         The normal :class:`munin.distance.GenreTreeProvider` uses Single Linkage,
         which may give too good distances often enough.
 
@@ -719,6 +726,7 @@ if __name__ == '__main__':
                 for child in node.children:
                     saturation = min(8, len(child.children)) / 8
                     if saturation >= min_saturation:
+                        print('@@@')
                         lines.append(
                             'node [shape="none", style="rounded, filled", fillcolor="{color}", fontcolor="black" fontsize="{size}"]'.format(
                                 color=colors[child.depth].format(min(0.75, saturation)),
