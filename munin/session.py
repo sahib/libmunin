@@ -391,6 +391,7 @@ class Session:
             recom_set = set()
             while True:
                 iterator, starter = tee(iterator)
+
                 for recom in filter(lambda r: r not in recom_set, starter):
                     if self._recom_history.allowed(recom):
                         # we found a candidate!

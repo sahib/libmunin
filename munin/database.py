@@ -386,10 +386,6 @@ class Database:
         self._song_list[uid] = None
         self._revoked_uids.add(uid)
 
-        edge_set = set()
-        for neighbor in song.neighbors():
-            edge_set.add((song.uid, neighbor.uid))
-
         # Patch the hole:
         song.disconnect()
 

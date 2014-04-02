@@ -58,6 +58,7 @@ class KeywordsDistance(DistanceFunction):
 
 
 if __name__ == '__main__':
+    import sys
     import unittest
 
     class TestKeywordsDistance(unittest.TestCase):
@@ -84,4 +85,22 @@ if __name__ == '__main__':
                 ('fr', [frozenset(['x', 'y']), frozenset(['z', 'ö'])]),
             ), 1.0)
 
-    unittest.main()
+    if '--cli' in sys.argv:
+        from munin.provider import KeywordsProvider
+        provider = KeywordsProvider()
+
+        with open(sys.argv[2], 'r') as f:
+            left_text = f.read()
+
+        with open(sys.argv[3], 'r') as f:
+            right_text = f.read()
+
+        dist = KeywordsDistance()
+        print(
+            dist.do_compute(
+                provider.do_process(left_text),
+                provider.do_process(right_text)
+            )
+        )
+    else:
+        unittest.main()

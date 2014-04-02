@@ -25,7 +25,7 @@ def _build_graph_from_song_list(graph, song_list):
 
 
 def _color_from_distance(distance):
-    r, g, b = (int(v * 255) for v in hsv_to_rgb(abs(1.0 - distance), 1.0, 0.5))
+    r, g, b = (int(v * 255) for v in hsv_to_rgb(abs(1.0 - distance) * 0.9, 1.0, 0.5))
     return '#{:02x}{:02x}{:02x}'.format(r, g, b)
 
 
@@ -37,7 +37,7 @@ def _edge_color_list(graph):
         distance = a.distance_get(b)
         if distance is not None:
             edge_colors.append(_color_from_distance(distance.distance))
-            edge_widths.append((1.0 - distance.distance) * 0.5)
+            edge_widths.append((1.0 - distance.distance) * 0.9)
 
     return list(edge_colors), list(edge_widths)
 
@@ -58,11 +58,11 @@ def _style(graph, vx_mapping, width, height):
         'edge_width': edge_width,
         'vertex_color': [hsv_to_rgb(v, 1.0, 1.0) for v in colors],
         'vertex_label_color': [hsv_to_rgb(1 - v, 0.2, 0.1) for v in colors],
-        'vertex_label_size': 10,
-        'vertex_size': 15,
+        'vertex_label_size': 35,
+        'vertex_size': 30,
         'layout': graph.layout('fr'),
         'bbox': (width, height),
-        'margin': (50, 50, 50, 50),
+        'margin': (500, 500, 500, 500),
         'vertex_label': [
             _format_vertex_label(vx_mapping, vx['song'].uid) for vx in graph.vs
         ],
@@ -114,7 +114,7 @@ def Plot(
     style.update(kwargs)
 
     path = path or '/tmp/.munin_plot.png'
-    bg_color = "rgba(100%, 100%, 100%, 0%)"
+    bg_color = "rgba(100%, 100%, 100%, 100%)"
     plot = igraph.Plot(target=target, background=bg_color, bbox=(width, height))
     plot.add(graph, **style)
     plot.redraw()

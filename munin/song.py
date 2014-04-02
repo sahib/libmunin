@@ -144,7 +144,8 @@ class Song(SessionMapping, Hashable):
             return False
 
         if self._worst_cache is not None and self._worst_cache < distance.distance:
-            return False
+            if len(self._dist_dict) >= self._max_neighbors:
+                return False
 
         if distance.distance > self._max_distance:
             return False
