@@ -71,6 +71,7 @@ Table of Contents
     :maxdepth: 1
 
     todo
+    media
     logbuch
 
 **Indices and tables**

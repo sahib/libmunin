@@ -339,7 +339,7 @@ class Database:
             max_neighbors=self._session.config['max_neighbors'],
             max_distance=self._session.config['max_distance']
         )
-        new_song.uid = song.uid
+        new_song.uid = self.remove(song.uid)
         self._song_list[song.uid] = new_song
 
         # Clear all know distances:
