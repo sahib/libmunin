@@ -72,6 +72,7 @@ Table of Contents
 
     todo
     media
+    docs
     logbuch
 
 **Indices and tables**
