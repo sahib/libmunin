@@ -12,4 +12,4 @@ understanding of german to read the papers.
 * `Project report - PDF <https://dl.dropboxusercontent.com/u/12859833/projektarbeit_new_oneside.pdf>`_
 * `Project report - HTML <http://sahib.github.io/libmunin-thesis/projekt/html/rst/index.html>`_
 * `Bachelor thesis - PDF <https://dl.dropboxusercontent.com/u/12859833/ba.pdf>`_
-* `Bachelor thesis - HTML <http://sahib.github.io/libmunin-thesis/bachelor/html/rst/index.html>`_
+* `Bachelor thesis - HTML <https://raw.githubusercontent.com/sahib/libmunin/master/doc/bachelor.pdf>`_
